@@ -1,0 +1,99 @@
+"use client"
+
+import type React from "react"
+import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import Link from "next/link"
+
+export default function LoginPage() {
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  })
+  const [isPending, startTransition] = useTransition()
+  const router = useRouter()
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+
+    startTransition(async () => {
+      console.log("Logging in with:", formData)
+      // await new Promise((resolve) => setTimeout(resolve, 1000)) // fake delay
+      router.push("/dashboard")
+    })
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md space-y-8 bg-white p-8 md:p-10 rounded-xl shadow-lg">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">Log In to Your Account</h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Welcome back! Please enter your credentials to continue.
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+          <div>
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              // required
+              placeholder="your@email.com"
+              className="mt-1"
+              value={formData.email}
+              onChange={handleInputChange}
+              disabled={isPending}
+            />
+          </div>
+          <div>
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              // required
+              placeholder="••••••••"
+              className="mt-1"
+              value={formData.password}
+              onChange={handleInputChange}
+              disabled={isPending}
+            />
+          </div>
+
+          <Button
+            type="submit"
+            className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
+            disabled={isPending}
+          >
+            {isPending ? "Logging In..." : "Log In"}
+          </Button>
+
+          {/* {state?.message && (
+            <p className={`text-sm text-center ${state.success ? "text-green-600" : "text-red-600"}`}>
+              {state.message}
+            </p>
+          )} */}
+        </form>
+        <div className="text-center text-sm text-gray-600">
+          Don't have an account?{" "}
+          <Link href="/onboarding" className="font-medium text-green-600 hover:text-green-500">
+            Sign Up
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+}
