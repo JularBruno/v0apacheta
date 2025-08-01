@@ -1,8 +1,9 @@
 "use client"
 
 import type * as React from "react"
-import { Home, Settings, HelpCircle, Map, History, Package } from "lucide-react" // Added Map, History, Package
-import { usePathname } from "next/navigation" // Import usePathname
+import { Home, Settings, HelpCircle, Map, History, Package, Wallet, LogOut } from "lucide-react" // Added Map, History, Package
+import { usePathname, useRouter } from "next/navigation"
+
 
 import {
   Sidebar,
@@ -29,13 +30,18 @@ const mainMenuItems = [
     icon: Home,
   },
   {
+    title: "Presupuesto", // New menu item
+    url: "/dashboard/presupuesto",
+    icon: Wallet, // Using Wallet icon for budget
+  },
+  {
     title: "Historial",
     url: "/dashboard/historial",
     icon: History,
   },
   {
-    title: "Assets",
-    url: "/dashboard/assets",
+    title: "Patrimonio",
+    url: "/dashboard/patrimonio",
     icon: Package,
   },
 ]
@@ -43,7 +49,7 @@ const mainMenuItems = [
 const secondaryMenuItems = [
   {
     title: "Configuración",
-    url: "/dashboard/settings",
+    url: "/dashboard/config",
     icon: Settings,
   },
   {
@@ -55,6 +61,13 @@ const secondaryMenuItems = [
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname() // Get current pathname
+  const router = useRouter()
+
+  const handleLogout = () => {
+    // In a real application, you would clear session tokens or call a logout API here
+    alert("Cerrando sesión (simulado)...")
+    router.push("/login") // Redirect to login page
+  }
 
   return (
     <Sidebar {...props}>
@@ -93,6 +106,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={handleLogout}>
+                  <LogOut />
+                  <span>Cerrar Sesión</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

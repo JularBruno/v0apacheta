@@ -2,11 +2,7 @@
 
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
-  Plus,
   Utensils,
   ShoppingCart,
   Car,
@@ -18,12 +14,10 @@ import {
   Briefcase,
   Plane,
   DollarSign,
-  Calendar,
-  Clock,
 } from "lucide-react"
-import { cn } from "@/lib/utils"
 import SpendingChart from "@/components/dashboard/spending-chart"
 import RecentExpenses from "@/components/dashboard/recent-expenses"
+import TransactionForm from "@/components/transaction-form" // Import the new form
 
 // Default categories with icons
 const defaultCategories = [
@@ -40,8 +34,7 @@ const defaultCategories = [
   { id: "ingreso", name: "Ingreso", icon: DollarSign, color: "bg-green-600" },
 ]
 
-interface Transaction {
-  id: string
+interface TransactionFormData {
   type: "gasto" | "ingreso"
   amount: number
   title: string
@@ -58,66 +51,12 @@ export default function InicioPage() {
     remaining: 800,
   })
 
-  // Transaction form state
-  const [step, setStep] = useState<"details" | "category">("details")
-  const [transactionType, setTransactionType] = useState<"gasto" | "ingreso">("gasto")
-  const [amount, setAmount] = useState("")
-  const [title, setTitle] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("")
-  const [categories, setCategories] = useState(defaultCategories)
-  const [newCategoryName, setNewCategoryName] = useState("")
-  const [showAddCategory, setShowAddCategory] = useState(false)
-
-  // Get current date and time
-  const now = new Date()
-  const currentDate = now.toLocaleDateString("es-AR")
-  const currentTime = now.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })
-
-  const handleNextStep = () => {
-    if (!amount || !title) {
-      alert("Por favor completa todos los campos")
-      return
-    }
-    setStep("category")
-  }
-
-  const handleBackStep = () => {
-    setStep("details")
-  }
-
-  const handleCategorySelect = (categoryId: string) => {
-    setSelectedCategory(categoryId)
-    // Here you would typically save the transaction
-    console.log("Transaction:", {
-      type: transactionType,
-      amount: Number.parseFloat(amount),
-      title,
-      category: categoryId,
-      date: currentDate,
-      time: currentTime,
-    })
-
-    // Reset form
-    setStep("details")
-    setAmount("")
-    setTitle("")
-    setSelectedCategory("")
+  // Transaction form state (now simplified as logic is in TransactionForm)
+  // We'll just use a placeholder for now, as the form is extracted
+  const handleTransactionComplete = (data: TransactionFormData) => {
+    console.log("Transaction completed:", data)
     alert("Transacción agregada exitosamente!")
-  }
-
-  const handleAddCategory = () => {
-    if (!newCategoryName.trim()) return
-
-    const newCategory = {
-      id: `custom-${Date.now()}`,
-      name: newCategoryName,
-      icon: Plus,
-      color: "bg-gray-400",
-    }
-
-    setCategories([...categories, newCategory])
-    setNewCategoryName("")
-    setShowAddCategory(false)
+    // Here you would typically save the transaction to a global state or backend
   }
 
   const progressPercentage = budget.total > 0 ? ((budget.total - budget.remaining) / budget.total) * 100 : 0
@@ -174,150 +113,13 @@ export default function InicioPage() {
           </CardContent>
         </Card>
 
-        {/* Add Transaction Section */}
+        {/* Add Transaction Section - Now uses the reusable TransactionForm */}
         <Card>
           <CardHeader>
             <CardTitle>Agregar Transacción</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {step === "details" && (
-              <>
-                {/* Transaction Type Toggle */}
-                <div className="flex bg-gray-100 rounded-lg p-1">
-                  <button
-                    onClick={() => setTransactionType("gasto")}
-                    className={cn(
-                      "flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors",
-                      transactionType === "gasto"
-                        ? "bg-white text-gray-900 shadow-sm"
-                        : "text-gray-600 hover:text-gray-900",
-                    )}
-                  >
-                    Gasto
-                  </button>
-                  <button
-                    onClick={() => setTransactionType("ingreso")}
-                    className={cn(
-                      "flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors",
-                      transactionType === "ingreso"
-                        ? "bg-white text-gray-900 shadow-sm"
-                        : "text-gray-600 hover:text-gray-900",
-                    )}
-                  >
-                    Ingreso
-                  </button>
-                </div>
-
-                {/* Amount Input */}
-                <div>
-                  <Label htmlFor="amount">Monto</Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                    <Input
-                      id="amount"
-                      type="number"
-                      placeholder="0"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      className="pl-8 text-2xl font-bold h-12"
-                    />
-                  </div>
-                </div>
-
-                {/* Title Input */}
-                <div>
-                  <Label htmlFor="title">Título</Label>
-                  <Input
-                    id="title"
-                    placeholder="Ingrese el título"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                  />
-                </div>
-
-                {/* Date and Time Display */}
-                <div className="flex items-center space-x-4 text-sm text-gray-600">
-                  <div className="flex items-center space-x-1">
-                    <Calendar className="w-4 h-4" />
-                    <span>Hoy</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <Clock className="w-4 h-4" />
-                    <span>{currentTime}</span>
-                  </div>
-                </div>
-
-                <Button onClick={handleNextStep} className="w-full">
-                  Continuar
-                </Button>
-              </>
-            )}
-
-            {step === "category" && (
-              <>
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Selecciona una Categoría</h3>
-                  <Button variant="ghost" size="sm" onClick={handleBackStep}>
-                    Atrás
-                  </Button>
-                </div>
-
-                {/* Categories Grid */}
-                <div className="grid grid-cols-3 gap-3">
-                  {categories.map((category) => (
-                    <button
-                      key={category.id}
-                      onClick={() => handleCategorySelect(category.id)}
-                      className="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      <div className={cn("w-12 h-12 rounded-lg flex items-center justify-center mb-2", category.color)}>
-                        <category.icon className="w-6 h-6 text-white" />
-                      </div>
-                      <span className="text-xs text-center font-medium">{category.name}</span>
-                    </button>
-                  ))}
-
-                  {/* Add New Category Button */}
-                  <button
-                    onClick={() => setShowAddCategory(true)}
-                    className="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition-colors border-2 border-dashed border-gray-300"
-                  >
-                    <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-2 bg-gray-200">
-                      <Plus className="w-6 h-6 text-gray-600" />
-                    </div>
-                    <span className="text-xs text-center font-medium text-gray-600">Agregar</span>
-                  </button>
-                </div>
-
-                {/* Add New Category Form */}
-                {showAddCategory && (
-                  <div className="border-t pt-4 space-y-3">
-                    <Label htmlFor="newCategory">Nueva Categoría</Label>
-                    <div className="flex space-x-2">
-                      <Input
-                        id="newCategory"
-                        placeholder="Nombre de la categoría"
-                        value={newCategoryName}
-                        onChange={(e) => setNewCategoryName(e.target.value)}
-                      />
-                      <Button onClick={handleAddCategory} size="sm">
-                        Agregar
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setShowAddCategory(false)
-                          setNewCategoryName("")
-                        }}
-                      >
-                        Cancelar
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
+          <CardContent>
+            <TransactionForm onComplete={handleTransactionComplete} onCancel={() => console.log("Cancelled")} />
           </CardContent>
         </Card>
       </div>

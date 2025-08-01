@@ -14,11 +14,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         return "Mapa"
       case "/dashboard/inicio":
         return "Inicio"
+      case "/dashboard/presupuesto": 
+        return "Presupuesto"
       case "/dashboard/historial":
         return "Historial"
-      case "/dashboard/assets":
-        return "Assets"
-      case "/dashboard/settings":
+      case "/dashboard/patrimonio":
+        return "Patrimonio"
+      case "/dashboard/config":
         return "Configuración"
       case "/dashboard/help":
         return "Ayuda"
