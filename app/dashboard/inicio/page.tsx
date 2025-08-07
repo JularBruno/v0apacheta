@@ -20,6 +20,7 @@ import TransactionForm from "@/components/transaction-form"
 import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress" // Import Progress component
+import QuickSpendCard, { type QuickSpendData } from "@/components/transactions/quick-spend-card"
 
 // Default categories with icons (kept for TransactionForm)
 const defaultCategories = [
@@ -63,7 +64,7 @@ export default function InicioPage() {
   const upcomingPayments: PaymentItem[] = [
     { id: "1", name: "Alquiler", amount: 500, dueDate: "01/mes" },
     { id: "2", name: "Internet", amount: 30, dueDate: "15/mes" },
-    { id: "3", name: "Electricidad", amount: 70, dueDate: "20/mes" },
+    // { id: "3", name: {/* Mock data */}"Electricidad", amount: 70, dueDate: "20/mes" },
   ]
 
   // Calculate daily spending suggestion (mock for now, assuming 4 days remaining)
@@ -80,7 +81,7 @@ export default function InicioPage() {
     <div className="space-y-6">
       {/* Budget Overview (existing small cards) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
+        {/* <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Banco</CardTitle>
           </CardHeader>
@@ -88,7 +89,7 @@ export default function InicioPage() {
             <div className="text-2xl font-bold">$0 USD</div>
             <p className="text-sm text-gray-500">0 transacciones</p>
           </CardContent>
-        </Card>
+        </Card> */}
 
         <Card>
           <CardHeader className="pb-2">
@@ -99,7 +100,16 @@ export default function InicioPage() {
             <p className="text-sm text-gray-500">Balance actual</p>
           </CardContent>
         </Card>
+
       </div>
+
+      <QuickSpendCard
+        onAdd={(data: QuickSpendData) => {
+          console.log("Quick spend:", data)
+          alert(`${data.type === "ingreso" ? "Ingreso" : "Gasto"} • ${data.amount} • ${data.tagId}`)
+          // TODO: push to your store/backend and refresh recent lists
+        }}
+      />
 
       {/* Combined Financial Summary & Upcoming Payments Card AND Add Transaction Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -128,16 +138,19 @@ export default function InicioPage() {
                 Puede gastar ${dailySpendSuggestion.toFixed(2)}/día para {daysRemaining} más días
               </p>
             </div>
-            <Separator /> {/* Separator between budget progress and net worth */}
+
+            {/* Separator between budget progress and net worth */}
             {/* Net Worth Summary Section */}
+            {/* <Separator /> 
+            
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center">
                 <p className="text-sm text-gray-500">Activos Totales</p>
-                <p className="text-2xl font-bold text-green-600">${(1500 + 5000 + 200).toFixed(2)}</p> {/* Mock data */}
+                <p className="text-2xl font-bold text-green-600">${(1500 + 5000 + 200).toFixed(2)}</p> 
               </div>
               <div className="text-center">
                 <p className="text-sm text-gray-500">Pasivos Totales</p>
-                <p className="text-2xl font-bold text-red-600">-${(300 + 1200).toFixed(2)}</p> {/* Mock data */}
+                <p className="text-2xl font-bold text-red-600">-${(300 + 1200).toFixed(2)}</p> 
               </div>
               <div className="text-center">
                 <p className="text-sm text-gray-500">Patrimonio Neto</p>
@@ -150,7 +163,8 @@ export default function InicioPage() {
                   ${(1500 + 5000 + 200 - 300 - 1200).toFixed(2)}
                 </p>
               </div>
-            </div>
+            </div> */}
+
             <Separator /> {/* Separator between net worth and payments */}
             {/* Upcoming Payments Section */}
             <div>
@@ -186,14 +200,16 @@ export default function InicioPage() {
         </Card>
 
         {/* Right Column: Add Transaction Section */}
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle>Agregar Transacción</CardTitle>
           </CardHeader>
           <CardContent>
             <TransactionForm onComplete={handleTransactionComplete} onCancel={() => console.log("Cancelled")} />
           </CardContent>
-        </Card>
+        </Card> */}
+
+        
       </div>
 
       {/* Bottom Section: Recent Expenses and Spending Chart (existing) */}

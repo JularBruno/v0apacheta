@@ -126,7 +126,7 @@ export default function TransactionForm({ onComplete, onCancel, initialType = "g
               onClick={() => setTransactionType("gasto")}
               className={cn(
                 "flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors",
-                transactionType === "gasto" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900",
+                transactionType === "gasto" ? "bg-gray-700 text-white shadow-sm" : "text-gray-600 hover:text-gray-900",
               )}
             >
               Gasto
@@ -136,7 +136,7 @@ export default function TransactionForm({ onComplete, onCancel, initialType = "g
               className={cn(
                 "flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors",
                 transactionType === "ingreso"
-                  ? "bg-white text-gray-900 shadow-sm"
+                  ? "bg-gray-700 text-white shadow-sm"
                   : "text-gray-600 hover:text-gray-900",
               )}
             >

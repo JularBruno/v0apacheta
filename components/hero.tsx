@@ -15,8 +15,11 @@ export default function Hero() {
 
           {/* Título principal */}
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6">
-            Alfabetización
-            <span className="block text-green-600">Financiera</span>
+            El mapa para llegar a
+            {/* <span className="block text-green-600">A fin de mes</span>
+            <span className="block text-green-600">A ahorrar</span>
+            <span className="block text-green-600">A seguir tus inversiones</span> */}
+            <span className="block text-green-600">entender mejor tu dinero</span>
           </h1>
 
           {/* Subtítulo */}

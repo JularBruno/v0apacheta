@@ -31,7 +31,7 @@
     --radius: 0.5rem;
 
     /* Sidebar Colors - More vibrant greens */
-    --sidebar-background: 149 80% 15%; /* Darker green */
+    --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 0 0% 98%; /* White */
     --sidebar-primary: 0 0% 98%;
     --sidebar-primary-foreground: 149 80% 15%;
@@ -92,4 +92,37 @@
 
 html {
   scroll-behavior: smooth;
+}
+
+
+/* Sidebar mobile fixes */
+@media (max-width: 768px) {
+  [data-sidebar="sidebar"] {
+    background-color: hsl(var(--sidebar-background)) !important;
+  }
+  
+  [data-sidebar="sidebar"][data-state="open"] {
+    background-color: hsl(var(--sidebar-background)) !important;
+    backdrop-filter: blur(8px);
+  }
+}
+
+/* Sidebar trigger visibility */
+[data-sidebar="trigger"] {
+  background-color: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--foreground));
+}
+
+[data-sidebar="trigger"]:hover {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+/* Enhanced active state for sidebar items */
+[data-sidebar="menu-button"][data-active="true"] {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
