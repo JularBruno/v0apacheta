@@ -1,11 +1,39 @@
 "use client"
 
+import type React from "react"
+
 import { useMemo, useRef, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { Utensils, ShoppingCart, Car, Home, Gamepad2, Zap, Gift, Sparkles, Briefcase, Plane, DollarSign, Coffee, Heart, Music, Camera, Book, Dumbbell, Palette, Wrench, Smartphone, Laptop, Settings, Plus } from 'lucide-react'
+import {
+  Utensils,
+  ShoppingCart,
+  Car,
+  Home,
+  Gamepad2,
+  Zap,
+  Gift,
+  Sparkles,
+  Briefcase,
+  Plane,
+  DollarSign,
+  Coffee,
+  Heart,
+  Music,
+  Camera,
+  Book,
+  Dumbbell,
+  Palette,
+  Wrench,
+  Smartphone,
+  Laptop,
+  Settings,
+  Plus,
+  Edit,
+  Trash2,
+} from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -135,7 +163,7 @@ export default function QuickSpendCard({
   const [selectedIncomeCat, setSelectedIncomeCat] = useState<string>(incomeCats[0]?.id || "trabajo")
   const categoryId = type === "gasto" ? selectedExpenseCat : selectedIncomeCat
 
-  // Tags (global suggestions; not filtered by category)
+  // Tags (global suggestions; not filtered by category initially)
   const [allTags, setAllTags] = useState<Tag[]>(initialTags)
   const [tagId, setTagId] = useState<string>("")
   const [tagInput, setTagInput] = useState<string>("")
@@ -179,10 +207,12 @@ export default function QuickSpendCard({
   }
 
   const matchingSuggestions = useMemo(() => {
-    const q = tagInput.toLowerCase().trim()
-    if (!q) return allTags.slice(0, 8)
-    return allTags.filter((t) => t.name.toLowerCase().includes(q)).slice(0, 12)
-  }, [allTags, tagInput])
+    return allTags.slice(0, 12)
+  }, [allTags])
+
+  const matchingSuggestionsMobile = useMemo(() => {
+    return allTags.slice(0, 4)
+  }, [allTags])
 
   const selectTag = (id: string) => {
     const t = allTags.find((tg) => tg.id === id)
@@ -303,7 +333,7 @@ export default function QuickSpendCard({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => (onManageCategories ? onManageCategories() : console.log("Gestionar categorías"))}
+          onClick={() => setShowManageCategories(true)}
           className="flex items-center gap-1"
         >
           <Settings className="w-4 h-4" />
@@ -314,7 +344,7 @@ export default function QuickSpendCard({
   )
 
   const CategoryGrid = ({ items }: { items: Category[] }) => (
-    <div className={cn("grid gap-2", "grid-cols-2 md:grid-cols-3 lg:grid-cols-5")}>
+    <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-5">
       {items.map((c) => {
         const Icon = c.icon
         const active = categoryId === c.id
@@ -323,14 +353,16 @@ export default function QuickSpendCard({
             key={c.id}
             onClick={() => setCategory(c.id)}
             className={cn(
-              "p-2 rounded-lg border flex items-center gap-2",
-              active ? "border-primary-600 bg-primary-50" : "border-gray-200 hover:bg-gray-50",
+              "p-2 rounded-lg border flex items-center gap-2 transition-colors text-left min-w-0",
+              active
+                ? "border-blue-600 bg-blue-50 ring-2 ring-blue-200"
+                : "border-gray-200 hover:bg-gray-50 hover:border-gray-300",
             )}
           >
-            <span className={cn("w-6 h-6 rounded-md flex items-center justify-center", c.color)}>
+            <span className={cn("w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0", c.color)}>
               <Icon className="w-3.5 h-3.5 text-white" />
             </span>
-            <span className="text-sm">{c.name}</span>
+            <span className="text-sm truncate">{c.name}</span>
           </button>
         )
       })}
@@ -369,12 +401,12 @@ export default function QuickSpendCard({
           />
         </div>
 
-        {/* Desktop suggestions with “Nuevo” pill */}
+        {/* Desktop suggestions with "Nuevo" pill */}
         <div id={listId} role="listbox" className="hidden md:flex md:flex-wrap gap-2">
           <button
             type="button"
             onClick={clearToNew}
-            className="px-3 py-1.5 rounded-full border text-sm border-primary-600 bg-primary-50 text-primary-700 hover:bg-primary-100"
+            className="px-3 py-1.5 rounded-full border text-sm border-blue-600 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
             aria-label="Crear nuevo tag"
             role="option"
             aria-selected={tagId === ""}
@@ -388,8 +420,10 @@ export default function QuickSpendCard({
               aria-selected={t.id === tagId}
               onClick={() => selectTag(t.id)}
               className={cn(
-                "px-3 py-1.5 rounded-full border text-sm",
-                t.id === tagId ? "border-primary-600 bg-primary-50" : "border-gray-200 hover:bg-gray-50",
+                "px-3 py-1.5 rounded-full border text-sm transition-colors",
+                t.id === tagId
+                  ? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-200"
+                  : "border-gray-200 hover:bg-gray-50 hover:border-gray-300",
               )}
             >
               {t.name} <span className="text-xs text-gray-500 ml-1">${t.defaultAmount}</span>
@@ -397,32 +431,40 @@ export default function QuickSpendCard({
           ))}
         </div>
 
-        {/* Mobile suggestions with “Nuevo” pill */}
-        <div role="listbox" className="md:hidden flex gap-2 overflow-x-auto pb-1">
-          <button
-            type="button"
-            onClick={clearToNew}
-            className="shrink-0 px-3 py-1.5 rounded-full border text-sm border-primary-600 bg-primary-50 text-primary-700"
-            aria-label="Crear nuevo tag"
-            role="option"
-            aria-selected={tagId === ""}
-          >
-            Nuevo
-          </button>
-          {matchingSuggestions.map((t) => (
+        {/* Mobile suggestions with "Nuevo" pill */}
+        <div role="listbox" className="md:hidden">
+          <div 
+          // className="flex gap-2 overflow-x-auto pb-2" 
+              className="flex flex-col sm:flex-row gap-2 pb-2"
+
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
             <button
-              key={t.id}
+              type="button"
+              onClick={clearToNew}
+              className="shrink-0 px-3 py-1.5 rounded-full border text-sm border-blue-600 bg-blue-50 text-blue-700 transition-colors"
+              aria-label="Crear nuevo tag"
               role="option"
-              aria-selected={t.id === tagId}
-              onClick={() => selectTag(t.id)}
-              className={cn(
-                "shrink-0 px-3 py-1.5 rounded-full border text-sm",
-                t.id === tagId ? "border-primary-600 bg-primary-50" : "border-gray-200",
-              )}
+              aria-selected={tagId === ""}
             >
-              {t.name} <span className="text-xs text-gray-500 ml-1">${t.defaultAmount}</span>
+              Nuevo
             </button>
-          ))}
+            {matchingSuggestionsMobile.map((t) => (
+              <button
+                key={t.id}
+                role="option"
+                aria-selected={t.id === tagId}
+                onClick={() => selectTag(t.id)}
+                className={cn(
+                  "shrink-0 px-3 py-1.5 rounded-full border text-sm transition-colors whitespace-nowrap",
+                  t.id === tagId
+                    ? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-200"
+                    : "border-gray-200 hover:bg-gray-50 hover:border-gray-300",
+                )}
+              >
+                {t.name} <span className="text-xs text-gray-500 ml-1">${t.defaultAmount}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     )
@@ -465,67 +507,131 @@ export default function QuickSpendCard({
     announce(`Categoría ${cat.name} creada`)
   }
 
+  // Manage Categories dialog state and handlers
+  const [showManageCategories, setShowManageCategories] = useState(false)
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null)
+  const [editCatName, setEditCatName] = useState("")
+  const [editCatIconId, setEditCatIconId] = useState("")
+  const [editCatColorId, setEditCatColorId] = useState("")
+
+  const startEditCategory = (cat: Category) => {
+    setEditingCategory(cat)
+    setEditCatName(cat.name)
+    const iconObj = availableIcons.find((i) => i.icon === cat.icon)
+    setEditCatIconId(iconObj?.id || availableIcons[0].id)
+    const colorObj = availableColors.find((c) => c.class === cat.color)
+    setEditCatColorId(colorObj?.id || availableColors[0].id)
+  }
+
+  const saveEditCategory = () => {
+    if (!editingCategory || !editCatName.trim()) return
+
+    const iconObj = availableIcons.find((i) => i.id === editCatIconId) || availableIcons[0]
+    const colorObj = availableColors.find((c) => c.id === editCatColorId) || availableColors[0]
+
+    const updatedCat: Category = {
+      ...editingCategory,
+      name: editCatName.trim(),
+      icon: iconObj.icon,
+      color: colorObj.class,
+    }
+
+    setCats((prev) => prev.map((c) => (c.id === editingCategory.id ? updatedCat : c)))
+    setEditingCategory(null)
+    announce(`Categoría ${updatedCat.name} actualizada`)
+  }
+
+  const deleteCategory = (catId: string) => {
+    const cat = cats.find((c) => c.id === catId)
+    if (!cat) return
+
+    // Check if there are tags using this category
+    const relatedTags = allTags.filter((t) => t.categoryId === catId)
+    if (relatedTags.length > 0) {
+      const confirmDelete = confirm(
+        `Esta categoría tiene ${relatedTags.length} tag(s) asociado(s). ¿Estás seguro de que quieres eliminarla? Esto también eliminará todos los tags asociados.`,
+      )
+      if (!confirmDelete) return
+
+      // Remove related tags
+      setAllTags((prev) => prev.filter((t) => t.categoryId !== catId))
+    }
+
+    setCats((prev) => prev.filter((c) => c.id !== catId))
+
+    // Reset selection if deleted category was selected
+    if (categoryId === catId) {
+      const remaining = cats.filter((c) => c.id !== catId && c.kind === type)
+      if (remaining.length > 0) {
+        if (type === "gasto") setSelectedExpenseCat(remaining[0].id)
+        else setSelectedIncomeCat(remaining[0].id)
+      }
+    }
+
+    announce(`Categoría ${cat.name} eliminada`)
+  }
+
   const shownCategories = type === "gasto" ? expenseCats : incomeCats
 
   return (
-    <Card>
+    <Card className="w-full max-w-none">
       <CardHeader>
         <CardTitle className="text-base">Agregar transacción</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 p-4">
         {/* A11y live region */}
         <div ref={liveRegionRef} className="sr-only" aria-live="polite" aria-atomic="true"></div>
 
-        {/* Type selector */}
-        <div className="flex bg-gray-100 rounded-lg p-1" role="tablist" aria-label="Tipo de transacción">
+        {/* Type selector - Big buttons */}
+        <div className="grid grid-cols-2 gap-2" role="tablist" aria-label="Tipo de transacción">
           <button
             role="tab"
             aria-selected={type === "gasto"}
             onClick={() => switchType("gasto")}
             className={cn(
-              "flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors",
+              "py-3 px-4 rounded-lg text-base font-semibold transition-all border-2 md:py-4 md:px-6 md:text-lg",
               type === "gasto"
-                ? "bg-white text-gray-900 shadow-sm border border-gray-200"
-                : "text-gray-600 hover:text-gray-900",
+                ? "bg-red-50 border-red-500 text-red-700 shadow-md"
+                : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100",
             )}
           >
-            Gasto
+            <span className="block sm:inline">💸</span> Gasto
           </button>
           <button
             role="tab"
             aria-selected={type === "ingreso"}
             onClick={() => switchType("ingreso")}
             className={cn(
-              "flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors",
+              "py-3 px-4 rounded-lg text-base font-semibold transition-all border-2 md:py-4 md:px-6 md:text-lg",
               type === "ingreso"
-                ? "bg-white text-gray-900 shadow-sm border border-gray-200"
-                : "text-gray-600 hover:text-gray-900",
+                ? "bg-green-50 border-green-500 text-green-700 shadow-md"
+                : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100",
             )}
           >
-            Ingreso
+            <span className="block sm:inline">💰</span> Ingreso
           </button>
         </div>
 
         {/* Category: mobile header */}
         <div className="md:hidden flex items-center justify-between">
           <Label className="text-sm text-gray-600">Categoría</Label>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setShowCreateCategory(true)}
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 text-xs px-2 py-1"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3 h-3" />
               Nueva
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => (onManageCategories ? onManageCategories() : console.log("Gestionar categorías"))}
-              className="flex items-center gap-1"
+              onClick={() => setShowManageCategories(true)}
+              className="flex items-center gap-1 text-xs px-2 py-1"
             >
-              <Settings className="w-4 h-4" />
+              <Settings className="w-3 h-3" />
               Gestionar
             </Button>
           </div>
@@ -544,13 +650,14 @@ export default function QuickSpendCard({
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
             <Input
+              id="amount-input"
               aria-label="Monto"
               inputMode="decimal"
               pattern="[0-9]*"
               enterKeyHint="done"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="pl-8 h-12 text-2xl font-semibold"
+              className="pl-8 h-12 text-xl font-semibold md:text-2xl"
               placeholder="0"
             />
           </div>
@@ -563,7 +670,7 @@ export default function QuickSpendCard({
 
       {/* Create Category Dialog */}
       <Dialog open={showCreateCategory} onOpenChange={setShowCreateCategory}>
-        <DialogContent>
+        <DialogContent className="w-[95vw] max-w-md">
           <DialogHeader>
             <DialogTitle>Nueva categoría</DialogTitle>
           </DialogHeader>
@@ -598,9 +705,9 @@ export default function QuickSpendCard({
             </div>
 
             <div>
-              <Label htmlFor="cat-name">Nombre</Label>
+              <Label htmlFor="new-cat-name">Nombre</Label>
               <Input
-                id="cat-name"
+                id="new-cat-name"
                 placeholder="Ej: Mascotas"
                 value={newCatName}
                 onChange={(e) => setNewCatName(e.target.value)}
@@ -639,7 +746,11 @@ export default function QuickSpendCard({
                     <button
                       key={c.id}
                       onClick={() => setNewCatColorId(c.id)}
-                      className={cn("w-8 h-8 rounded-full border-2", c.class, active ? "border-gray-900" : "border-white")}
+                      className={cn(
+                        "w-8 h-8 rounded-full border-2",
+                        c.class,
+                        active ? "border-gray-900" : "border-white",
+                      )}
                       title={c.name}
                     />
                   )
@@ -652,6 +763,133 @@ export default function QuickSpendCard({
               Cancelar
             </Button>
             <Button onClick={createCategory}>Crear</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manage Categories Dialog */}
+      <Dialog open={showManageCategories} onOpenChange={() => setShowManageCategories(false)}>
+        <DialogContent className="w-[95vw] max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Gestionar Categorías</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2 max-h-96 overflow-y-auto">
+            {cats.map((cat) => {
+              const Icon = cat.icon
+              const isEditing = editingCategory?.id === cat.id
+              const relatedTagsCount = allTags.filter((t) => t.categoryId === cat.id).length
+
+              return (
+                <div key={cat.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <span
+                      className={cn("w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0", cat.color)}
+                    >
+                      <Icon className="w-4 h-4 text-white" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium truncate">{cat.name}</p>
+                      <p className="text-sm text-gray-500">
+                        {cat.kind === "gasto" ? "Gasto" : "Ingreso"} • {relatedTagsCount} tag(s)
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => startEditCategory(cat)}
+                      className="flex items-center gap-1 text-xs px-2 py-1"
+                    >
+                      <Edit className="w-3 h-3" />
+                      <span className="hidden sm:inline">Editar</span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deleteCategory(cat.id)}
+                      className="flex items-center gap-1 text-red-600 hover:text-red-700 text-xs px-2 py-1"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span className="hidden sm:inline">Eliminar</span>
+                    </Button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowManageCategories(false)}>Cerrar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Category Dialog */}
+      <Dialog open={!!editingCategory} onOpenChange={() => setEditingCategory(null)}>
+        <DialogContent className="w-[95vw] max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar Categoría</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label htmlFor="edit-cat-name">Nombre</Label>
+              <Input
+                id="edit-cat-name"
+                placeholder="Nombre de la categoría"
+                value={editCatName}
+                onChange={(e) => setEditCatName(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label>Ícono</Label>
+              <div className="grid grid-cols-5 gap-2 mt-2">
+                {availableIcons.map((i) => {
+                  const Icon = i.icon
+                  const active = editCatIconId === i.id
+                  return (
+                    <button
+                      key={i.id}
+                      onClick={() => setEditCatIconId(i.id)}
+                      className={cn(
+                        "p-2 rounded-lg border flex items-center justify-center",
+                        active ? "border-primary-600 bg-primary-50" : "border-gray-200 hover:bg-gray-50",
+                      )}
+                      title={i.name}
+                    >
+                      <Icon className="w-5 h-5" />
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div>
+              <Label>Color</Label>
+              <div className="grid grid-cols-8 gap-2 mt-2">
+                {availableColors.map((c) => {
+                  const active = editCatColorId === c.id
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={() => setEditCatColorId(c.id)}
+                      className={cn(
+                        "w-8 h-8 rounded-full border-2",
+                        c.class,
+                        active ? "border-gray-900" : "border-white",
+                      )}
+                      title={c.name}
+                    />
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingCategory(null)}>
+              Cancelar
+            </Button>
+            <Button onClick={saveEditCategory}>Guardar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

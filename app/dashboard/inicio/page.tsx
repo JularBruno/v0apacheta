@@ -81,7 +81,7 @@ export default function InicioPage() {
     <div className="space-y-6">
       {/* Budget Overview (existing small cards) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* <Card>
+        <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Banco</CardTitle>
           </CardHeader>
@@ -89,9 +89,9 @@ export default function InicioPage() {
             <div className="text-2xl font-bold">$0 USD</div>
             <p className="text-sm text-gray-500">0 transacciones</p>
           </CardContent>
-        </Card> */}
+        </Card>
 
-        <Card>
+        {/* <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Cuenta</CardTitle>
           </CardHeader>
@@ -99,10 +99,10 @@ export default function InicioPage() {
             <div className="text-2xl font-bold">$0</div>
             <p className="text-sm text-gray-500">Balance actual</p>
           </CardContent>
-        </Card>
+        </Card> */}
 
       </div>
-
+      
       <QuickSpendCard
         onAdd={(data: QuickSpendData) => {
           console.log("Quick spend:", data)
@@ -110,6 +110,7 @@ export default function InicioPage() {
           // TODO: push to your store/backend and refresh recent lists
         }}
       />
+
 
       {/* Combined Financial Summary & Upcoming Payments Card AND Add Transaction Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -217,6 +218,7 @@ export default function InicioPage() {
         <RecentExpenses />
         <SpendingChart />
       </div>
+
     </div>
   )
 }
