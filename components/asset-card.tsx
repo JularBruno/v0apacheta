@@ -1,82 +1,132 @@
 "use client"
 
-import { useState } from "react" // Import useState
-import { Card, CardContent } from "@/components/ui/card"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ArrowUpCircle, ArrowDownCircle, Edit, Trash2, History, ChevronDown, ChevronUp } from "lucide-react" // Added Chevron icons
+import { Badge } from "@/components/ui/badge"
+import { TrendingUp, TrendingDown, Eye, Plus, Minus } from "lucide-react"
 import { cn } from "@/lib/utils"
-import AssetHistoryList from "./asset-history-list" // Import the new history list component
 
-interface FinancialItem {
+interface AssetCardProps {
   id: string
   name: string
   type: "asset" | "liability"
   currentValue: number
+  change?: number
+  changePercent?: number
+  history?: Array<{ date: string; value: number }>
 }
 
-interface AssetCardProps {
-  item: FinancialItem
-  onEdit: (item: FinancialItem) => void
-  onDelete: (id: string) => void
-  onAddIncome: (item: FinancialItem) => void
-  onAddExpense: (item: FinancialItem) => void
-  // onViewHistory prop is removed as history is now internal
-}
+export default function AssetCard({ id, name, type, currentValue, change, changePercent, history }: AssetCardProps) {
+  const router = useRouter()
+  const [isExpanded, setIsExpanded] = useState(false)
 
-export default function AssetCard({ item, onEdit, onDelete, onAddIncome, onAddExpense }: AssetCardProps) {
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false) // State to manage history visibility
-
-  const isAsset = item.type === "asset"
+  const isAsset = type === "asset"
+  const isPositiveChange = (change || 0) >= 0
   const valueColorClass = isAsset ? "text-green-600" : "text-red-600"
+  const changeColorClass = isPositiveChange ? "text-green-600" : "text-red-600"
   const valuePrefix = isAsset ? "$" : "-$"
+
+  const handleIncomeClick = () => {
+    router.push(`/dashboard/patrimonio/${id}?action=ingreso`)
+  }
+
+  const handleExpenseClick = () => {
+    router.push(`/dashboard/patrimonio/${id}?action=gasto`)
+  }
+
+  const handleViewDetails = () => {
+    router.push(`/dashboard/patrimonio/${id}`)
+  }
 
   return (
     <Card className="w-full">
-      <CardContent className="p-4 flex flex-col gap-4">
-        {/* Main Card Content */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex-grow">
-            <h3 className="text-lg font-semibold text-gray-900">{item.name}</h3>
-            <p className="text-sm text-gray-500 capitalize">{item.type === "asset" ? "Activo" : "Pasivo"}</p>
-            <p className={cn("text-xl font-bold mt-1", valueColorClass)}>
-              {valuePrefix}
-              {item.currentValue.toFixed(2)}
-            </p>
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="min-w-0 flex-1">
+            <CardTitle className="text-lg font-semibold text-gray-900 truncate">{name}</CardTitle>
+            <Badge variant="outline" className="mt-1 text-xs">
+              {isAsset ? "Activo" : "Pasivo"}
+            </Badge>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-            <Button variant="outline" size="sm" onClick={() => onAddIncome(item)} className="flex items-center gap-1">
-              <ArrowUpCircle className="w-4 h-4" />
-              Ingreso
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => onAddExpense(item)} className="flex items-center gap-1">
-              <ArrowDownCircle className="w-4 h-4" />
-              Gasto
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsHistoryOpen(!isHistoryOpen)} // Toggle history visibility
-              className="flex items-center gap-1"
-            >
-              <History className="w-4 h-4" />
-              Historial
-              {isHistoryOpen ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => onEdit(item)}>
-              <Edit className="w-4 h-4" />
-              <span className="sr-only">Editar</span>
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => onDelete(item.id)}>
-              <Trash2 className="w-4 h-4 text-red-500" />
-              <span className="sr-only">Eliminar</span>
-            </Button>
+          <div className="text-right">
+            <p className={cn("text-2xl font-bold", valueColorClass)}>
+              {valuePrefix}
+              {currentValue.toFixed(2)}
+            </p>
+            {change !== undefined && changePercent !== undefined && (
+              <div className={cn("flex items-center justify-end gap-1 text-sm", changeColorClass)}>
+                {isPositiveChange ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                <span>
+                  {isPositiveChange ? "+" : ""}
+                  {change.toFixed(2)} ({isPositiveChange ? "+" : ""}
+                  {changePercent.toFixed(1)}%)
+                </span>
+              </div>
+            )}
           </div>
         </div>
+      </CardHeader>
 
-        {/* Collapsible History Section */}
-        {isHistoryOpen && (
-          <div className="w-full">
-            <AssetHistoryList assetId={item.id} />
+      <CardContent className="pt-0">
+        {/* Action Buttons */}
+        <div className="grid grid-cols-2 gap-2 mb-4 md:grid-cols-4">
+          <Button
+            onClick={handleIncomeClick}
+            size="sm"
+            className="bg-green-500 hover:bg-green-600 text-white flex items-center gap-1"
+          >
+            <Plus className="w-3 h-3" />
+            <span className="hidden sm:inline">Ingreso</span>
+          </Button>
+          <Button
+            onClick={handleExpenseClick}
+            size="sm"
+            variant="outline"
+            className="border-red-200 text-red-600 hover:bg-red-50 flex items-center gap-1 bg-transparent"
+          >
+            <Minus className="w-3 h-3" />
+            <span className="hidden sm:inline">Gasto</span>
+          </Button>
+          <Button
+            onClick={handleViewDetails}
+            size="sm"
+            variant="outline"
+            className="col-span-2 md:col-span-2 flex items-center gap-1 bg-transparent"
+          >
+            <Eye className="w-3 h-3" />
+            Ver Detalles
+          </Button>
+        </div>
+
+        {/* History - Hidden on mobile */}
+        {history && history.length > 0 && (
+          <div className="hidden lg:block">
+            <div className="border-t pt-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700">Historial Reciente</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="text-xs px-2 py-1"
+                >
+                  {isExpanded ? "Ocultar" : "Ver más"}
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {(isExpanded ? history : history.slice(0, 3)).map((entry, index) => (
+                  <div key={index} className="flex justify-between items-center text-sm">
+                    <span className="text-gray-500">{entry.date}</span>
+                    <span className={cn("font-medium", valueColorClass)}>
+                      {valuePrefix}
+                      {entry.value.toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </CardContent>

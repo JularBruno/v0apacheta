@@ -33,6 +33,7 @@ import {
   Plus,
   Edit,
   Trash2,
+  X,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -146,12 +147,16 @@ export default function QuickSpendCard({
   onAdd,
   defaultType = "gasto",
   onManageCategories,
+  initialType,
+  onCancel,
 }: {
   onAdd: (data: QuickSpendData) => void
   defaultType?: TxType
   onManageCategories?: () => void
+  initialType?: TxType
+  onCancel?: () => void
 }) {
-  const [type, setType] = useState<TxType>(defaultType)
+  const [type, setType] = useState<TxType>(initialType || defaultType)
 
   // Categories state (allows creation)
   const [cats, setCats] = useState<Category[]>(initialCategories)
@@ -353,16 +358,18 @@ export default function QuickSpendCard({
             key={c.id}
             onClick={() => setCategory(c.id)}
             className={cn(
-              "p-2 rounded-lg border flex items-center gap-2 transition-colors text-left min-w-0",
+              "p-3 rounded-lg border flex items-center gap-2 transition-all text-left min-w-0",
               active
-                ? "border-blue-600 bg-blue-50 ring-2 ring-blue-200"
-                : "border-gray-200 hover:bg-gray-50 hover:border-gray-300",
+                ? "border-blue-600 bg-blue-50 ring-2 ring-blue-200 shadow-md"
+                : "border-gray-200 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm",
             )}
           >
-            <span className={cn("w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0", c.color)}>
-              <Icon className="w-3.5 h-3.5 text-white" />
+            <span className={cn("w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0", c.color)}>
+              <Icon className="w-4 h-4 text-white" />
             </span>
-            <span className="text-sm truncate">{c.name}</span>
+            <span className={cn("text-sm font-medium truncate", active ? "text-blue-900" : "text-gray-700")}>
+              {c.name}
+            </span>
           </button>
         )
       })}
@@ -420,10 +427,10 @@ export default function QuickSpendCard({
               aria-selected={t.id === tagId}
               onClick={() => selectTag(t.id)}
               className={cn(
-                "px-3 py-1.5 rounded-full border text-sm transition-colors",
+                "px-3 py-1.5 rounded-full border text-sm transition-all",
                 t.id === tagId
-                  ? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-200"
-                  : "border-gray-200 hover:bg-gray-50 hover:border-gray-300",
+                  ? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-200 shadow-md"
+                  : "border-gray-200 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm",
               )}
             >
               {t.name} <span className="text-xs text-gray-500 ml-1">${t.defaultAmount}</span>
@@ -433,20 +440,22 @@ export default function QuickSpendCard({
 
         {/* Mobile suggestions with "Nuevo" pill */}
         <div role="listbox" className="md:hidden">
-          <div 
-          // className="flex gap-2 overflow-x-auto pb-2" 
-              className="flex flex-col sm:flex-row gap-2 pb-2"
-
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
+          <div className="flex flex-col sm:flex-row gap-2 pb-2">
             <button
               type="button"
               onClick={clearToNew}
-              className="shrink-0 px-3 py-1.5 rounded-full border text-sm border-blue-600 bg-blue-50 text-blue-700 transition-colors"
+              // className="shrink-0 px-3 py-1.5 rounded-full border text-sm  transition-colors"
+              className={cn(
+                  "shrink-0 px-3 py-1.5 rounded-full border text-sm transition-all whitespace-nowrap",
+                  tagId === ""
+                    ? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-200 shadow-md"
+                    : "border-gray-200 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm",
+                )}
               aria-label="Crear nuevo tag"
               role="option"
               aria-selected={tagId === ""}
             >
-              Nuevo
+              Nuevo +
             </button>
             {matchingSuggestionsMobile.map((t) => (
               <button
@@ -455,10 +464,10 @@ export default function QuickSpendCard({
                 aria-selected={t.id === tagId}
                 onClick={() => selectTag(t.id)}
                 className={cn(
-                  "shrink-0 px-3 py-1.5 rounded-full border text-sm transition-colors whitespace-nowrap",
+                  "shrink-0 px-3 py-1.5 rounded-full border text-sm transition-all whitespace-nowrap",
                   t.id === tagId
-                    ? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-200"
-                    : "border-gray-200 hover:bg-gray-50 hover:border-gray-300",
+                    ? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-200 shadow-md"
+                    : "border-gray-200 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm",
                 )}
               >
                 {t.name} <span className="text-xs text-gray-500 ml-1">${t.defaultAmount}</span>
@@ -576,7 +585,14 @@ export default function QuickSpendCard({
   return (
     <Card className="w-full max-w-none">
       <CardHeader>
-        <CardTitle className="text-base">Agregar transacción</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base">Agregar transacción</CardTitle>
+          {onCancel && (
+            <Button variant="ghost" size="icon" onClick={onCancel} className="h-8 w-8">
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-4 p-4">
         {/* A11y live region */}
@@ -591,7 +607,7 @@ export default function QuickSpendCard({
             className={cn(
               "py-3 px-4 rounded-lg text-base font-semibold transition-all border-2 md:py-4 md:px-6 md:text-lg",
               type === "gasto"
-                ? "bg-red-50 border-red-500 text-red-700 shadow-md"
+                ? "bg-red-50 border-red-500 text-red-700 shadow-md ring-2 ring-red-200"
                 : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100",
             )}
           >
@@ -604,7 +620,7 @@ export default function QuickSpendCard({
             className={cn(
               "py-3 px-4 rounded-lg text-base font-semibold transition-all border-2 md:py-4 md:px-6 md:text-lg",
               type === "ingreso"
-                ? "bg-green-50 border-green-500 text-green-700 shadow-md"
+                ? "bg-green-50 border-green-500 text-green-700 shadow-md ring-2 ring-green-200"
                 : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100",
             )}
           >
@@ -674,6 +690,7 @@ export default function QuickSpendCard({
           <DialogHeader>
             <DialogTitle>Nueva categoría</DialogTitle>
           </DialogHeader>
+
           <div className="space-y-4 py-2">
             <div className="flex bg-gray-100 rounded-lg p-1" role="tablist" aria-label="Tipo de categoría">
               <button
@@ -681,29 +698,28 @@ export default function QuickSpendCard({
                 aria-selected={newCatKind === "gasto"}
                 onClick={() => setNewCatKind("gasto")}
                 className={cn(
-                  "flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors",
+                  "flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all",
                   newCatKind === "gasto"
-                    ? "bg-white text-gray-900 shadow-sm border border-gray-200"
-                    : "text-gray-600 hover:text-gray-900",
+                    ? "bg-white text-gray-900 shadow-sm border border-gray-200 ring-2 ring-red-200"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50",
                 )}
               >
-                Gasto
+                💸 Gasto
               </button>
               <button
                 role="tab"
                 aria-selected={newCatKind === "ingreso"}
                 onClick={() => setNewCatKind("ingreso")}
                 className={cn(
-                  "flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors",
+                  "flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all",
                   newCatKind === "ingreso"
-                    ? "bg-white text-gray-900 shadow-sm border border-gray-200"
-                    : "text-gray-600 hover:text-gray-900",
+                    ? "bg-white text-gray-900 shadow-sm border border-gray-200 ring-2 ring-green-200"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50",
                 )}
               >
-                Ingreso
+                💰 Ingreso
               </button>
             </div>
-
             <div>
               <Label htmlFor="new-cat-name">Nombre</Label>
               <Input
