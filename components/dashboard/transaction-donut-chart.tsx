@@ -102,18 +102,22 @@ export default function TransactionDonutChart({ transactions, categories }: Tran
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Gastos por Categoría</CardTitle>
-          <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent">
+          <Button variant="default" size="sm" className="flex items-center gap-2 ">
             <Settings className="w-4 h-4" />
-            Gestionar Presupuestos
+            Gestionar Presupuestos 
+            {/* THis button is probably wronlgy setted */}
           </Button>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Enhanced Chart with Double Ring */} 
+        <div className="grid grid-cols-1 gap-6">
+          {/* Enhanced Chart with Double Ring */}
+
           {/* THE CHART WORKS LIKE SHIT MIGHT REQUIRE SOME LIBRARY */}
           <div className="flex items-center justify-center">
-            <div className="relative w-56 h-56">
+
+            <div className="relative w-60 h-60">
+            {/* <div className="relative w-56 h-56"> */}
               {/* Outer ring - Budget */}
               <div className="absolute inset-0 rounded-full border-8 border-gray-200"></div>
               <div
@@ -161,67 +165,8 @@ export default function TransactionDonutChart({ transactions, categories }: Tran
             </div>
           </div>
 
-          {/* Enhanced Legend with Budget Indicators */}
-          <div className="space-y-4">
-            <h3 className="font-semibold text-gray-900">Desglose por categoría</h3>
-            {chartData.length === 0 ? (
-              <p className="text-gray-500 text-sm">No hay gastos para mostrar</p>
-            ) : (
-              <div className="space-y-4">
-                {chartData.map((item) => (
-                  <div key={item.category} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", item.color)}>
-                          <item.icon className="w-4 h-4 text-white" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm">{item.name}</p>
-                          <p className="text-xs text-gray-500">
-                            ${item.spent.toFixed(0)} de ${item.budget}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p
-                          className={cn("font-semibold text-sm", item.isOverBudget ? "text-red-600" : "text-gray-900")}
-                        >
-                          ${item.remaining.toFixed(0)} restante
-                        </p>
-                        <p className="text-xs text-gray-500">{item.budgetPercentage.toFixed(0)}% usado</p>
-                      </div>
-                    </div>
-                    {/* Budget progress bar */}
-                    <Progress
-                      value={item.budgetPercentage}
-                      className={cn("h-2", item.isOverBudget ? "[&>div]:bg-red-500" : "[&>div]:bg-primary-500")}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Overall Summary */}
-            {chartData.length > 0 && (
-              <div className="pt-4 border-t space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-600">Total gastado</span>
-                  <span className="font-bold text-gray-900">${totalExpenses.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-600">Presupuesto total</span>
-                  <span className="font-bold text-gray-900">${totalBudget.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-600">Restante</span>
-                  <span className={cn("font-bold", budgetRemaining >= 0 ? "text-green-600" : "text-red-600")}>
-                    ${budgetRemaining.toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
         </div>
+        
       </CardContent>
     </Card>
   )
