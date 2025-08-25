@@ -9,6 +9,8 @@ import { ArrowLeft, Edit, Trash2, Filter, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import AssetFormModal from "@/components/asset-form-modal"
 import QuickSpendCard, { type QuickSpendData } from "@/components/transactions/quick-spend-card"
+import EditTransactionModal from "@/components/edit-transaction-modal"
+import DeleteConfirmationModal from "@/components/delete-confirmation-modal"
 import {
   Utensils,
   ShoppingCart,
@@ -146,6 +148,9 @@ export default function AssetDetailPage() {
   const [asset, setAsset] = useState<FinancialItem | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [showQuickSpend, setShowQuickSpend] = useState(false)
+  const [deletingTransaction, setDeletingTransaction] = useState<Transaction | null>(null)
+  const [isEditTransactionModalOpen, setIsEditTransactionModalOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
 
   useEffect(() => {
     setIsLoading(true)
@@ -191,12 +196,23 @@ export default function AssetDetailPage() {
   const handleEditTransaction = (transaction: Transaction) => {
     setEditingTransaction(transaction)
     // Here you would open an edit modal
-    console.log("Edit transaction:", transaction)
+    setIsEditTransactionModalOpen(true)
   }
 
-  const handleDeleteTransaction = (transactionId: string) => {
-    if (confirm("¿Estás seguro de que quieres eliminar esta transacción?")) {
-      setTransactions((prev) => prev.filter((t) => t.id !== transactionId))
+  const handleSaveTransaction = (updatedTransaction: Transaction) => {
+    setTransactions((prev) => prev.map((t) => (t.id === updatedTransaction.id ? updatedTransaction : t)))
+    setEditingTransaction(null)
+  }
+
+  const handleDeleteTransaction = (transaction: Transaction) => {
+    setDeletingTransaction(transaction)
+    setIsDeleteModalOpen(true)
+  }
+
+  const handleConfirmDelete = () => {
+    if (deletingTransaction) {
+      setTransactions((prev) => prev.filter((t) => t.id !== deletingTransaction.id))
+      setDeletingTransaction(null)
     }
   }
 
@@ -397,10 +413,13 @@ export default function AssetDetailPage() {
                         <p className="text-xs text-gray-500">
                           {formatDate(transaction.date)} {transaction.time}
                         </p>
+                        <span className={cn(" lg:hidden font-semibold text-sm", isIncome ? "text-green-600" : "text-gray-900")}>
+                          {isIncome ? "+" : "-"}${transaction.amount.toFixed(2)}
+                        </span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className={cn("font-semibold text-sm", isIncome ? "text-green-600" : "text-gray-900")}>
+                      <span className={cn("hidden lg:block font-semibold text-sm", isIncome ? "text-green-600" : "text-gray-900")}>
                         {isIncome ? "+" : "-"}${transaction.amount.toFixed(2)}
                       </span>
                       <Button
@@ -414,7 +433,7 @@ export default function AssetDetailPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDeleteTransaction(transaction.id)}
+                        onClick={() => handleDeleteTransaction(transaction)}
                         className="w-8 h-8"
                       >
                         <Trash2 className="w-4 h-4 text-red-500" />
@@ -446,6 +465,28 @@ export default function AssetDetailPage() {
         onClose={() => setIsEditModalOpen(false)}
         onSave={handleSaveAsset}
         initialData={asset}
+      />
+      {/* Transaction Edit Modal */}
+      <EditTransactionModal
+        isOpen={isEditTransactionModalOpen}
+        onClose={() => {
+          setIsEditTransactionModalOpen(false)
+          setEditingTransaction(null)
+        }}
+        onSave={handleSaveTransaction}
+        transaction={editingTransaction}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false)
+          setDeletingTransaction(null)
+        }}
+        onConfirm={handleConfirmDelete}
+        title={deletingTransaction?.title || ""}
+        description="Esta transacción será eliminada permanentemente."
       />
     </div>
   )

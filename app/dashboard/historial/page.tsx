@@ -271,7 +271,7 @@ export default function HistorialPage() {
           </div>
 
           {/* Desktop: Always visible */}
-          <div className="hidden lg:block">
+          <div className="hidden lg:col-span-2 xl:block">
             <Card>
               <CardHeader>
                 <CardTitle>Desglose por categoría</CardTitle>
