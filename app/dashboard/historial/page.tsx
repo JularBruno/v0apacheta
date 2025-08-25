@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Progress } from "@/components/ui/progress"
 import {
   Utensils,
   ShoppingCart,
@@ -22,6 +23,8 @@ import {
   Search,
   Filter,
   X,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import TransactionDonutChart from "@/components/dashboard/transaction-donut-chart"
@@ -134,6 +137,8 @@ export default function HistorialPage() {
   const [minAmount, setMinAmount] = useState("")
   const [maxAmount, setMaxAmount] = useState("")
   const [showFilters, setShowFilters] = useState(false)
+  const [showCategoryBreakdown, setShowCategoryBreakdown] = useState(false)
+
 
   // Filter transactions based on current filters
   const filteredTransactions = mockTransactions.filter((transaction) => {
@@ -185,23 +190,167 @@ export default function HistorialPage() {
   return (
     <div className="space-y-6">
       {/* Donut Chart */}
-      <TransactionDonutChart transactions={filteredTransactions} categories={categories} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Chart - always visible */}
+        <div className="lg:col-span-2 xl:col-span-1">
+          <TransactionDonutChart transactions={filteredTransactions} categories={categories} />
+        </div>
+
+        {/* Category breakdown - collapsible on mobile, always visible on desktop */}
+        <div className="xl:col-span-1">
+          {/* Mobile: Collapsible header */}
+          <div className="lg:hidden">
+            <Card>
+              <CardHeader className="pb-3">
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowCategoryBreakdown(!showCategoryBreakdown)}
+                  className="flex items-center justify-between w-full p-0 h-auto"
+                >
+                  <CardTitle className="text-lg">Desglose por categoría</CardTitle>
+                  {showCategoryBreakdown ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </Button>
+              </CardHeader>
+              {showCategoryBreakdown && (
+                <CardContent className="pt-0">
+                  <div className="grid gap-4">
+                    {categories
+                      .filter((cat) => cat.budget > 0)
+                      .map((category) => {
+                        const spent = filteredTransactions
+                          .filter((t) => t.type === "gasto" && t.category === category.id)
+                          .reduce((sum, t) => sum + t.amount, 0)
+                        const remaining = category.budget - spent
+                        const percentage = (spent / category.budget) * 100
+
+                        return (
+                          <Card key={category.id} className="p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className={cn(
+                                    "w-10 h-10 rounded-lg flex items-center justify-center",
+                                    category.color,
+                                  )}
+                                >
+                                  <category.icon className="w-5 h-5 text-white" />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-sm">{category.name}</p>
+                                  <p className="text-xs text-gray-500">
+                                    ${spent.toFixed(0)} de ${category.budget}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p
+                                  className={cn(
+                                    "font-semibold text-sm",
+                                    spent > category.budget ? "text-red-600" : "text-gray-900",
+                                  )}
+                                >
+                                  ${remaining.toFixed(0)} restante
+                                </p>
+                                <p className="text-xs text-gray-500">{percentage.toFixed(0)}% usado</p>
+                              </div>
+                            </div>
+                            <Progress
+                              value={Math.min(100, percentage)}
+                              className={cn(
+                                "h-2",
+                                spent > category.budget ? "[&>div]:bg-red-500" : "[&>div]:bg-primary-500",
+                              )}
+                            />
+                          </Card>
+                        )
+                      })}
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+          </div>
+
+          {/* Desktop: Always visible */}
+          <div className="hidden lg:block">
+            <Card>
+              <CardHeader>
+                <CardTitle>Desglose por categoría</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  {categories
+                    .filter((cat) => cat.budget > 0)
+                    .map((category) => {
+                      const spent = filteredTransactions
+                        .filter((t) => t.type === "gasto" && t.category === category.id)
+                        .reduce((sum, t) => sum + t.amount, 0)
+                      const remaining = category.budget - spent
+                      const percentage = (spent / category.budget) * 100
+
+                      return (
+                        <Card key={category.id} className="p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={cn("w-8 h-8 rounded-lg flex items-center justify-center", category.color)}
+                              >
+                                <category.icon className="w-4 h-4 text-white" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-sm">{category.name}</p>
+                                <p className="text-xs text-gray-500">
+                                  ${spent.toFixed(0)} de ${category.budget}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p
+                                className={cn(
+                                  "font-semibold text-sm",
+                                  spent > category.budget ? "text-red-600" : "text-gray-900",
+                                )}
+                              >
+                                ${remaining.toFixed(0)} restante
+                              </p>
+                              <p className="text-xs text-gray-500">{percentage.toFixed(0)}% usado</p>
+                            </div>
+                          </div>
+                          <Progress
+                            value={Math.min(100, percentage)}
+                            className={cn(
+                              "h-2",
+                              spent > category.budget ? "[&>div]:bg-red-500" : "[&>div]:bg-primary-500",
+                            )}
+                          />
+                        </Card>
+                      )
+                    })}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
 
       {/* Transactions List with integrated search and filters */}
       <Card>
-        <CardHeader>
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <CardHeader className="pb-4">
+          <div className="flex flex-col space-y-4">
             <div className="flex items-center justify-between">
-              <CardTitle>Transacciones ({filteredTransactions.length})</CardTitle>
-              <div className="text-sm text-gray-500 lg:hidden">
-                {selectedDateFilter === "month" ? "Este mes" : "Período seleccionado"}
-              </div>
+              <CardTitle className="text-lg">Transacciones ({filteredTransactions.length})</CardTitle>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => console.log("Undo Last Clicked")}
+                className="hidden sm:flex"
+              >
+                Deshacer Último
+              </Button>
             </div>
 
-            {/* Search and Filter Controls */}
+            {/* Search and Filter Controls - Mobile optimized */}
             <div className="flex flex-col sm:flex-row gap-3">
-              {/* Search */}
-              <div className="relative flex-1 sm:min-w-[300px]">
+              <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
                   placeholder="Buscar transacciones..."
@@ -211,34 +360,34 @@ export default function HistorialPage() {
                 />
               </div>
 
-              {/* Filter Toggle */}
-              <Button
-                variant="outline"
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2"
-              >
-                <Filter className="w-4 h-4" />
-                Filtros
-                {activeFiltersCount > 0 && (
-                  <Badge variant="secondary" className="ml-1">
-                    {activeFiltersCount}
-                  </Badge>
-                )}
-              </Button>
-
-              {/* I LIKED THIS but it should be different also the button to undo */}
-              <div className="hidden lg:block text-md text-gray-500">
-                {selectedDateFilter === "month" ? "Este mes" : "Período seleccionado"}
-              </div>
-
-              <Button variant="destructive" size="sm" onClick={() => console.log("Undo Last Clicked")}>
-                  Deshacer Último
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="flex items-center gap-2"
+                >
+                  <Filter className="w-4 h-4" />
+                  <span className="hidden sm:inline">Filtros</span>
+                  {activeFiltersCount > 0 && (
+                    <Badge variant="secondary" className="ml-1">
+                      {activeFiltersCount}
+                    </Badge>
+                  )}
                 </Button>
 
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => console.log("Undo Last Clicked")}
+                  className="sm:hidden"
+                >
+                  Deshacer último
+                </Button>
+              </div>
             </div>
           </div>
 
-          {/* Expandable Filters */}
+          {/* Rest of the filters section remains the same */}
           {showFilters && (
             <div className="mt-4 pt-4 border-t space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -333,40 +482,48 @@ export default function HistorialPage() {
               <p>No se encontraron transacciones con los filtros aplicados</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {filteredTransactions.map((transaction) => {
                 const categoryInfo = getCategoryInfo(transaction.category)
                 return (
-                  <div
-                    key={transaction.id}
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-100"
-                  >
-                    {/* Left side: Icon and details */}
-                    <div className="flex items-center space-x-3">
-                      <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", categoryInfo.color)}>
-                        <categoryInfo.icon className="w-5 h-5 text-white" />
+                  <Card key={transaction.id} className="p-4 hover:shadow-sm transition-all">
+                    <div className="flex items-center justify-between">
+                      {/* Left side: Icon and details */}
+                      <div className="flex items-center space-x-3">
+                        <div
+                          className={cn(
+                            "w-12 h-12 rounded-xl flex items-center justify-center shadow-sm",
+                            categoryInfo.color,
+                          )}
+                        >
+                          <categoryInfo.icon className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-gray-900">{transaction.title}</p>
+                          <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                            <span className="bg-gray-100 px-2 py-1 rounded-full">{categoryInfo.name}</span>
+                            <span>•</span>
+                            <span>
+                              {formatDate(transaction.date)} {transaction.time}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-sm">{transaction.title}</p>
-                        <p className="text-xs text-gray-500">
-                          {categoryInfo.name} • {formatDate(transaction.date)} {transaction.time}
-                        </p>
-                      </div>
-                    </div>
 
-                    {/* Right side: Amount */}
-                    <div className="text-right">
-                      <span
-                        className={cn(
-                          "font-semibold",
-                          transaction.type === "ingreso" ? "text-green-600" : "text-gray-900",
-                        )}
-                      >
-                        {transaction.type === "ingreso" ? "+" : "-"}${transaction.amount}
-                      </span>
-                      <p className="text-xs text-gray-500 capitalize">{transaction.type}</p>
+                      {/* Right side: Amount */}
+                      <div className="text-right">
+                        <span
+                          className={cn(
+                            "font-bold text-lg",
+                            transaction.type === "ingreso" ? "text-green-600" : "text-gray-900",
+                          )}
+                        >
+                          {transaction.type === "ingreso" ? "+" : "-"}${transaction.amount}
+                        </span>
+                        <p className="text-xs text-gray-500 capitalize mt-1">{transaction.type}</p>
+                      </div>
                     </div>
-                  </div>
+                  </Card>
                 )
               })}
             </div>

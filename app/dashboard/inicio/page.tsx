@@ -90,6 +90,29 @@ export default function InicioPage() {
             <p className="text-sm text-gray-500">0 transacciones</p>
           </CardContent>
         </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">Presupuesto</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div>
+              <div className="text-2xl font-bold mb-2">
+                ${monthlyBudgetRemaining.toFixed(2)} restante de ${monthlyBudget.toFixed(2)}
+              </div>
+              <Progress value={progressPercentage} className="h-2 mb-4" />
+              <div className="flex justify-between text-sm text-gray-500">
+                <span>1 jul</span> {/* Mock start date */}
+                <span>{progressPercentage.toFixed(0)}%</span>
+                <span>31 jul</span> {/* Mock end date */}
+              </div>
+              <p className="text-sm text-gray-500 mt-2">
+                Puede gastar ${dailySpendSuggestion.toFixed(2)}/día para {daysRemaining} más días
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        
 
         {/* <Card>
           <CardHeader className="pb-2">
@@ -111,16 +134,21 @@ export default function InicioPage() {
         }}
       />
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <RecentExpenses />
+      </div>
+
 
       {/* Combined Financial Summary & Upcoming Payments Card AND Add Transaction Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column: Combined Financial Summary & Upcoming Payments */}
         <Card>
-          <CardHeader>
+          {/* <CardHeader>
             <CardTitle>Resumen Financiero</CardTitle>
-          </CardHeader>
+          </CardHeader> */}
           <CardContent className="space-y-6">
             {/* Budget Progress Section */}
+{/* 
             <div>
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-lg font-semibold">Presupuesto</h3>
@@ -131,14 +159,15 @@ export default function InicioPage() {
               </div>
               <Progress value={progressPercentage} className="h-2 mb-4" />
               <div className="flex justify-between text-sm text-gray-500">
-                <span>1 jul</span> {/* Mock start date */}
+                <span>1 jul</span>
                 <span>{progressPercentage.toFixed(0)}%</span>
-                <span>31 jul</span> {/* Mock end date */}
+                <span>31 jul</span>
               </div>
               <p className="text-sm text-gray-500 mt-2">
                 Puede gastar ${dailySpendSuggestion.toFixed(2)}/día para {daysRemaining} más días
               </p>
-            </div>
+            </div> */}
+
 
             {/* Separator between budget progress and net worth */}
             {/* Net Worth Summary Section */}
@@ -197,27 +226,17 @@ export default function InicioPage() {
                 )}
               </div>
             </div>
+
           </CardContent>
+
         </Card>
-
-        {/* Right Column: Add Transaction Section */}
-        {/* <Card>
-          <CardHeader>
-            <CardTitle>Agregar Transacción</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <TransactionForm onComplete={handleTransactionComplete} onCancel={() => console.log("Cancelled")} />
-          </CardContent>
-        </Card> */}
-
-        
       </div>
 
       {/* Bottom Section: Recent Expenses and Spending Chart (existing) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <RecentExpenses />
         <SpendingChart />
-      </div>
+      </div> */}
 
     </div>
   )
