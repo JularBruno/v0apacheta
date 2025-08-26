@@ -7,8 +7,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
+import { authenticate } from '@/lib/actions/auth';
+import { useActionState } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -21,15 +27,19 @@ export default function LoginPage() {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  // const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  //   e.preventDefault()
 
-    startTransition(async () => {
-      console.log("Logging in with:", formData)
-      // await new Promise((resolve) => setTimeout(resolve, 1000)) // fake delay
-      router.push("/dashboard")
-    })
-  }
+  //   startTransition(async () => {
+  //     console.log("Logging in with:", formData)
+  //     // await new Promise((resolve) => setTimeout(resolve, 1000)) // fake delay
+  //     router.push("/dashboard")
+  //   })
+  // }
+  const [errorMessage, formAction ] = useActionState(
+    authenticate,
+    undefined,
+  );
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-white py-12 px-4 sm:px-6 lg:px-8">
@@ -41,7 +51,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+        <form action={formAction} className="mt-8 space-y-6">
           <div>
             <Label htmlFor="email">Email</Label>
             <Input
@@ -85,6 +95,8 @@ export default function LoginPage() {
             type="submit"
             className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
             disabled={isPending}
+            name="redirectTo"
+            value={callbackUrl} 
           >
             {isPending ? "Logging In..." : "Log In"}
           </Button>
