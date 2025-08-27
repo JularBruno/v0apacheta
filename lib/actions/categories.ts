@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { Category } from '@/app/lib/definitions';
+import { Category } from '../definitions';
 import { z } from 'zod';
 import { getSession, getMethod, postMethod, deleteMethod } from "./utils";
 

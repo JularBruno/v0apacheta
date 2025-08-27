@@ -9,6 +9,10 @@ Also any setup requires an .env of project Neptuno(API).
 - `.env` - shared defaults/fallbacks
 
 #### What Goes in Each File
+
+`API_URL`
+- .env.local: http://localhost:8080/v1
+
 `AUTH_SECRET` handling:
 
 - Local: Generate one secret for your machine

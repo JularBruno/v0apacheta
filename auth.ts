@@ -5,6 +5,13 @@ import { z } from 'zod';
 // import { JWT } from 'next-auth/jwt';
 import 'next-auth/jwt';
 
+
+/**
+ * @title url for dynamic env, based on how npm run was executed
+ * @notes process.env.API_URL retrieves .env API_URL
+ */
+const apiUrl = process.env.API_URL;
+
 declare module 'next-auth' {
   interface Session extends DefaultSession {
     accessToken?: string;
@@ -50,10 +57,8 @@ export const { auth, signIn, signOut } = NextAuth({
           }
 
           const { email, password } = parsedCredentials.data;
-
-
-          // const response = await fetch('https://neptuno-production.up.railway.app/v1/user/login', {
-          const response = await fetch('http://localhost:8080/v1/user/login', {
+          
+          const response = await fetch(apiUrl + '/user/login', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

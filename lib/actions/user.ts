@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { signIn } from '@/auth'; 
 import { AuthError } from 'next-auth';
-import { Category } from '@/app/lib/definitions';
+import { Category } from '../definitions';
 import { z } from 'zod';
 import { postMethod } from "./utils";
 

@@ -91,12 +91,16 @@ export default function LoginPage() {
             </div>
           </div>
 
+
+          <div>
+            <input type="hidden" name="redirectTo" value={callbackUrl} />
+           
           <Button
             type="submit"
             className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
             disabled={isPending}
             name="redirectTo"
-            value={callbackUrl} 
+            // value={callbackUrl} 
           >
             {isPending ? "Logging In..." : "Log In"}
           </Button>
@@ -106,6 +110,7 @@ export default function LoginPage() {
               {state.message}
             </p>
           )} */}
+          </div>
         </form>
         <div className="text-center text-sm text-gray-600">
           Don't have an account?{" "}
