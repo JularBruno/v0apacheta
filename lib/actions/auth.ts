@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { signIn } from '@/auth'; 
+import { signIn, signOut } from '@/auth'; 
 import { AuthError } from 'next-auth';
 import { Category } from '@/lib/definitions';
 import { z } from 'zod';
@@ -28,6 +28,14 @@ export async function authenticate(
     }
   }
 
+export async function logOut() {
+  try {
+    await signOut({ redirectTo: '/' });
+  } catch (error) {
+    console.error('Logout error:', error);
+    throw error;
+  }
+}
 
 const PostUserFormSchema = z.object({
     userId: z.string(),

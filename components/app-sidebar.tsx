@@ -3,7 +3,7 @@
 import type * as React from "react"
 import { Home, Settings, HelpCircle, Map, History, Package, Wallet, LogOut } from "lucide-react" // Added Map, History, Package
 import { usePathname, useRouter } from "next/navigation"
-
+import { logOut } from '@/lib/actions/auth';
 
 import {
   Sidebar,
@@ -63,10 +63,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname() // Get current pathname
   const router = useRouter()
 
-  const handleLogout = () => {
-    // In a real application, you would clear session tokens or call a logout API here
-    alert("Cerrando sesión (simulado)...")
-    router.push("/login") // Redirect to login page
+  const handleLogout = async () => {
+    // await signOut({ redirectTo: '/' });
+    await logOut();
+    // await logOut({ 
+    //   redirectTo: '/',  // Use callbackUrl instead of redirectTo for client-side
+    //   redirect: true 
+    // });
   }
 
   return (
@@ -107,10 +110,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </SidebarMenuItem>
               ))}
               <SidebarMenuItem>
+
                 <SidebarMenuButton onClick={handleLogout}>
                   <LogOut />
                   <span>Cerrar Sesión</span>
                 </SidebarMenuButton>
+                
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>

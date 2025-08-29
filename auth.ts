@@ -55,7 +55,6 @@ export const { auth, signIn, signOut } = NextAuth({
             console.log('Invalid credentials format');
             return null;
           }
-
           const { email, password } = parsedCredentials.data;
           
           const response = await fetch(apiUrl + '/user/login', {
@@ -108,6 +107,12 @@ export const { auth, signIn, signOut } = NextAuth({
         session.accessToken = token.accessToken;
       }
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      // Handles redirects after sign-in/sign-out
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      else if (new URL(url).origin === baseUrl) return url;
+      return `${baseUrl}/dashboard/mapa`; // Default redirect after login
     },
   },
 });
