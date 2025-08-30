@@ -2,11 +2,13 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { signIn, signOut } from '@/auth'; 
+import { signIn, signOut, lastAuthError } from '@/auth'; 
+
 import { AuthError } from 'next-auth';
 import { Category } from '@/lib/definitions';
 import { z } from 'zod';
 import { postMethod } from "./utils";
+
 
 // Authenticate for throwing in form and reaching sign-in in auth
 export async function authenticate(
@@ -15,23 +17,34 @@ export async function authenticate(
   ) {
     try {
       await signIn('credentials', formData);
+      revalidatePath('/dashboard/mapa');
+      redirect('/dashboard/mapa');
     } catch (error) {
-      if (error instanceof AuthError) {
-        switch (error.type) {
-          case 'CredentialsSignin':
-            return 'Invalid credentials.';
+      
+      if (error instanceof AuthError && error.type === 'CredentialsSignin') {
+        // Check what type of error it was
+        switch (lastAuthError) {
+          case 'EMAIL_VALIDATIONERROR':
+            return 'Fomato incorrecto de email';
+          case 'PASSWORD_VALIDATIONERROR':
+            return 'Fomato incorrecto de contraseña';
+          case 'LOGIN_EMAIL_ERROR':
+            return 'Ese mail no está registrado';
+          case 'LOGIN_PASSWORD_ERROR':
+            return 'Contraseña incorrecta';
+          case 'LOGIN_ERROR':
+            return 'Algo salió mal.';
           default:
-            return 'Something went wrong.';
+            break;
+          }
         }
-      }
-      throw error;
     }
   }
 
 export async function logOut() {
   try {
-    await signOut({ redirectTo: '/' });
-  } catch (error) {
+    await signOut({ redirectTo: '/', });
+  } catch (error: any) {
     console.error('Logout error:', error);
     throw error;
   }
@@ -78,9 +91,8 @@ export async function register(prevState: UserState, formData: FormData) {
 
         try {
             await signIn('credentials', formData);
-            
-            revalidatePath('/dashboard');
-            redirect('/dashboard');
+            revalidatePath('/dashboard/mapa');
+            redirect('/dashboard/mapa');
         } catch (error) {
             if (error instanceof AuthError) {
                 switch (error.type) {

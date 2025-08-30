@@ -2,8 +2,8 @@ import NextAuth, { DefaultSession } from 'next-auth';
 import { authConfig } from './auth.config';
 import Credentials from 'next-auth/providers/credentials';
 import { z } from 'zod';
-// import { JWT } from 'next-auth/jwt';
 import 'next-auth/jwt';
+import { Router } from "next/router";
 
 
 /**
@@ -31,6 +31,9 @@ declare module 'next-auth/jwt' {
   }
 }
 
+// Create a global error store
+export let lastAuthError: string | null = null;
+
 export const { auth, signIn, signOut } = NextAuth({
   ...authConfig,
   providers: [
@@ -50,11 +53,15 @@ export const { auth, signIn, signOut } = NextAuth({
             // .safeParse(credentials);
             .safeParse({ email: credentials?.email, password: credentials?.password });
 
-
-          if (!parsedCredentials.success) {
-            console.log('Invalid credentials format');
+          if (!parsedCredentials.success) { // TODO this can be done on form
+            const firstError = parsedCredentials.error.issues[0];
+            console.log('Field:', firstError.path[0]); // 'email' or 'password'
+            console.log('Message:', firstError.message); // 'Invalid email' or 'String must contain at least 6 character(s)'
+            
+            lastAuthError = `${firstError.path[0].toString().toUpperCase()}_VALIDATIONERROR`;
             return null;
           }
+
           const { email, password } = parsedCredentials.data;
           
           const response = await fetch(apiUrl + '/user/login', {
@@ -69,7 +76,17 @@ export const { auth, signIn, signOut } = NextAuth({
           });
 
           if (!response.ok) {
-            console.log('Login failed:', response.status);
+            const errorData = await response.json();
+            console.log('Login failed:', response.status, errorData);
+            switch (errorData.message) {
+              case 'Invalid username':
+                lastAuthError = 'LOGIN_EMAIL_ERROR';
+                break;
+            
+              default:
+                lastAuthError = 'LOGIN_PASSWORD_ERROR';
+                break;
+            }
             return null;
           }
 
@@ -84,16 +101,16 @@ export const { auth, signIn, signOut } = NextAuth({
             // Store the token if you need it for other API calls
             accessToken: data.accessToken, // If your API returns a token
           };
-          
-        } catch (error) {
+        } catch (error: any) {
           console.error('Login error:', error);
-          return null;
+          lastAuthError = 'LOGIN_ERROR';
+          throw error;
         }
       },
     }),
   ],
-  // access the token in your application
   callbacks: {
+    // access the token in your application
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
@@ -107,12 +124,6 @@ export const { auth, signIn, signOut } = NextAuth({
         session.accessToken = token.accessToken;
       }
       return session;
-    },
-    async redirect({ url, baseUrl }) {
-      // Handles redirects after sign-in/sign-out
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      else if (new URL(url).origin === baseUrl) return url;
-      return `${baseUrl}/dashboard/mapa`; // Default redirect after login
     },
   },
 });

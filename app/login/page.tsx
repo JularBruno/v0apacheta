@@ -1,8 +1,7 @@
 "use client"
 
-import type React from "react"
+import React from "react"
 import { useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,30 +11,22 @@ import { useActionState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
-  const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
 
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard/mapa';
+  
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   })
+
   const [isPending, startTransition] = useTransition()
-  const router = useRouter()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  // const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-  //   e.preventDefault()
-
-  //   startTransition(async () => {
-  //     console.log("Logging in with:", formData)
-  //     // await new Promise((resolve) => setTimeout(resolve, 1000)) // fake delay
-  //     router.push("/dashboard")
-  //   })
-  // }
   const [errorMessage, formAction ] = useActionState(
     authenticate,
     undefined,
@@ -45,9 +36,9 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-white py-12 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md space-y-8 bg-white p-8 md:p-10 rounded-xl shadow-lg">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">Log In to Your Account</h2>
+          <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">Ingresa a Apacheta</h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Welcome back! Please enter your credentials to continue.
+            Bienvenido de vuelta! Ingresa tus credenciales para continuar.
           </p>
         </div>
 
@@ -60,7 +51,7 @@ export default function LoginPage() {
               type="email"
               autoComplete="email"
               // required
-              placeholder="your@email.com"
+              placeholder="tu@email.com"
               className="mt-1"
               value={formData.email}
               onChange={handleInputChange}
@@ -68,7 +59,7 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">Contraseña</Label>
             <Input
               id="password"
               name="password"
@@ -86,7 +77,7 @@ export default function LoginPage() {
           <div className="flex items-center justify-end">
             <div className="text-sm">
               <Link href="/recover-password" className="font-medium text-green-600 hover:text-green-500">
-                Forgot password?
+                Olvidaste tu contraseña?
               </Link>
             </div>
           </div>
@@ -94,23 +85,20 @@ export default function LoginPage() {
 
           <div>
             <input type="hidden" name="redirectTo" value={callbackUrl} />
-           
-          <Button
-            type="submit"
-            className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
-            disabled={isPending}
-            name="redirectTo"
-            // value={callbackUrl} 
-          >
-            {isPending ? "Logging In..." : "Log In"}
-          </Button>
-
-          {/* {state?.message && (
-            <p className={`text-sm text-center ${state.success ? "text-green-600" : "text-red-600"}`}>
-              {state.message}
-            </p>
-          )} */}
+            <Button
+              type="submit"
+              className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
+              disabled={isPending}
+            >
+              {isPending ? "Ingresando..." : "Log In"}
+            </Button>
           </div>
+
+            {errorMessage && (
+              <div className="pt-2 text-center " >
+                <p className="text-sm text-red-600">{errorMessage}</p>
+              </div>
+            )}
         </form>
         <div className="text-center text-sm text-gray-600">
           Don't have an account?{" "}

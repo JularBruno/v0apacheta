@@ -1,9 +1,9 @@
-"use client"
 
 import type * as React from "react"
 import { Home, Settings, HelpCircle, Map, History, Package, Wallet, LogOut } from "lucide-react" // Added Map, History, Package
 import { usePathname, useRouter } from "next/navigation"
 import { logOut } from '@/lib/actions/auth';
+import { signOut } from '@/auth'; 
 
 import {
   Sidebar,
@@ -60,16 +60,10 @@ const secondaryMenuItems = [
 ]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const pathname = usePathname() // Get current pathname
-  const router = useRouter()
+  const pathname = usePathname(); // Get current pathname
 
   const handleLogout = async () => {
-    // await signOut({ redirectTo: '/' });
     await logOut();
-    // await logOut({ 
-    //   redirectTo: '/',  // Use callbackUrl instead of redirectTo for client-side
-    //   redirect: true 
-    // });
   }
 
   return (
