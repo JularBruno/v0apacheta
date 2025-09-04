@@ -16,13 +16,14 @@ export async function authenticate(
     formData: FormData,
   ) {
     try {
+      console.log('🚀 2. About to call signIn()');
+
       await signIn('credentials', formData);
-      revalidatePath('/dashboard/mapa');
-      redirect('/dashboard/mapa');
+
     } catch (error) {
-      
-      if (error instanceof AuthError && error.type === 'CredentialsSignin') {
-        // Check what type of error it was
+      // this broke redirection not idea why
+      // if (error instanceof AuthError && error.type === 'CredentialsSignin') {
+      if (error instanceof AuthError) {
         switch (lastAuthError) {
           case 'EMAIL_VALIDATIONERROR':
             return 'Fomato incorrecto de email';
@@ -35,9 +36,10 @@ export async function authenticate(
           case 'LOGIN_ERROR':
             return 'Algo salió mal.';
           default:
-            break;
+            return 'Algo salió mal.';
           }
-        }
+      }
+      throw error;
     }
   }
 

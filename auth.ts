@@ -94,6 +94,8 @@ export const { auth, signIn, signOut } = NextAuth({
 
           // Return a user object that NextAuth can use
           // Adjust the fields based on your API response
+          console.log('before return login 200')
+
           return {
             id: data.user.id, // Adjust based on your API response
             email: data.user.email,

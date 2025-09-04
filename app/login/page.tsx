@@ -13,21 +13,27 @@ import { useSearchParams } from 'next/navigation';
 export default function LoginPage() {
 
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard/mapa';
+  // const callbackUrl = searchParams.get('callbackUrl') || '/dashboard/mapa';
   
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   })
 
-  const [isPending, startTransition] = useTransition()
+  // const [isPending, startTransition] = useTransition()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const [errorMessage, formAction ] = useActionState(
+  // const [errorMessage, formAction ] = useActionState(
+  //   authenticate,
+  //   undefined,
+  // );
+
+  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard/mapa';
+  const [errorMessage, formAction, isPending] = useActionState(
     authenticate,
     undefined,
   );
@@ -81,7 +87,6 @@ export default function LoginPage() {
               </Link>
             </div>
           </div>
-
 
           <div>
             <input type="hidden" name="redirectTo" value={callbackUrl} />
