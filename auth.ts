@@ -12,6 +12,12 @@ import { Router } from "next/router";
  */
 const apiUrl = process.env.API_URL;
 
+/**
+ * @title Authenticate for throwing in form and reaching sign-in in auth
+ * @param prevState - Previous state of the form, useful for seting state
+ * @param formData - Form data of login
+ * @returns error messages based on the failing form, otherwise return data(might require to make custom type) and redirects to dashboard/mapa
+ */
 declare module 'next-auth' {
   interface Session extends DefaultSession {
     accessToken?: string;

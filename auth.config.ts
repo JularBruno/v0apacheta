@@ -8,7 +8,8 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      console.log('IMPORTANT isLoggedIn ', isLoggedIn);
+      // console.log('IMPORTANT isLoggedIn ', isLoggedIn);
+      
       const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
       // const isOnLogin = nextUrl.pathname.startsWith('/login');
       // const isOnHome = nextUrl.pathname === '/';

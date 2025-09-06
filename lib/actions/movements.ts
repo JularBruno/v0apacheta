@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { Category, Tag } from '../definitions';
+import { Category, Tag } from '../schemas/definitions';
 import { z } from 'zod';
 import { getSession, getMethod, postMethod } from "./utils";
 

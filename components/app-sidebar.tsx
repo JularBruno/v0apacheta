@@ -1,9 +1,9 @@
 
 import type * as React from "react"
 import { Home, Settings, HelpCircle, Map, History, Package, Wallet, LogOut } from "lucide-react" // Added Map, History, Package
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { logOut } from '@/lib/actions/auth';
-import { signOut } from '@/auth'; 
+import { useTransition } from 'react';
 
 import {
   Sidebar,
@@ -62,9 +62,22 @@ const secondaryMenuItems = [
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname(); // Get current pathname
 
-  const handleLogout = async () => {
-    await logOut();
-  }
+  const [isPending, startTransition] = useTransition();
+
+  /**
+   * @title Handles logout with proper error handling
+   * @returns Logs out user and redirects
+   */
+  const handleLogout = () => {
+    startTransition(async () => {
+      try {
+        await logOut();
+      } catch (error) {
+        console.error('Logout failed:', error);
+        // Handle error if needed
+      }
+    });
+  };
 
   return (
     <Sidebar {...props}>
@@ -105,9 +118,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               ))}
               <SidebarMenuItem>
 
-                <SidebarMenuButton onClick={handleLogout}>
+                <SidebarMenuButton 
+                    disabled={isPending}
+                    onClick={handleLogout}>
                   <LogOut />
-                  <span>Cerrar Sesión</span>
+                  {/* <span></span> */}
+                  <span>{isPending ? 'Cerrando Sesión...' : 'Cerrar Sesión'}</span>
                 </SidebarMenuButton>
                 
               </SidebarMenuItem>

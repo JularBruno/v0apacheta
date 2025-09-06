@@ -1,77 +1,104 @@
 "use client"
 
 import type React from "react"
-import { useState, useTransition } from "react"
-import { useActionState } from "react"
-import { signUp } from "./actions"
+import { useState, useTransition, useActionState } from "react"
+import { UserState, register } from '@/lib/actions/user';
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
+
+/**
+ * @title required to follow form state
+ * @notes sets FormData on input change tracking actual form data 
+ */
+type LocalFormData = {
+  name: string;
+  email: string;
+  password: string;
+};
+
+type LocalErrors = {
+  name?: string;
+  email?: string;
+  password?: string;
+};
+
 export default function OnboardingPage() {
-  const [currentStep, setCurrentStep] = useState(1)
-  const [isPending, startTransition] = useTransition()
-  const router = useRouter()
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    question1: "",
-    question2: "",
+
+  /** Current step in multi-step form (1-4) */
+  const [currentStep, setCurrentStep] = useState(1);
+
+  /** Initial state for registration form validation and error handling */
+  const initialState: UserState = { 
+    message: null, 
+    errors: {
+    },
+    formData: undefined 
+  };
+
+  /** 
+   * Registration form state management
+   * @returns [state, formAction, isPending] - Form validation state, submit handler, loading status
+   */
+  const [state, formAction, isPending] = useActionState(register, initialState);
+
+  /** 
+   * Local errors to retrieve before form submiting
+   * @returns [localErrors, setLocalErrors] - localErrors state for each input, setLocalErrors handler
+   */
+  const [localErrors, setLocalErrors] = useState<LocalErrors>({});
+
+  /**
+   * useState required to follow form state
+   * @notes sets FormData on input change tracking actual form data 
+   */
+  const [localFormData, setLocalFormData] = useState<LocalFormData>({
+    name: '',
+    email: '',
+    password: ''
+    // question1: "", // should add question response to User?
+    // question2: "",
   })
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+  /** handles input values on change **/
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setLocalFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Clear error when user starts typing
+    if (localErrors[name as keyof LocalErrors]) {  // Better typing
+      setLocalErrors(prev => ({ ...prev, [name]: undefined }));
+    }
+  };
 
+  /**
+   * handles next on onboarding, reaching local errors before actually requiring to submit
+   * @notes sets FormData on input change tracking actual form data 
+   */
   const handleNext = () => {
-    if (currentStep === 1 && !formData.name) {
-      alert("Please enter your name.")
-      return
+    // Validate name on Step 1
+    if (currentStep === 1) {
+      if (!localFormData.name.trim()) {
+        setLocalErrors({ name: 'Ingresa un nombre' });
+        return;
+      }
+      // Clear any previous errors and proceed
+      setLocalErrors({});
     }
-    if (currentStep === 2 && (!formData.email || !formData.password)) {
-      alert("Please enter your email and password.")
-      return
-    }
-    if (currentStep === 3 && !formData.question1) {
-      alert("Please answer the question.")
-      return
-    }
-    setCurrentStep((prev) => prev + 1)
-  }
 
+    setCurrentStep(prev => prev + 1);
+  };
+
+  /** handle back button on onboarding **/
   const handleBack = () => {
     setCurrentStep((prev) => prev - 1)
   }
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (!formData.question2) {
-      alert("Please answer the question.")
-      return
-    }
-
-    // Use startTransition to properly handle the async action
-    startTransition(async () => {
-      try {
-        // Simulate your signup process
-        console.log("Submitting form data:", formData)
-        
-        // For placeholder: just wait a bit and navigate to dashboard
-        await new Promise(resolve => setTimeout(resolve, 150))
-        
-        // Navigate to dashboard after successful submission
-        router.push("/dashboard/mapa")
-      } catch (error) {
-        console.error("Signup failed:", error)
-        alert("Signup failed. Please try again.")
-      }
-    })
-  }
-
+  /** get image to display on each step **/
   const getImageSrc = () => {
     switch (currentStep) {
       case 1:
@@ -98,101 +125,131 @@ export default function OnboardingPage() {
         />
       </div>
 
-      {/* Form Section */}
+      {/* FORM CARD Section */}
       <div className="w-full lg:w-1/2 max-w-md lg:max-w-lg space-y-8 bg-white p-8 md:p-10 rounded-xl shadow-lg mt-8 lg:mt-0 lg:ml-8">
+      {/* FORM CARD HEADER */}
         <div>
-          <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">Start Your Journey</h2>
+          <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">Comienza tu camino</h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            {currentStep === 1 && "Tell us a bit about yourself."}
+            {currentStep === 1 && "Cuentanos sobre ti."}
             {currentStep === 2 && "Create your access credentials."}
             {currentStep === 3 && "A few quick questions to get to know you better."}
             {currentStep === 4 && "Almost done, one last question."}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+        {/* FORM CARD Form Section, STEPS */}
+        <form action={formAction} noValidate className="mt-8 space-y-6">
           {/* Step 1: Name */}
           {currentStep === 1 && (
             <div className="space-y-6">
               <div>
-                <Label htmlFor="name">Your Name</Label>
+                <Label htmlFor="name">Tu Nombre</Label>
                 <Input
                   id="name"
                   name="name"
                   type="text"
                   autoComplete="name"
                   required
-                  placeholder="Your full name"
+                  placeholder="tu nombre"
                   className="mt-1"
-                  value={formData.name}
+                  value={state.formData?.name || localFormData.name}
                   onChange={handleInputChange}
-                  disabled={isPending}
                 />
+                {/* client-side errors */}
+                {localErrors.name && (
+                  <p className="text-red-500 text-sm">{localErrors.name}</p>
+                )}
               </div>
+
               <Button
                 type="button"
                 onClick={handleNext}
                 className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
               >
-                Next
+                Siguiente
               </Button>
+
             </div>
           )}
 
           {/* Step 2: Email & Password */}
           {currentStep === 2 && (
             <div className="space-y-6">
+              {/* Hidden input to carry forward name from Step 1 */}
+              <input type="hidden" name="name" value={localFormData.name} />
               <div>
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   name="email"
                   type="email"
-                  autoComplete="email"
-                  required
                   placeholder="your@email.com"
                   className="mt-1"
-                  value={formData.email}
+                  required
+                  autoComplete="email"
                   onChange={handleInputChange}
-                  disabled={isPending}
+                  defaultValue={state.formData?.email || localFormData.email} 
                 />
+                <div id="email-error" aria-live="polite" aria-atomic="true">
+                  {state.errors?.email &&
+                    state.errors.email.map((error: string) => (
+                      <p className="mt-2 text-sm text-red-500" key={error}>
+                        {error}
+                      </p>
+                    ))}
+                </div>
               </div>
               <div>
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Contraseña</Label>
                 <Input
                   id="password"
                   name="password"
                   type="password"
-                  autoComplete="new-password"
                   required
                   placeholder="••••••••"
                   className="mt-1"
-                  value={formData.password}
                   onChange={handleInputChange}
-                  disabled={isPending}
+                  autoComplete="new-password"
+                  defaultValue={state.formData?.password || localFormData.password}  // This preserves the value
+
                 />
+                <div id="password-error" aria-live="polite" aria-atomic="true">
+                  {state.errors?.password &&
+                    state.errors.password.map((error: string) => (
+                      <p className="mt-2 text-sm text-red-500" key={error}>
+                        {error}
+                      </p>
+                    ))}
+                </div>
               </div>
+
               <div className="flex justify-between gap-4">
                 <Button type="button" onClick={handleBack} variant="outline" className="w-1/2 bg-transparent">
-                  Back
+                  Atrás
                 </Button>
                 <Button
-                  type="button"
-                  onClick={handleNext}
+                  type="submit"
                   className="w-1/2 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
+                  disabled={isPending}
                 >
-                  Next
+                  {isPending ? "Finalizando..." : "Terminar Registro"}
                 </Button>
+
+                {/* client-side errors */}
+                {localErrors && (
+                  <p className="text-red-500 text-sm">{localErrors.name}</p>
+                )}
               </div>
             </div>
           )}
 
           {/* Step 3: Question 1 */}
-          {currentStep === 3 && (
+          {/* {currentStep === 3 && (
             <div className="space-y-6">
               <div>
                 <Label htmlFor="question1" className="text-base font-semibold mb-2 block">
-                  1. What is your main short-term financial goal?
+                  1. Cual sería tu logro ideal a corto plazo?
                 </Label>
                 <div className="space-y-2">
                   <div className="flex items-center">
@@ -207,7 +264,7 @@ export default function OnboardingPage() {
                       disabled={isPending}
                     />
                     <Label htmlFor="q1-a1" className="ml-2 block text-sm text-gray-900">
-                      Save for an emergency fund
+                      Tener un fondo de emergencia
                     </Label>
                   </div>
                   <div className="flex items-center">
@@ -222,7 +279,7 @@ export default function OnboardingPage() {
                       disabled={isPending}
                     />
                     <Label htmlFor="q1-a2" className="ml-2 block text-sm text-gray-900">
-                      Pay off credit card debt
+                      Pagar deudas como tarjetas de crédito
                     </Label>
                   </div>
                   <div className="flex items-center">
@@ -237,7 +294,7 @@ export default function OnboardingPage() {
                       disabled={isPending}
                     />
                     <Label htmlFor="q1-a3" className="ml-2 block text-sm text-gray-900">
-                      Buy a significant asset (e.g., car, appliance)
+                      Hacer una compra significativa (auto, emprendimiento, construcción, etc.)
                     </Label>
                   </div>
                   <div className="flex items-center">
@@ -252,32 +309,32 @@ export default function OnboardingPage() {
                       disabled={isPending}
                     />
                     <Label htmlFor="q1-a4" className="ml-2 block text-sm text-gray-900">
-                      Start investing small amounts
+                      Invertir montos pequeños
                     </Label>
                   </div>
                 </div>
               </div>
               <div className="flex justify-between gap-4">
                 <Button type="button" onClick={handleBack} variant="outline" className="w-1/2 bg-transparent">
-                  Back
+                  Atrás
                 </Button>
                 <Button
                   type="button"
                   onClick={handleNext}
                   className="w-1/2 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
                 >
-                  Next
+                  Siguiente
                 </Button>
               </div>
             </div>
-          )}
+          )} */}
 
           {/* Step 4: Question 2 */}
-          {currentStep === 4 && (
+          {/* {currentStep === 4 && (
             <div className="space-y-6">
               <div>
                 <Label htmlFor="question2" className="text-base font-semibold mb-2 block">
-                  2. How would you describe your current level of financial knowledge?
+                  2. ¿Cómo describirías tu nivel actual de conocimiento financiero?
                 </Label>
                 <div className="space-y-2">
                   <div className="flex items-center">
@@ -292,7 +349,7 @@ export default function OnboardingPage() {
                       disabled={isPending}
                     />
                     <Label htmlFor="q2-a1" className="ml-2 block text-sm text-gray-900">
-                      Basic (almost none)
+                      Básico (casi nulo)
                     </Label>
                   </div>
                   <div className="flex items-center">
@@ -307,7 +364,7 @@ export default function OnboardingPage() {
                       disabled={isPending}
                     />
                     <Label htmlFor="q2-a2" className="ml-2 block text-sm text-gray-900">
-                      Intermediate (I know some concepts)
+                      Intermedio (conozco algunos conceptos)
                     </Label>
                   </div>
                   <div className="flex items-center">
@@ -322,7 +379,7 @@ export default function OnboardingPage() {
                       disabled={isPending}
                     />
                     <Label htmlFor="q2-a3" className="ml-2 block text-sm text-gray-900">
-                      Advanced (I manage investments and strategies)
+                      Avanzado (gestiono inversiones y estrategias)
                     </Label>
                   </div>
                   <div className="flex items-center">
@@ -337,38 +394,40 @@ export default function OnboardingPage() {
                       disabled={isPending}
                     />
                     <Label htmlFor="q2-a4" className="ml-2 block text-sm text-gray-900">
-                      Expert (I am a professional in the sector)
+                      Experto (soy un profesional del sector)
                     </Label>
                   </div>
                 </div>
               </div>
               <div className="flex justify-between gap-4">
                 <Button type="button" onClick={handleBack} variant="outline" className="w-1/2 bg-transparent">
-                  Back
+                  Atrás
                 </Button>
                 <Button
                   type="submit"
                   className="w-1/2 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
                   disabled={isPending}
                 >
-                  {isPending ? "Finalizing..." : "Finish Registration"}
+                  {isPending ? "Finalizing..." : "Terminar Registro"}
                 </Button>
               </div>
             </div>
-          )}
+          )} */}
 
           {/* {state?.message && (
             <p className={`text-sm text-center ${state.success ? "text-green-600" : "text-red-600"}`}>
               {state.message}
             </p>
           )} */}
+
+          {/* should have an ending response. also all questions could be outside form */}
         </form>
         <div className="text-center text-sm text-gray-600">
           {currentStep < 4 && (
             <>
-              Already have an account?{" "}
+              Ya tenés una cuenta?{" "}
               <Link href="/login" className="font-medium text-green-600 hover:text-green-500">
-                Log In
+                Ingresa aca!
               </Link>
             </>
           )}
