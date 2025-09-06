@@ -1,14 +1,6 @@
 // This file contains type definitions for  data.
+// should be migrated to each schema
 
-export interface User {
-    id: string;
-    name: string;
-    email: string;
-    password: string;
-    // role: string;
-    // balance: string;
-};
-  
 export interface Category {
     createdAt?: string;
     id: string;

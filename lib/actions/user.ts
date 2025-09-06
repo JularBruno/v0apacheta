@@ -4,10 +4,11 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { signIn } from '@/auth'; 
 import { AuthError } from 'next-auth';
-import { User } from '../schemas/definitions';
+import { User, UserState } from '../schemas/user';
 import { z } from 'zod';
 import { postMethod } from "./utils";
 
+/* FormSchemas for validating each form parameter with an specific error before post on actual server */
 const PostUserFormSchema = z.object({
     name: z.string().nonempty({ message: "Ingresa un nombre" }),
     email: z.string().email({ message: "Invalid email format" }),
@@ -19,25 +20,13 @@ const PostUserFormSchema = z.object({
         // .regex(/[0-9]/, { message: "Password must contain at least one number" })
         // .regex(/[\W_]/, { message: "Password must contain at least one special character" }),
 });
-  
-// const PostUser = PostUserFormSchema.omit({ userId: true });
 
-export type UserState = {
-    errors?: {
-        name?: string[];
-        email?: string[];
-        password?: string[];
-    };
-    message?: string | null;
-    // Add this to preserve form data:
-    formData?: {
-        name?: string;
-        email?: string;
-        password?: string;
-    };
-};
-  
-
+/**
+ * @title Register user! Posting to api user/register
+ * @param prevState - Previous state of the form, useful for setting state
+ * @param formData - Form data for registering
+ * @returns error messages based on the failing form, otherwise return data, and redirects to dashboard/mapa
+ */
 export async function register(prevState: UserState, formData: FormData) {
     const url = 'user/register';
     
@@ -93,15 +82,6 @@ export async function register(prevState: UserState, formData: FormData) {
     } catch (registrationError: any) {
         console.error('Registration failed:', registrationError);
         
-        // Handle specific registration errors
-        // if (registrationError.message?.includes('email already exists') || 
-        //     registrationError.status === 409) {
-        //     return {
-        //         errors: { email: ['This email is already registered'] },
-        //         message: 'Email already exists.'
-        //     };
-        // }
-
         if (registrationError.statusCode === 401 && registrationError.message === "Invalid username") {
             return {
                 errors: { email: ['This email is already registered'] },
@@ -115,19 +95,20 @@ export async function register(prevState: UserState, formData: FormData) {
         }
         
         // Handle other registration errors
-        // return {
-        //     errors: {},
-        //     message: 'Registration failed. Please try again.'
-        // };
+        return {
+            errors: { email: ['Something went wrong.'] },
+                message: 'Something went wrong.',
+                formData: {
+                    name: formData.get('name') as string,
+                    email: formData.get('email') as string,
+                    password: formData.get('password') as string,
+                }
+        };
     }
     
     // Only redirect if everything succeeded
-
-    // return validatedData;
-    console.log('REDIRECT')
     revalidatePath('/dashboard/mapa');
     redirect('/dashboard/mapa');
-
 }
 
   

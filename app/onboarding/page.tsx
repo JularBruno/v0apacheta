@@ -2,14 +2,14 @@
 
 import type React from "react"
 import { useState, useTransition, useActionState } from "react"
-import { UserState, register } from '@/lib/actions/user';
+import { register } from '@/lib/actions/user';
+import { UserState, initialUserState } from '@/lib/schemas/user';
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-
 
 /**
  * @title required to follow form state
@@ -32,19 +32,11 @@ export default function OnboardingPage() {
   /** Current step in multi-step form (1-4) */
   const [currentStep, setCurrentStep] = useState(1);
 
-  /** Initial state for registration form validation and error handling */
-  const initialState: UserState = { 
-    message: null, 
-    errors: {
-    },
-    formData: undefined 
-  };
-
   /** 
    * Registration form state management
    * @returns [state, formAction, isPending] - Form validation state, submit handler, loading status
    */
-  const [state, formAction, isPending] = useActionState(register, initialState);
+  const [state, formAction, isPending] = useActionState(register, initialUserState);
 
   /** 
    * Local errors to retrieve before form submiting
