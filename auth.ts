@@ -13,10 +13,8 @@ import { Router } from "next/router";
 const apiUrl = process.env.API_URL;
 
 /**
- * @title Authenticate for throwing in form and reaching sign-in in auth
- * @param prevState - Previous state of the form, useful for seting state
- * @param formData - Form data of login
- * @returns error messages based on the failing form, otherwise return data(might require to make custom type) and redirects to dashboard/mapa
+ * @title 
+ * @notes 
  */
 declare module 'next-auth' {
   interface Session extends DefaultSession {
@@ -38,8 +36,16 @@ declare module 'next-auth/jwt' {
 }
 
 // Create a global error store
+/**
+ * @title 
+ * @notes 
+ */
 export let lastAuthError: string | null = null;
 
+/**
+ * @title 
+ * @notes 
+ */
 export const { auth, signIn, signOut } = NextAuth({
   ...authConfig,
   providers: [
@@ -99,15 +105,14 @@ export const { auth, signIn, signOut } = NextAuth({
           const data = await response.json();
 
           // Return a user object that NextAuth can use
-          // Adjust the fields based on your API response
-          console.log('before return login 200')
+          // console.log('before return login 200')
 
           return {
-            id: data.user.id, // Adjust based on your API response
+            id: data.user.id, 
             email: data.user.email,
-            // name: data.user.name, // If available
+            name: data.user.name, // If available
             // Store the token if you need it for other API calls
-            accessToken: data.accessToken, // If your API returns a token
+            accessToken: data.accessToken,
           };
         } catch (error: any) {
           console.error('Login error:', error);

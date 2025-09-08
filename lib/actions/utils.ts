@@ -21,7 +21,12 @@ export async function unauthorized(): Promise<Session | null> {
     return redirect("/login");
 };
 
-//// Methods for using in the rest of functions
+/**
+ * @title Default getMethod
+ * @param url - url to get from
+ * @param id - id to add to url if required
+ * @returns response or error
+ */
 export async function getMethod<T>(url: string, id?: string | number): Promise<T> {
     const session = await getSession();
 
@@ -45,43 +50,74 @@ export async function getMethod<T>(url: string, id?: string | number): Promise<T
         const data = await response.json();
         return data;
     } catch (error) {
-      if (error) {
-        throw error;
-      }
       throw error;
     }
 };
 
-export async function postMethod<T>(url: string, body?: object): Promise<T> {
-    const session = await getSession();
-
-    if (!session?.user?.id || !session?.accessToken) {
-    //   throw new Error("Unauthorized");
-        unauthorized();
+/**
+ * @title Default postMethod
+ * @param url - url to post to
+ * @param body - body to post
+ * @param requiresAuth - IF requires authentication, default true but for registering it was required to false
+ * @returns response or error
+ */
+export async function postMethod<T>(
+    url: string, 
+    body?: object, 
+    requiresAuth: boolean = true // Add flag for auth requirement
+): Promise<T> {
+    
+    // Only check session for authenticated endpoints
+    if (requiresAuth) {
+        const session = await getSession();
+        if (!session?.user?.id || !session?.accessToken) {
+            unauthorized();
+        }
     }
 
     try {
-        const response = await fetch(`${urlDev}/${url}`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session?.accessToken}`,
+        // Build headers conditionally
+        const headers: Record<string, string> = {
             'Content-Type': 'application/json',
-          }, 
-          body: JSON.stringify(body)
+        };
+        
+        if (requiresAuth) {
+            const session = await getSession();
+            headers['Authorization'] = `Bearer ${session?.accessToken}`;
+        }
+
+        const response = await fetch(`${urlDev}/${url}`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(body)
         });
 
-        const data = await response.json();
-        return data;
-    } catch (error) {
-      if (error) {
+        if (!response.ok) {
+            const errorData = await response.json();
+            
+            // Create proper error object with all data
+            const error = new Error(errorData.message || 'API Error') as any;
+            error.statusCode = errorData.statusCode || response.status;
+            error.status = response.status;
+            error.response = errorData;
+            
+            throw error;
+        }
+
+        return await response.json();
+        
+    } catch (error: any) {
+        // Don't modify the error, just re-throw it
         throw error;
-      }
-      throw error;
     }
-};
+}
 
-
-
+/**
+ * @title Default deleteMethod
+ * @param url - url to object for deletion
+ * @param id - id to identify object
+ * @returns response or error
+ */
 export async function deleteMethod<T>(url: string, id: string): Promise<T> {
     const session = await getSession();
 
@@ -102,9 +138,6 @@ export async function deleteMethod<T>(url: string, id: string): Promise<T> {
         const data = await response.json();
         return data;
     } catch (error) {
-      if (error) {
-        throw error;
-      }
       throw error;
     }
 };

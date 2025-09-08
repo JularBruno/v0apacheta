@@ -11,10 +11,10 @@ import { postMethod } from "./utils";
 /* FormSchemas for validating each form parameter with an specific error before post on actual server */
 const PostUserFormSchema = z.object({
     name: z.string().nonempty({ message: "Ingresa un nombre" }),
-    email: z.string().email({ message: "Invalid email format" }),
+    email: z.string().email({ message: "Formato de email incorrecto" }),
     password: z
         .string()
-        .min(6, { message: "Password must be at least 6 characters long" })
+        .min(6, { message: "La contraseña al menos debe tener 6 caracteres" })
         // .regex(/[A-Z]/, { message: "Password must contain at least one uppercase letter" })
         // .regex(/[a-z]/, { message: "Password must contain at least one lowercase letter" })
         // .regex(/[0-9]/, { message: "Password must contain at least one number" })
@@ -51,9 +51,7 @@ export async function register(prevState: UserState, formData: FormData) {
     }
 
     try {
-        await postMethod<User>(url, {
-            ...validatedData.data
-        });
+        await postMethod<User>(url, validatedData.data, false);
 
         try {
 
@@ -65,7 +63,9 @@ export async function register(prevState: UserState, formData: FormData) {
             await signIn('credentials', signInData);
             
         } catch (error: any) {
-            console.log(error);
+            
+            console.log('HOLY error', error);
+
             if (error.statusCode === 401 && error.message === "Invalid username") {
             return {
                 errors: { email: ['This email is already registered'] },
@@ -80,11 +80,13 @@ export async function register(prevState: UserState, formData: FormData) {
         }
 
     } catch (registrationError: any) {
+        console.log('HOLY error', registrationError);
+
         console.error('Registration failed:', registrationError);
         
         if (registrationError.statusCode === 401 && registrationError.message === "Invalid username") {
             return {
-                errors: { email: ['This email is already registered'] },
+                errors: { email: ['Este email está en uso'] },
                 message: 'Email already exists.',
                 formData: {
                     name: formData.get('name') as string,
@@ -96,7 +98,7 @@ export async function register(prevState: UserState, formData: FormData) {
         
         // Handle other registration errors
         return {
-            errors: { email: ['Something went wrong.'] },
+            errors: { email: ['Algo salió mal.'] },
                 message: 'Something went wrong.',
                 formData: {
                     name: formData.get('name') as string,
