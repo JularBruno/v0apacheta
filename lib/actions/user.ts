@@ -6,7 +6,8 @@ import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
 import { User, UserState } from '../schemas/user';
 import { z } from 'zod';
-import { postMethod } from "./utils";
+import { getSession, getMethod, postMethod } from "./utils";
+import { errorMonitor } from 'events';
 
 /* FormSchemas for validating each form parameter with an specific error before post on actual server */
 const PostUserFormSchema = z.object({
@@ -113,4 +114,26 @@ export async function register(prevState: UserState, formData: FormData) {
     redirect('/dashboard/mapa');
 }
 
-  
+
+/**
+ * @title Get user profile including Balance
+ * @returns User obejct
+ */
+export async function getProfile() {
+    const url = 'user/profile';
+    const session = await getSession();
+
+    if (!session?.user.id) throw new Error('User ID is missing'); // not sure if required
+
+    try {
+
+        let userProfile = await getMethod<User>(url);
+        console.log('userProfile ', userProfile);
+        
+        return userProfile;    
+    } catch (error) {
+        console.log(error);
+        throw error;
+    }
+    
+}

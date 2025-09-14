@@ -158,8 +158,11 @@ export default function QuickSpendCard({
 }) {
   const [type, setType] = useState<TxType>(initialType || defaultType)
 
-  // Categories state (allows creation)
+  /**
+   * Categories state (allows creation, setsnewone after created)
+   */
   const [cats, setCats] = useState<Category[]>(initialCategories)
+  // fitlered cats
   const expenseCats = useMemo(() => cats.filter((c) => c.kind === "gasto"), [cats])
   const incomeCats = useMemo(() => cats.filter((c) => c.kind === "ingreso"), [cats])
 
@@ -176,6 +179,7 @@ export default function QuickSpendCard({
   // Amount
   const [amount, setAmount] = useState<string>("")
 
+  /** By using an ARIA live region, you make your app accessible (A11y = accessibility). */
   // A11y live region
   const liveRegionRef = useRef<HTMLDivElement>(null)
   const announce = (msg: string) => {
@@ -317,6 +321,12 @@ export default function QuickSpendCard({
     // Keep amount set to last used for fast re-entry
     setAmount(String(a))
   }
+
+  /**
+   * 
+   * UI PIECES
+   * 
+   */
 
   // UI pieces
 
@@ -479,6 +489,13 @@ export default function QuickSpendCard({
     )
   }
 
+
+  /**
+   * 
+   * CATEGORIES
+   * 
+   */
+
   // Create Category dialog state and handlers
   const [showCreateCategory, setShowCreateCategory] = useState(false)
   const [newCatName, setNewCatName] = useState("")
@@ -491,6 +508,8 @@ export default function QuickSpendCard({
       alert("Ingresá un nombre de categoría.")
       return
     }
+
+    // building cat object
     const iconObj = availableIcons.find((i) => i.id === newCatIconId) || availableIcons[0]
     const colorObj = availableColors.find((c) => c.id === newCatColorId) || availableColors[0]
     const cat: Category = {
@@ -500,7 +519,10 @@ export default function QuickSpendCard({
       color: colorObj.class,
       kind: newCatKind,
     }
-    setCats((prev) => [cat, ...prev])
+
+    setCats((prev) => [cat, ...prev]) // setCats! 
+
+    // set filtered cats based on creations
     if (cat.kind === "gasto") {
       setSelectedExpenseCat(cat.id)
       setType("gasto")
@@ -508,14 +530,18 @@ export default function QuickSpendCard({
       setSelectedIncomeCat(cat.id)
       setType("ingreso")
     }
+
+    // close dialog and clean form
     setShowCreateCategory(false)
     setNewCatName("")
     setNewCatIconId(availableIcons[0].id)
     setNewCatColorId(availableColors[0].id)
     setNewCatKind(type)
+
     announce(`Categoría ${cat.name} creada`)
   }
 
+  
   // Manage Categories dialog state and handlers
   const [showManageCategories, setShowManageCategories] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
@@ -582,6 +608,11 @@ export default function QuickSpendCard({
 
   const shownCategories = type === "gasto" ? expenseCats : incomeCats
 
+  /**
+   * 
+   * AGREGAR TRANSACCIÓN
+   * 
+   */
   return (
     <Card className="w-full max-w-none">
       <CardHeader>
@@ -683,7 +714,11 @@ export default function QuickSpendCard({
           {type === "gasto" ? "Gastar" : "Agregar"}
         </Button>
       </CardContent>
-
+      {/*
+      * 
+      * CATEGORIES
+      * 
+      */}
       {/* Create Category Dialog */}
       <Dialog open={showCreateCategory} onOpenChange={setShowCreateCategory}>
         <DialogContent className="w-[95vw] max-w-md">
@@ -909,6 +944,8 @@ export default function QuickSpendCard({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+
     </Card>
   )
 }

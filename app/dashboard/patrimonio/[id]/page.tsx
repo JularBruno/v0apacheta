@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Edit, Trash2, Filter, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
-import AssetFormModal from "@/components/asset-form-modal"
+import AssetFormModal from "@/components/assets/asset-form-modal"
 import QuickSpendCard, { type QuickSpendData } from "@/components/transactions/quick-spend-card"
-import EditTransactionModal from "@/components/edit-transaction-modal"
-import DeleteConfirmationModal from "@/components/delete-confirmation-modal"
+import EditTransactionModal from "@/components/assets/edit-transaction-modal"
+import DeleteConfirmationModal from "@/components/assets/delete-confirmation-modal"
 import {
   Utensils,
   ShoppingCart,

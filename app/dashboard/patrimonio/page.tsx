@@ -4,8 +4,8 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
-import AssetCard from "@/components/asset-card"
-import AssetFormModal from "@/components/asset-form-modal"
+import AssetCard from "@/components/assets/asset-card"
+import AssetFormModal from "@/components/assets/asset-form-modal"
 
 // Mock data - replace with real data later
 const mockAssets = [

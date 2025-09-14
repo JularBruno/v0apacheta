@@ -22,6 +22,11 @@ import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress" // Import Progress component
 import QuickSpendCard, { type QuickSpendData } from "@/components/transactions/quick-spend-card"
+//
+import { getProfile } from "@/lib/actions/user";
+import { useEffect, useState } from 'react';
+import { User } from "@/lib/schemas/user"
+
 
 // Default categories with icons (kept for TransactionForm)
 const defaultCategories = [
@@ -61,6 +66,7 @@ export default function InicioPage() {
   const monthlyBudgetRemaining = monthlyBudget - totalSpent
   const progressPercentage = (totalSpent / monthlyBudget) * 100
 
+
   // Mock data for upcoming payments
   const upcomingPayments: PaymentItem[] = [
     { id: "1", name: "Alquiler", amount: 500, dueDate: "01/mes" },
@@ -77,6 +83,28 @@ export default function InicioPage() {
     alert("Transacción agregada exitosamente!")
     // In a real app, you would typically save the transaction to a global state or backend
   }
+
+  const [userProfile, setUserProfile] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        setLoading(true);
+        const profile = await getProfile();
+        setUserProfile(profile);
+        console.log('userProfile:', profile);
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+        setError('Failed to load profile');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // fetchProfile(); API DOESNT WORK
+  }, []);
 
   return (
     <div className="space-y-6">

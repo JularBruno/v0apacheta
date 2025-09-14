@@ -1,5 +1,6 @@
 import { Users, Target, Heart } from "lucide-react"
 
+/**  */
 export default function About() {
   return (
     <section id="about" className="py-20 bg-white">

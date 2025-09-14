@@ -1,9 +1,9 @@
-import Header from "@/components/header"
-import Hero from "@/components/hero"
-import About from "@/components/about"
-import Features from "@/components/features"
-import FAQ from "@/components/faq"
-import Footer from "@/components/footer"
+import Header from "@/components/home/header"
+import Hero from "@/components/home/hero"
+import About from "@/components/home/about"
+import Features from "@/components/home/features"
+import FAQ from "@/components/home/faq"
+import Footer from "@/components/home/footer"
 
 export default function Home() {
   return (
