@@ -17,7 +17,6 @@ import {
 } from "lucide-react"
 import SpendingChart from "@/components/dashboard/spending-chart"
 import RecentExpenses from "@/components/dashboard/recent-expenses"
-import TransactionForm from "@/components/transaction-form"
 import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress" // Import Progress component

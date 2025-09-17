@@ -39,33 +39,10 @@ import type { LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
-type TxType = "gasto" | "ingreso"
-
-type Category = {
-  id: string
-  name: string
-  color: string
-  icon: LucideIcon
-  kind: TxType
-}
-
-type Tag = {
-  id: string
-  name: string
-  categoryId: string
-  defaultAmount: number
-  color: string
-}
-
-export type QuickSpendData = {
-  type: TxType
-  categoryId: string
-  tagId: string
-  tagName: string
-  amount: number
-  date: string
-  time: string
-}
+import { TxType } from "@/lib/schemas/definitions";
+import { Category } from "@/lib/schemas/category";
+import { Tag } from "@/lib/schemas/tag";
+import { Movement } from "@/lib/schemas/movement";
 
 const initialCategories: Category[] = [
   // Gastos
@@ -150,7 +127,7 @@ export default function QuickSpendCard({
   initialType,
   onCancel,
 }: {
-  onAdd: (data: QuickSpendData) => void
+  onAdd: (data: Movement) => void
   defaultType?: TxType
   onManageCategories?: () => void
   initialType?: TxType

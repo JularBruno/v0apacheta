@@ -53,7 +53,12 @@ const secondaryMenuItems = [
     icon: Settings,
   },
   {
-    title: "Ayuda",
+    title: "Ayuda", // desarrollar basado en el mapa
+    url: "/dashboard/help",
+    icon: HelpCircle,
+  },
+  {
+    title: "Donaciones",
     url: "/dashboard/help",
     icon: HelpCircle,
   },
