@@ -27,21 +27,6 @@ import { useEffect, useState } from 'react';
 import { User } from "@/lib/schemas/user"
 
 
-// Default categories with icons (kept for TransactionForm)
-const defaultCategories = [
-  { id: "comida", name: "Comida", icon: Utensils, color: "bg-orange-500" },
-  { id: "comestibles", name: "Comestibles", icon: ShoppingCart, color: "bg-green-500" },
-  { id: "transporte", name: "Transporte", icon: Car, color: "bg-blue-500" },
-  { id: "hogar", name: "Hogar", icon: Home, color: "bg-purple-500" },
-  { id: "entretenimiento", name: "Entretenimiento", icon: Gamepad2, color: "bg-red-500" },
-  { id: "servicios", name: "Servicios", icon: Zap, color: "bg-yellow-500" },
-  { id: "regalos", name: "Regalos", icon: Gift, color: "bg-pink-500" },
-  { id: "belleza", name: "Belleza", icon: Sparkles, color: "bg-indigo-500" },
-  { id: "trabajo", name: "Trabajo", icon: Briefcase, color: "bg-gray-500" },
-  { id: "viajes", name: "Viajes", icon: Plane, color: "bg-cyan-500" },
-  { id: "ingreso", name: "Ingreso", icon: DollarSign, color: "bg-green-600" },
-]
-
 interface Transaction {
   type: "gasto" | "ingreso"
   amount: number
@@ -159,6 +144,7 @@ export default function InicioPage() {
           console.log("Quick spend:", data)
           alert(`${data.type === "ingreso" ? "Ingreso" : "Gasto"} • ${data.amount} • ${data.tagId}`)
           // TODO: push to your store/backend and refresh recent lists
+          // ALSO: update balance
         }}
       />
 

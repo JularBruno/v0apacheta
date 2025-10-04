@@ -1,5 +1,3 @@
-import type { LucideIcon } from "lucide-react"
-
 import { TxType } from "./definitions";
 
 /**
@@ -9,7 +7,7 @@ export type Category = {
   id: string
   name: string
   color: string
-  icon: LucideIcon
+  icon: string
   kind: TxType
 }
 
