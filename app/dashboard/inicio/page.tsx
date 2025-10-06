@@ -25,6 +25,7 @@ import QuickSpendCard, { type QuickSpendData } from "@/components/transactions/q
 import { getProfile } from "@/lib/actions/user";
 import { useEffect, useState } from 'react';
 import { User } from "@/lib/schemas/user"
+import { TxType } from "@/lib/schemas/definitions";
 
 
 interface Transaction {
@@ -142,7 +143,7 @@ export default function InicioPage() {
       <QuickSpendCard
         onAdd={(data: QuickSpendData) => {
           console.log("Quick spend:", data)
-          alert(`${data.type === "ingreso" ? "Ingreso" : "Gasto"} • ${data.amount} • ${data.tagId}`)
+          alert(`${data.type === TxType.INCOME ? "Ingreso" : "Gasto"} • ${data.amount} • ${data.tagId}`)
           // TODO: push to your store/backend and refresh recent lists
           // ALSO: update balance
         }}

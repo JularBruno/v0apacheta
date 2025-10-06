@@ -22,7 +22,7 @@ import { Tag } from "@/lib/schemas/tag";
 import { Movement } from "@/lib/schemas/movement";
 import { TxType } from "@/lib/schemas/definitions";
 import { Category } from "@/lib/schemas/category";
-import { getCategoriesByUser } from "@/lib/actions/categories";
+import { getCategoriesByUser, postCategory } from "@/lib/actions/categories";
 import { getTagsByUser } from "@/lib/actions/tags";
 
 import { QuickSpendCategoryDialogs } from "./quick-spend-category-dialogs"
@@ -59,7 +59,7 @@ function nowInfo() {
  */
 export default function QuickSpendCard({
   onAdd,
-  defaultType = "gasto",
+  defaultType = TxType.EXPENSE,
   onManageCategories,
   initialType,
   onCancel,
@@ -84,6 +84,8 @@ export default function QuickSpendCard({
 
   /**
    * Fetch Categories
+   * TODO Validate if this should be on parent component
+   * This is the "lift state up" pattern. If it gets too deep (prop drilling), use Context.
    */
   useEffect(() => {
     const fetchData = async () => {
@@ -100,15 +102,15 @@ export default function QuickSpendCard({
   }, []);
 
   // fitlered cats
-  const expenseCats = useMemo(() => cats.filter((c) => c.kind === "gasto"), [cats]) 
-  const incomeCats = useMemo(() => cats.filter((c) => c.kind === "ingreso"), [cats])
+  const expenseCats = useMemo(() => cats.filter((c) => c.type === TxType.EXPENSE), [cats]) 
+  const incomeCats = useMemo(() => cats.filter((c) => c.type === TxType.INCOME), [cats])
 
   // Track a selected category per type so switching is smooth
   const [selectedExpenseCat, setSelectedExpenseCat] = useState<string>(expenseCats[0]?.id ) // || "comida" // TODO Validate what to do when null or empty or not this id
   const [selectedIncomeCat, setSelectedIncomeCat] = useState<string>(incomeCats[0]?.id)
 
   // Selected category
-  const categoryId = type === "gasto" ? selectedExpenseCat : selectedIncomeCat
+  const categoryId = type === TxType.EXPENSE ? selectedExpenseCat : selectedIncomeCat
 
   /** By using an ARIA live region, you make your app accessible (A11y = accessibility). */
   // A11y live region
@@ -127,8 +129,8 @@ export default function QuickSpendCard({
   const switchType = (next: TxType) => { // next: the type we're switching TO
     setType(next)// Update the transaction type
     // Get the first available category for the new type (or undefined if none exist)
-    const first = next === "gasto" ? expenseCats[0]?.id : incomeCats[0]?.id
-    if (next === "gasto") {
+    const first = next === TxType.EXPENSE ? expenseCats[0]?.id : incomeCats[0]?.id
+    if (next === TxType.EXPENSE) {
       // For expenses: keep current selection, OR use first available, OR fallback to "comida"
       setSelectedExpenseCat((prev) => prev || first || "comida")
     } else {
@@ -143,15 +145,18 @@ export default function QuickSpendCard({
   const setCategory = (id: string) => {
     const c = cats.find((x) => x.id === id)
     if (!c) return
-    if (c.kind === "gasto") {
+    if (c.type === TxType.EXPENSE) {
       setSelectedExpenseCat(id)
-      if (type !== "gasto") setType("gasto")
+      if (type !== TxType.EXPENSE) setType(TxType.EXPENSE)
     } else {
       setSelectedIncomeCat(id)
-      if (type !== "ingreso") setType("ingreso")
+      if (type !== TxType.INCOME) setType(TxType.INCOME)
     }
     announce(`Categoría ${c.name} seleccionada`)
   }
+
+  // Categories to display based on selected type
+  const shownCategories = type === TxType.EXPENSE ? expenseCats : incomeCats
 
   /**
    * 
@@ -210,9 +215,9 @@ export default function QuickSpendCard({
     // match category and type to tag
     const cat = cats.find((c) => c.id === t.categoryId)
     if (cat) {
-      if (cat.kind === "gasto") setSelectedExpenseCat(cat.id)
+      if (cat.type === TxType.EXPENSE) setSelectedExpenseCat(cat.id)
       else setSelectedIncomeCat(cat.id)
-      setType(cat.kind)
+      setType(cat.type)
     }
     announce(`Tag ${t.name} seleccionado`)
   }
@@ -432,9 +437,9 @@ export default function QuickSpendCard({
   const [newCatName, setNewCatName] = useState("")
   const [newCatIconId, setNewCatIconId] = useState(availableIcons[0].id)
   const [newCatColorId, setNewCatColorId] = useState(availableColors[0].id)
-  const [newCatKind, setNewCatKind] = useState<TxType>(type)
+  const [newCatType, setNewCatType] = useState<TxType>(type)
 
-  const createCategory = () => {
+  const createCategory = async () => {
     if (!newCatName.trim()) {
       alert("Ingresá un nombre de categoría.")
       return
@@ -444,33 +449,47 @@ export default function QuickSpendCard({
     const iconObj = availableIcons.find((i) => i.id === newCatIconId) || availableIcons[0]
     const colorObj = availableColors.find((c) => c.id === newCatColorId) || availableColors[0]
 
-    const cat: Category = {
-      id: `c-${Date.now()}`,
-      name: newCatName.trim(),
-      icon: iconObj.name,
-      color: colorObj.class,
-      kind: newCatKind,
+    try {
+      // API call FIRST
+      const result = await postCategory({
+        name: newCatName.trim(),
+        icon: iconObj.id,
+        color: colorObj.class,
+        type: newCatType,
+      })
+
+      console.log("result", result);
+      
+      // if ('errors' in result || 'message' in result) {
+      //   alert(result.message || "Error al crear categoría")
+      //   return
+      // }
+
+      const cat = result as Category
+      setCats((prev) => [cat, ...prev]) // setCats! 
+
+      // set filtered cats based on creations
+      if (cat.type === TxType.EXPENSE) {
+        setSelectedExpenseCat(cat.id)
+        setType(TxType.EXPENSE)
+      } else {
+        setSelectedIncomeCat(cat.id)
+        setType(TxType.INCOME)
+      }
+
+      // close dialog and clean form
+      setShowCreateCategory(false)
+      setNewCatName("")
+      setNewCatIconId(availableIcons[0].id)
+      setNewCatColorId(availableColors[0].id)
+      setNewCatType(type)
+
+      announce(`Categoría ${cat.name} creada`)
+    } catch (error) {
+      console.log('error ', error);
+      
+      alert("Error al crear categoría")
     }
-
-    setCats((prev) => [cat, ...prev]) // setCats! 
-
-    // set filtered cats based on creations
-    if (cat.kind === "gasto") {
-      setSelectedExpenseCat(cat.id)
-      setType("gasto")
-    } else {
-      setSelectedIncomeCat(cat.id)
-      setType("ingreso")
-    }
-
-    // close dialog and clean form
-    setShowCreateCategory(false)
-    setNewCatName("")
-    setNewCatIconId(availableIcons[0].id)
-    setNewCatColorId(availableColors[0].id)
-    setNewCatKind(type)
-
-    announce(`Categoría ${cat.name} creada`)
   }
 
   // Manage Categories dialog state and handlers
@@ -530,9 +549,9 @@ export default function QuickSpendCard({
 
     // Reset selection if deleted category was selected
     if (categoryId === catId) {
-      const remaining = cats.filter((c) => c.id !== catId && c.kind === type)
+      const remaining = cats.filter((c) => c.id !== catId && c.type === type)
       if (remaining.length > 0) {
-        if (type === "gasto") setSelectedExpenseCat(remaining[0].id)
+        if (type === TxType.EXPENSE) setSelectedExpenseCat(remaining[0].id)
         else setSelectedIncomeCat(remaining[0].id)
       }
     }
@@ -540,7 +559,6 @@ export default function QuickSpendCard({
     announce(`Categoría ${cat.name} eliminada`)
   }
 
-  const shownCategories = type === "gasto" ? expenseCats : incomeCats
 
   /**
    * 
@@ -567,11 +585,11 @@ export default function QuickSpendCard({
         <div className="grid grid-cols-2 gap-2" role="tablist" aria-label="Tipo de transacción">
           <button
             role="tab"
-            aria-selected={type === "gasto"}
-            onClick={() => switchType("gasto")}
+            aria-selected={type === TxType.EXPENSE}
+            onClick={() => switchType(TxType.EXPENSE)}
             className={cn(
               "py-3 px-4 rounded-lg text-base font-semibold transition-all border-2 md:py-4 md:px-6 md:text-lg",
-              type === "gasto"
+              type === TxType.EXPENSE
                 ? "bg-red-50 border-red-500 text-red-700 shadow-md ring-2 ring-red-200"
                 : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100",
             )}
@@ -580,11 +598,11 @@ export default function QuickSpendCard({
           </button>
           <button
             role="tab"
-            aria-selected={type === "ingreso"}
-            onClick={() => switchType("ingreso")}
+            aria-selected={type === TxType.INCOME}
+            onClick={() => switchType(TxType.INCOME)}
             className={cn(
               "py-3 px-4 rounded-lg text-base font-semibold transition-all border-2 md:py-4 md:px-6 md:text-lg",
-              type === "ingreso"
+              type === TxType.INCOME
                 ? "bg-green-50 border-green-500 text-green-700 shadow-md ring-2 ring-green-200"
                 : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100",
             )}
@@ -605,7 +623,7 @@ export default function QuickSpendCard({
           setShowManageCategories={setShowManageCategories}
         />
 
-        {/* Category: desktop grid */}
+        {/* Category: grid */}
         <CategoryGrid 
           items={shownCategories} 
           categoryId={categoryId}
@@ -635,39 +653,44 @@ export default function QuickSpendCard({
         </div>
 
         <Button onClick={submit} className="w-full h-12 text-base font-semibold">
-          {type === "gasto" ? "Gastar" : "Agregar"}
+          {type === TxType.EXPENSE ? "Gastar" : "Agregar"}
         </Button>
       </CardContent>
       
       {/* Category Dialogs */}
       <QuickSpendCategoryDialogs
+        // objects
+        cats={cats}
+        allTags={allTags}
+        // handlers for popup
         showCreateCategory={showCreateCategory}
         setShowCreateCategory={setShowCreateCategory}
+        showManageCategories={showManageCategories}
+        setShowManageCategories={setShowManageCategories}
+        // new form
         newCatName={newCatName}
         setNewCatName={setNewCatName}
         newCatIconId={newCatIconId}
         setNewCatIconId={setNewCatIconId}
         newCatColorId={newCatColorId}
         setNewCatColorId={setNewCatColorId}
-        newCatKind={newCatKind}
-        setNewCatKind={setNewCatKind}
-        createCategory={createCategory}
-
-        showManageCategories={showManageCategories}
-        setShowManageCategories={setShowManageCategories}
-        cats={cats}
+        newCatType={newCatType}
+        setNewCatType={setNewCatType}
+        // edit form
         startEditCategory={startEditCategory}
         editingCategory={editingCategory}
         setEditingCategory={setEditingCategory}
+
         editCatName={editCatName}
         setEditCatName={setEditCatName}
         editCatIconId={editCatIconId}
         setEditCatIconId={setEditCatIconId}
         editCatColorId={editCatColorId}
         setEditCatColorId={setEditCatColorId}
+        // actions
+        createCategory={createCategory}
         saveEditCategory={saveEditCategory}
         deleteCategory={deleteCategory}
-        allTags={allTags}
       />
 
     </Card>

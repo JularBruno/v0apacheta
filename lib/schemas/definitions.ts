@@ -4,4 +4,7 @@
 /** GLOBAL DEFINITIONS*/
 
 /** doesnt have a type on api right now, update this TODO */
-export type TxType = "gasto" | "ingreso"
+export enum TxType {
+    EXPENSE = 'expense',
+    INCOME = 'income',
+}

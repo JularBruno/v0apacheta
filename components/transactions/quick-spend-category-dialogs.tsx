@@ -39,41 +39,16 @@ import { cn } from "@/lib/utils"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Category } from "@/lib/schemas/category";
 import { Tag } from "@/lib/schemas/tag";
-import { availableColors, availableIcons } from "./quick-spend-constants"
-
-
-const iconComponents = {  Utensils,
-  ShoppingCart,
-  Car,
-  Home,
-  Gamepad2,
-  Zap,
-  Gift,
-  Sparkles,
-  Briefcase,
-  Plane,
-  DollarSign,
-  Coffee,
-  Heart,
-  Music,
-  Camera,
-  Book,
-  Dumbbell,
-  Palette,
-  Wrench,
-  Smartphone,
-  Laptop,
-  Settings,
-  Plus,
-  Edit,
-  Trash2,
-  X, }
+import { availableColors, availableIcons, iconComponents } from "./quick-spend-constants"
+import { TxType } from "@/lib/schemas/definitions";
 
 type Props = {
+    cats: Category[],
+    allTags: Tag[],
     showCreateCategory: boolean,
     setShowCreateCategory: (open: boolean) => void,
-    newCatKind: "gasto" | "ingreso",
-    setNewCatKind: (kind: "gasto" | "ingreso") => void,
+    newCatType: TxType.EXPENSE | TxType.INCOME,
+    setNewCatType: (kind: TxType.EXPENSE | TxType.INCOME) => void,
     newCatName: string,
     setNewCatName: (name: string) => void,
     newCatIconId: string,
@@ -83,7 +58,6 @@ type Props = {
     createCategory: () => void,
     showManageCategories: boolean,
     setShowManageCategories: (open: boolean) => void,
-    cats: Category[],
     deleteCategory: (id: string) => void,
     editingCategory: Category | null,
     setEditingCategory: (category: Category | null) => void,
@@ -95,15 +69,44 @@ type Props = {
     editCatColorId: string,
     setEditCatColorId: (id: string) => void,
     saveEditCategory: () => void,
-    allTags: Tag[],
 }
 
-
+/**
+ * Dialogs for creating and managing categories (used in QuickSpendCard component)
+ * @param cats Categories array
+ * @param allTags All tags array
+ * @param showCreateCategory Boolean to control the visibility of the create category dialog
+ * @param setShowCreateCategory Function to set the visibility of the create category dialog
+ * @param newCatType Type of the new category (TxType.EXPENSE or TxType.INCOME)
+ * @param setNewCatType Function to set the kind of the new category
+ * @param newCatName Name of the new category
+ * @param setNewCatName Function to set the name of the new category
+ * @param newCatIconId ID of the icon for the new category
+ * @param setNewCatIconId Function to set the icon ID for the new category
+ * @param newCatColorId ID of the color for the new category
+ * @param setNewCatColorId Function to set the color ID for the new category
+ * @param createCategory Function to create the new category
+ * @param showManageCategories Boolean to control the visibility of the manage categories dialog
+ * @param setShowManageCategories Function to set the visibility of the manage categories dialog
+ * @param deleteCategory Function to delete a category
+ * @param editingCategory Category being edited
+ * @param setEditingCategory Function to set the category being edited
+ * @param startEditCategory Function to start editing a category
+ * @param editCatName Name of the category being edited
+ * @param setEditCatName Function to set the name of the category being edited
+ * @param editCatIconId ID of the icon for the category being edited
+ * @param setEditCatIconId Function to set the icon ID for the category being edited
+ * @param editCatColorId ID of the color for the category being edited
+ * @param setEditCatColorId Function to set the color ID for the category being edited
+ * @param saveEditCategory Function to save the edited category
+ */
 export function QuickSpendCategoryDialogs({
+    cats,
+    allTags,
     showCreateCategory,
     setShowCreateCategory,
-    newCatKind,
-    setNewCatKind,
+    newCatType,
+    setNewCatType,
     newCatName,
     setNewCatName,
     newCatIconId,
@@ -113,7 +116,6 @@ export function QuickSpendCategoryDialogs({
     createCategory,
     showManageCategories,
     setShowManageCategories,
-    cats,
     deleteCategory,
     editingCategory,
     setEditingCategory,
@@ -125,7 +127,6 @@ export function QuickSpendCategoryDialogs({
     editCatColorId,
     setEditCatColorId,
     saveEditCategory,
-    allTags
 }: Props) {
     
     return (
@@ -140,11 +141,11 @@ export function QuickSpendCategoryDialogs({
                 <div className="flex bg-gray-100 rounded-lg p-1" role="tablist" aria-label="Tipo de categoría">
                 <button
                     role="tab"
-                    aria-selected={newCatKind === "gasto"}
-                    onClick={() => setNewCatKind("gasto")}
+                    aria-selected={newCatType === TxType.EXPENSE}
+                    onClick={() => setNewCatType(TxType.EXPENSE)}
                     className={cn(
                     "flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all",
-                    newCatKind === "gasto"
+                    newCatType === TxType.EXPENSE
                         ? "bg-white text-gray-900 shadow-sm border border-gray-200 ring-2 ring-red-200"
                         : "text-gray-600 hover:text-gray-900 hover:bg-gray-50",
                     )}
@@ -153,11 +154,11 @@ export function QuickSpendCategoryDialogs({
                 </button>
                 <button
                     role="tab"
-                    aria-selected={newCatKind === "ingreso"}
-                    onClick={() => setNewCatKind("ingreso")}
+                    aria-selected={newCatType === TxType.INCOME}
+                    onClick={() => setNewCatType(TxType.INCOME)}
                     className={cn(
                     "flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all",
-                    newCatKind === "ingreso"
+                    newCatType === TxType.INCOME
                         ? "bg-white text-gray-900 shadow-sm border border-gray-200 ring-2 ring-green-200"
                         : "text-gray-600 hover:text-gray-900 hover:bg-gray-50",
                     )}
@@ -220,10 +221,10 @@ export function QuickSpendCategoryDialogs({
                 </div>
             </div>
             <DialogFooter>
-                <Button variant="outline" onClick={() => setShowCreateCategory(false)}>
+                <Button type="button" variant="outline" onClick={() => {setShowCreateCategory(false); setNewCatName("")}}>
                 Cancelar
                 </Button>
-                <Button onClick={createCategory}>Crear</Button>
+                <Button type="button" onClick={createCategory}>Crear</Button>
             </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -253,7 +254,7 @@ export function QuickSpendCategoryDialogs({
                         <div className="min-w-0 flex-1">
                         <p className="font-medium truncate">{cat.name}</p>
                         <p className="text-sm text-gray-500">
-                            {cat.kind === "gasto" ? "Gasto" : "Ingreso"} • {relatedTagsCount} tag(s)
+                            {cat.type === "expense" ? "Gasto" : "Ingreso"} • {relatedTagsCount} tag(s)
                         </p>
                         </div>
                     </div>

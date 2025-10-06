@@ -26,6 +26,7 @@ import {
   TrendingUp,
   CreditCard,
 } from "lucide-react"
+import { TxType } from "@/lib/schemas/definitions";
 
 // Mock data - replace with real data later
 const mockAssets: FinancialItem[] = [
@@ -139,7 +140,7 @@ export default function AssetDetailPage() {
   const params = useParams()
   const searchParams = useSearchParams()
   const assetId = params.id as string
-  const actionParam = searchParams.get("action") as "ingreso" | "gasto" | null
+  const actionParam = searchParams.get("action") as TxType.INCOME | TxType.EXPENSE | null
 
   const [isLoading, setIsLoading] = useState(true)
   const [filterType, setFilterType] = useState<"all" | "gasto" | "ingreso">("all")
@@ -163,7 +164,7 @@ export default function AssetDetailPage() {
       setIsLoading(false)
 
       // Show QuickSpendCard if action parameter is present
-      if (actionParam === "ingreso" || actionParam === "gasto") {
+      if (actionParam === TxType.INCOME || actionParam === TxType.EXPENSE) {
         setShowQuickSpend(true)
       }
     }, 500)
@@ -236,7 +237,7 @@ export default function AssetDetailPage() {
 
   const handleQuickSpend = (data: QuickSpendData) => {
     console.log("Quick spend for asset:", asset?.name, data)
-    alert(`${data.type === "ingreso" ? "Ingreso" : "Gasto"} • ${data.amount} • ${data.tagId} agregado a ${asset?.name}`)
+    alert(`${data.type === TxType.INCOME ? "Ingreso" : "Gasto"} • ${data.amount} • ${data.tagId} agregado a ${asset?.name}`)
     // TODO: Add transaction to this specific asset
     setShowQuickSpend(false)
     // Remove action parameter from URL
