@@ -34,8 +34,10 @@ export async function getMethod<T>(url: string, id?: string | number): Promise<T
         throw new Error("Unauthorized");
     }
 
+    const endpoint = id ? `${urlDev}/${url}/${id}` : `${urlDev}/${url}`;
+
     try {
-        const response = await fetch(`${urlDev}/${url}/${id}`, {
+        const response = await fetch(endpoint, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${session?.accessToken}`,
@@ -50,6 +52,8 @@ export async function getMethod<T>(url: string, id?: string | number): Promise<T
         const data = await response.json();
         return data;
     } catch (error) {
+        console.log(error);
+        
       throw error;
     }
 };

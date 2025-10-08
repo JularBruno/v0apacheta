@@ -34,6 +34,7 @@ import {
   Trash2,
   X,
 } from "lucide-react"
+import { z } from 'zod';
 
 import { cn } from "@/lib/utils"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -70,6 +71,17 @@ type Props = {
     setEditCatColorId: (id: string) => void,
     saveEditCategory: () => void,
 }
+
+
+const PostCategorySchema = z.object({
+    name: z.string().min(1, 'Name is required').max(50, "Name must be less than 50 characters"),
+    icon: z.string().min(1, 'icon is required'),
+    color: z.string().min(1, 'color is required'),
+    type: z.enum([TxType.EXPENSE, TxType.INCOME])
+})
+
+export type CategoryFormData = z.infer<typeof PostCategorySchema>;
+
 
 /**
  * Dialogs for creating and managing categories (used in QuickSpendCard component)

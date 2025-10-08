@@ -5,7 +5,7 @@ export interface User {
     email: string;
     password: string;
     // role: string;
-    // balance: string;
+    balance: string;
 };
 
 /** User State type to reuse in forms **/ 

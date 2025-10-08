@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Category } from "@/lib/schemas/category";
+import { Tag } from "@/lib/schemas/tag";
 
 import {
   Settings,
@@ -90,8 +91,6 @@ export function CategoryHeaderMobile({
     )
 }
 
-
-
 type CategoryGridProps = {
     items: Category[],
     categoryId: string,
@@ -131,6 +130,140 @@ export function CategoryGrid({
                     )
                 })}
             </div>
+        </>
+    )
+}
+
+type TagRowProps = {
+    // tagInputRef: HTMLInputElement,
+    tagInput: string,
+    setTagInput: (name: string) => void,
+    tagId: string,
+    setTagId: (id: string) => void,
+    matchingSuggestions: Tag[],
+    matchingSuggestionsMobile: Tag[],
+    selectTag: (id: string) => void,
+    // clearToNew: () => void,
+    // onTagInputKeyDown: () => void
+}
+
+export function TagRow({
+    // tagInputRef,
+    tagInput,
+    setTagInput,
+    tagId,
+    setTagId,
+    matchingSuggestions,
+    matchingSuggestionsMobile,
+    selectTag,
+    // clearToNew,
+    // onTagInputKeyDown
+}: TagRowProps
+) {
+    const tagInputRef = useRef<HTMLInputElement>(null)
+
+    const listId = "tag-suggestions"
+    return (
+        <>
+            <div className="space-y-2">
+                    <Label className="text-sm text-gray-600">Tag</Label>
+                    <p id="tag-hint" className="sr-only">
+                    Escribe para buscar o crear un nuevo tag. Presiona Enter para crear.
+                    </p>
+                    <div className="flex gap-2">
+                    <Input
+                        ref={tagInputRef}
+                        role="combobox"
+                        aria-autocomplete="list"
+                        // aria-expanded={matchingSuggestions.length > 0}
+                        aria-controls={listId}
+                        aria-describedby="tag-hint"
+                        placeholder="Escribe para buscar o crear (Enter)"
+                        value={tagInput}
+                        onChange={(e) => {
+                            console.log('onChange fired, activeElement:', document.activeElement)
+            
+                        setTagInput(e.target.value)
+                        setTagId("") // typing implies "draft" new tag selection
+                        }}
+                        // onKeyDown={onTagInputKeyDown}
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        autoComplete="off"
+                        enterKeyHint="done"
+                        className="flex-1"
+                    />
+                    </div>
+            
+                    {/* Desktop suggestions with "Nuevo" pill */}
+                    <div id={listId} role="listbox" className="hidden md:flex md:flex-wrap gap-2">
+                    <button
+                        type="button"
+                        // onClick={clearToNew}
+                        className="px-3 py-1.5 rounded-full border text-sm border-blue-600 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
+                        aria-label="Crear nuevo tag"
+                        role="option"
+                        aria-selected={tagId === ""}
+                    >
+                        Nuevo
+                    </button>
+                    {matchingSuggestions.map((t) => (
+                        <button
+                        key={t.id}
+                        role="option"
+                        aria-selected={t.id === tagId}
+                        onClick={() => selectTag(t.id)}
+                        className={cn(
+                            "px-3 py-1.5 rounded-full border text-sm transition-all",
+                            t.id === tagId
+                            ? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-200 shadow-md"
+                            : "border-gray-200 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm",
+                        )}
+                        >
+                        {t.name} <span className="text-xs text-gray-500 ml-1">${t.amount}</span> 
+                        {/* AMOUNT SHOULD BE HIDDEN ON INCOME TAGS */}
+                        </button>
+                    ))}
+                    </div>
+            
+                    {/* Mobile suggestions with "Nuevo" pill */}
+                    <div role="listbox" className="md:hidden">
+                    <div className="flex flex-col sm:flex-row gap-2 pb-2">
+                        <button
+                        type="button"
+                        // onClick={clearToNew}
+                        // className="shrink-0 px-3 py-1.5 rounded-full border text-sm  transition-colors"
+                        className={cn(
+                            "shrink-0 px-3 py-1.5 rounded-full border text-sm transition-all whitespace-nowrap",
+                            tagId === ""
+                                ? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-200 shadow-md"
+                                : "border-gray-200 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm",
+                            )}
+                        aria-label="Crear nuevo tag"
+                        role="option"
+                        aria-selected={tagId === ""}
+                        >
+                        Nuevo +
+                        </button>
+                        {matchingSuggestionsMobile.map((t) => (
+                        <button
+                            key={t.id}
+                            role="option"
+                            aria-selected={t.id === tagId}
+                            onClick={() => selectTag(t.id)}
+                            className={cn(
+                            "shrink-0 px-3 py-1.5 rounded-full border text-sm transition-all whitespace-nowrap",
+                            t.id === tagId
+                                ? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-200 shadow-md"
+                                : "border-gray-200 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm",
+                            )}
+                        >
+                            {t.name} <span className="text-xs text-gray-500 ml-1">${t.amount}</span>
+                        </button>
+                        ))}
+                    </div>
+                    </div>
+                </div>
         </>
     )
 }

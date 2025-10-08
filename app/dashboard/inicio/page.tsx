@@ -20,11 +20,12 @@ import RecentExpenses from "@/components/dashboard/recent-expenses"
 import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress" // Import Progress component
-import QuickSpendCard, { type QuickSpendData } from "@/components/transactions/quick-spend-card"
+import QuickSpendCard from "@/components/transactions/quick-spend-card"
 //
 import { getProfile } from "@/lib/actions/user";
 import { useEffect, useState } from 'react';
 import { User } from "@/lib/schemas/user"
+import { Movement } from "@/lib/schemas/movement"
 import { TxType } from "@/lib/schemas/definitions";
 
 
@@ -71,15 +72,17 @@ export default function InicioPage() {
 
   const [userProfile, setUserProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null); // TODO whats this
   
   useEffect(() => {
-    async function fetchProfile() {
+    console.log('usefect');
+    
+    const fetchProfile = async () => {
       try {
         setLoading(true);
         const profile = await getProfile();
-        setUserProfile(profile);
         console.log('userProfile:', profile);
+        setUserProfile(profile);
       } catch (err) {
         console.error('Error fetching profile:', err);
         setError('Failed to load profile');
@@ -88,7 +91,7 @@ export default function InicioPage() {
       }
     }
 
-    // fetchProfile(); API DOESNT WORK
+    fetchProfile();
   }, []);
 
   return (
@@ -97,10 +100,17 @@ export default function InicioPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Banco</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">Balance personal</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$0 USD</div>
+            {loading ? (
+              <div>Loading...</div>
+            ) : userProfile ? (
+              <div className="text-2xl font-bold">${userProfile.balance} ARS</div>
+            ) : (
+              <div className="text-2xl font-bold">$0 ARS</div>
+            )}
+            {/* <div className="text-2xl font-bold">${userProfile: userProfile?.balance | 0 } ars</div> */}
             <p className="text-sm text-gray-500">0 transacciones</p>
           </CardContent>
         </Card>
@@ -141,7 +151,7 @@ export default function InicioPage() {
       </div>
       
       <QuickSpendCard
-        onAdd={(data: QuickSpendData) => {
+        onAdd={(data: Movement) => {
           console.log("Quick spend:", data)
           alert(`${data.type === TxType.INCOME ? "Ingreso" : "Gasto"} • ${data.amount} • ${data.tagId}`)
           // TODO: push to your store/backend and refresh recent lists

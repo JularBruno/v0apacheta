@@ -6,6 +6,6 @@ export type Tag = {
   id: string
   name: string
   categoryId: string
-  defaultAmount: number
+  amount: number
   color: string
 }

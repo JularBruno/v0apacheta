@@ -22,22 +22,13 @@ import { Tag } from "@/lib/schemas/tag";
 import { Movement } from "@/lib/schemas/movement";
 import { TxType } from "@/lib/schemas/definitions";
 import { Category } from "@/lib/schemas/category";
-import { getCategoriesByUser, postCategory } from "@/lib/actions/categories";
+import { getCategoriesByUser, postCategory, deleteCategoryById } from "@/lib/actions/categories";
 import { getTagsByUser } from "@/lib/actions/tags";
 
 import { QuickSpendCategoryDialogs } from "./quick-spend-category-dialogs"
 import { availableIcons, availableColors, iconComponents } from "./quick-spend-constants"
-import { CategoryHeaderDesktop, CategoryHeaderMobile, CategoryGrid } from "./quick-spend-ui-pieces"
+import { CategoryHeaderDesktop, CategoryHeaderMobile, CategoryGrid, TagRow } from "./quick-spend-ui-pieces"
 
-export type QuickSpendData = {
-  type: TxType
-  categoryId: string
-  tagId: string
-  tagName: string
-  amount: number
-  date: string
-  time: string
-}
 
 // this very nice but not sure how it works TODO review
 function nowInfo() {
@@ -91,7 +82,6 @@ export default function QuickSpendCard({
     const fetchData = async () => {
       try {
         const cats = await getCategoriesByUser();
-        console.log('cats ', cats); // TODO remove logs
         setCats(cats);
       } catch (error) {
         console.error('Failed to fetch categories:', error);
@@ -171,13 +161,8 @@ export default function QuickSpendCard({
   // Amount in form. This also allows that when tag selected input amount is set with value.
   const [amount, setAmount] = useState<string>("")
 
-  // After setState, check if focus is lost:
-  useEffect(() => {
-    console.log('After tagInput change, focused element:', document.activeElement)
-  }, [tagInput])
-
   // Tags (global suggestions; not filtered by category initially)
-  const [allTags, setAllTags] = useState<Tag[]>([]) // TODO Validate what to do when null or empty (should have some by default)
+  const [allTags, setAllTags] = useState<Tag[]>([])
   
   /**
    * Fetch Tags
@@ -186,7 +171,6 @@ export default function QuickSpendCard({
     const fetchData = async () => {
       try {
         const allTags = await getTagsByUser();
-        console.log('allTags ', allTags); // TODO remove logs
         setAllTags(allTags);
       } catch (error) {
         console.error('Failed to fetch tags:', error);
@@ -211,7 +195,7 @@ export default function QuickSpendCard({
     if (!t) return
     setTagId(t.id)
     setTagInput(t.name)
-    setAmount(String(t.defaultAmount || ""))
+    setAmount(String(t.amount || ""))
     // match category and type to tag
     const cat = cats.find((c) => c.id === t.categoryId)
     if (cat) {
@@ -222,22 +206,22 @@ export default function QuickSpendCard({
     announce(`Tag ${t.name} seleccionado`)
   }
 
-  const clearToNew = () => {
-    setTagId("")
-    setTagInput("")
-    setAmount("")
-    announce("Nuevo tag. Escribe el nombre y presiona Enter para crearlo.")
-    setTimeout(() => tagInputRef.current?.focus(), 0)
-  }
+  // const clearToNew = () => {
+  //   setTagId("")
+  //   setTagInput("")
+  //   setAmount("")
+  //   announce("Nuevo tag. Escribe el nombre y presiona Enter para crearlo.")
+  //   setTimeout(() => tagInputRef.current?.focus(), 0)
+  // }
 
   // TODO REVIEW Create Tag helper that returns the tag object (avoids stale reads)
-  const createTagObject = (name: string, defaultAmount?: number): Tag => {
+  const createTagObject = (name: string, amount?: number): Tag => {
     const cat = cats.find((c) => c.id === categoryId)!
     return {
       id: `t-${Date.now()}`,
       name: name.trim(),
       categoryId: cat.id,
-      defaultAmount: Number.isFinite(defaultAmount || 0) && (defaultAmount || 0) > 0 ? (defaultAmount as number) : 0,
+      amount: Number.isFinite(amount || 0) && (amount || 0) > 0 ? (amount as number) : 0,
       color: cat.color,
     }
   }
@@ -292,20 +276,20 @@ export default function QuickSpendCard({
 
     // Always update tag default amount to last used
     if (currentTag) {
-      const updated = { ...currentTag, defaultAmount: a }
+      const updated = { ...currentTag, amount: a }
       setAllTags((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
     }
 
     const { date, time } = nowInfo()
-    onAdd({
-      type,
-      categoryId,
-      tagId: currentTag?.id || "",
-      tagName: currentTag?.name || trimmed,
-      amount: a,
-      date,
-      time,
-    })
+    // onAdd({
+    //   type,
+    //   categoryId,
+    //   tagId: currentTag?.id || "",
+    //   tagName: currentTag?.name || trimmed,
+    //   amount: a,
+    //   date,
+    //   time,
+    // })
 
     // Keep amount set to last used for fast re-entry
     setAmount(String(a))
@@ -319,116 +303,12 @@ export default function QuickSpendCard({
 
   // UI pieces
 
-  // Ref to directly access the tag input DOM element (e.g., to focus or clear it programmatically)
-  const tagInputRef = useRef<HTMLInputElement>(null)
-
-  const TagRow = () => {
-    const listId = "tag-suggestions"
-    return (
-      <div className="space-y-2">
-        <Label className="text-sm text-gray-600">Tag</Label>
-        <p id="tag-hint" className="sr-only">
-          Escribe para buscar o crear un nuevo tag. Presiona Enter para crear.
-        </p>
-        <div className="flex gap-2">
-          <Input
-            ref={tagInputRef}
-            role="combobox"
-            aria-autocomplete="list"
-            // aria-expanded={matchingSuggestions.length > 0}
-            aria-controls={listId}
-            aria-describedby="tag-hint"
-            placeholder="Escribe para buscar o crear (Enter)"
-            value={tagInput}
-            onChange={(e) => {
-                console.log('onChange fired, activeElement:', document.activeElement)
-
-              setTagInput(e.target.value)
-              setTagId("") // typing implies "draft" new tag selection
-            }}
-            onKeyDown={onTagInputKeyDown}
-            autoCapitalize="none"
-            autoCorrect="off"
-            autoComplete="off"
-            enterKeyHint="done"
-            className="flex-1"
-          />
-        </div>
-
-        {/* Desktop suggestions with "Nuevo" pill */}
-        <div id={listId} role="listbox" className="hidden md:flex md:flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={clearToNew}
-            className="px-3 py-1.5 rounded-full border text-sm border-blue-600 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
-            aria-label="Crear nuevo tag"
-            role="option"
-            aria-selected={tagId === ""}
-          >
-            Nuevo
-          </button>
-          {matchingSuggestions.map((t) => (
-            <button
-              key={t.id}
-              role="option"
-              aria-selected={t.id === tagId}
-              onClick={() => selectTag(t.id)}
-              className={cn(
-                "px-3 py-1.5 rounded-full border text-sm transition-all",
-                t.id === tagId
-                  ? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-200 shadow-md"
-                  : "border-gray-200 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm",
-              )}
-            >
-              {t.name} <span className="text-xs text-gray-500 ml-1">${t.defaultAmount}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Mobile suggestions with "Nuevo" pill */}
-        <div role="listbox" className="md:hidden">
-          <div className="flex flex-col sm:flex-row gap-2 pb-2">
-            <button
-              type="button"
-              onClick={clearToNew}
-              // className="shrink-0 px-3 py-1.5 rounded-full border text-sm  transition-colors"
-              className={cn(
-                  "shrink-0 px-3 py-1.5 rounded-full border text-sm transition-all whitespace-nowrap",
-                  tagId === ""
-                    ? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-200 shadow-md"
-                    : "border-gray-200 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm",
-                )}
-              aria-label="Crear nuevo tag"
-              role="option"
-              aria-selected={tagId === ""}
-            >
-              Nuevo +
-            </button>
-            {matchingSuggestionsMobile.map((t) => (
-              <button
-                key={t.id}
-                role="option"
-                aria-selected={t.id === tagId}
-                onClick={() => selectTag(t.id)}
-                className={cn(
-                  "shrink-0 px-3 py-1.5 rounded-full border text-sm transition-all whitespace-nowrap",
-                  t.id === tagId
-                    ? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-200 shadow-md"
-                    : "border-gray-200 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm",
-                )}
-              >
-                {t.name} <span className="text-xs text-gray-500 ml-1">${t.defaultAmount}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    )
-  }
+  // TAG ROW Ref to directly access the tag input DOM element (e.g., to focus or clear it programmatically)
+  // const tagInputRef = useRef<HTMLInputElement>(null)
 
   /**
    * 
-   * CATEGORY DIALOGS
+   * CATEGORY dialog handlers and functions
    * 
    */
 
@@ -529,7 +409,8 @@ export default function QuickSpendCard({
     announce(`Categoría ${updatedCat.name} actualizada`)
   }
 
-  const deleteCategory = (catId: string) => {
+  /* deletion */
+  const deleteCategory = async (catId: string) => {
     const cat = cats.find((c) => c.id === catId)
     if (!cat) return
 
@@ -544,6 +425,8 @@ export default function QuickSpendCard({
       // Remove related tags
       setAllTags((prev) => prev.filter((t) => t.categoryId !== catId))
     }
+
+    await deleteCategoryById(cat.id);
 
     setCats((prev) => prev.filter((c) => c.id !== catId))
 
@@ -631,7 +514,17 @@ export default function QuickSpendCard({
         />
 
         {/* Tags */}
-        <TagRow />
+        <TagRow 
+          tagInput={tagInput}
+          setTagInput={setTagInput}
+          tagId={tagId}
+          setTagId={ setTagId}
+          matchingSuggestions={matchingSuggestions}
+          matchingSuggestionsMobile={matchingSuggestionsMobile}
+          selectTag={selectTag}
+          // clearToNew={ clearToNew}
+          // onTagInputKeyDown={ onTagInputKeyDown }
+        />
 
         {/* Amount */}
         <div className="space-y-2">

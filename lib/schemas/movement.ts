@@ -4,11 +4,6 @@
 
 import { TxType } from "./definitions";
 
-
-
-/**
- * as for now movements will be a type, when finished on api should be updated TODO
- */
 export type Movement = {
   type: TxType
   categoryId: string
@@ -16,5 +11,5 @@ export type Movement = {
   tagName: string
   amount: number
   date: string
-  time: string
+  description: string
 }

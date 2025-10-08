@@ -38,7 +38,6 @@ export async function register(prevState: UserState, formData: FormData) {
     });
     
     if (!validatedData.success) {
-        console.log('validatedData.error ', validatedData.error?.flatten().fieldErrors);
         return {
             errors: validatedData.error.flatten().fieldErrors,
             message: 'Missing fields.',
@@ -64,9 +63,6 @@ export async function register(prevState: UserState, formData: FormData) {
             await signIn('credentials', signInData);
             
         } catch (error: any) {
-            
-            console.log('HOLY error', error);
-
             if (error.statusCode === 401 && error.message === "Invalid username") {
             return {
                 errors: { email: ['This email is already registered'] },
@@ -81,10 +77,6 @@ export async function register(prevState: UserState, formData: FormData) {
         }
 
     } catch (registrationError: any) {
-        console.log('HOLY error', registrationError);
-
-        console.error('Registration failed:', registrationError);
-        
         if (registrationError.statusCode === 401 && registrationError.message === "Invalid username") {
             return {
                 errors: { email: ['Este email está en uso'] },
@@ -114,22 +106,15 @@ export async function register(prevState: UserState, formData: FormData) {
     redirect('/dashboard/mapa');
 }
 
-
 /**
  * @title Get user profile including Balance
  * @returns User obejct
  */
 export async function getProfile() {
     const url = 'user/profile';
-    const session = await getSession();
-
-    if (!session?.user.id) throw new Error('User ID is missing'); // not sure if required
-
     try {
-
         let userProfile = await getMethod<User>(url);
         console.log('userProfile ', userProfile);
-        
         return userProfile;    
     } catch (error) {
         console.log(error);
