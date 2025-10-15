@@ -61,7 +61,7 @@ export async function getMethod<T>(url: string, id?: string | number): Promise<T
 /**
  * @title Default postMethod
  * @param url - url to post to
- * @param body - body to post
+ * @param body - body to post (Remmember to include user id)
  * @param requiresAuth - IF requires authentication, default true but for registering it was required to false
  * @returns response or error
  */
@@ -93,6 +93,55 @@ export async function postMethod<T>(
         const response = await fetch(`${urlDev}/${url}`, {
             method: 'POST',
             headers,
+            body: JSON.stringify(body)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            
+            // Create proper error object with all data
+            const error = new Error(errorData.message || 'API Error') as any;
+            error.statusCode = errorData.statusCode || response.status;
+            error.status = response.status;
+            error.response = errorData;
+            
+            throw error;
+        }
+
+        return await response.json();
+        
+    } catch (error: any) {
+        // Don't modify the error, just re-throw it
+        throw error;
+    }
+}
+
+/**
+ * @title Default putMethod
+ * @param url - url to post to
+ * @param body - body to post (Remmember to include user id)
+ * @param id - id of object to update
+ * @returns response or error
+ */
+export async function putMethod<T>(
+    url: string, 
+    id: string,
+    body?: object,
+): Promise<T> {
+
+    try {
+        // Only check session for authenticated endpoints
+        const session = await getSession();
+        if (!session?.user?.id || !session?.accessToken) {
+            unauthorized();
+        }
+
+        const response = await fetch(`${urlDev}/${url}/${id}`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${session?.accessToken}`,
+                'Content-Type': 'application/json',
+            },
             body: JSON.stringify(body)
         });
 

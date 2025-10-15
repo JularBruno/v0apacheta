@@ -43,7 +43,7 @@ declare module 'next-auth/jwt' {
 export let lastAuthError: string | null = null;
 
 /**
- * @title 
+ * @title From NextAuth auth method, signIn and signOut functions
  * @notes 
  */
 export const { auth, signIn, signOut } = NextAuth({

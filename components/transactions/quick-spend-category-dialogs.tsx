@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { useState } from "react"
 
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -39,9 +40,23 @@ import { z } from 'zod';
 import { cn } from "@/lib/utils"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Category } from "@/lib/schemas/category";
+import { postCategory, putCategory } from "@/lib/actions/categories";
 import { Tag } from "@/lib/schemas/tag";
 import { availableColors, availableIcons, iconComponents } from "./quick-spend-constants"
 import { TxType } from "@/lib/schemas/definitions";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+
+const categorySchema = z.object({
+    name: z.string().min(1, 'Ingresa un nombre').max(20, "Intenta que tenga menos de 20 caracteres"),
+    icon: z.string().min(1, 'icon is required'),
+    color: z.string().min(1, 'color is required'),
+    type: z.enum([TxType.EXPENSE, TxType.INCOME])
+})
+
+export type CategoryFormData = z.infer<typeof categorySchema>;
+
 
 type Props = {
     cats: Category[],
@@ -50,37 +65,13 @@ type Props = {
     setShowCreateCategory: (open: boolean) => void,
     newCatType: TxType.EXPENSE | TxType.INCOME,
     setNewCatType: (kind: TxType.EXPENSE | TxType.INCOME) => void,
-    newCatName: string,
-    setNewCatName: (name: string) => void,
-    newCatIconId: string,
-    setNewCatIconId: (id: string) => void,
-    newCatColorId: string,
-    setNewCatColorId: (id: string) => void,
-    createCategory: () => void,
     showManageCategories: boolean,
     setShowManageCategories: (open: boolean) => void,
     deleteCategory: (id: string) => void,
-    editingCategory: Category | null,
-    setEditingCategory: (category: Category | null) => void,
-    startEditCategory: (category: Category) => void,
-    editCatName: string,
-    setEditCatName: (name: string) => void,
-    editCatIconId: string,
-    setEditCatIconId: (id: string) => void,
-    editCatColorId: string,
-    setEditCatColorId: (id: string) => void,
-    saveEditCategory: () => void,
+    //
+    onSubmit: (data: Category) => void,
 }
 
-
-const PostCategorySchema = z.object({
-    name: z.string().min(1, 'Name is required').max(50, "Name must be less than 50 characters"),
-    icon: z.string().min(1, 'icon is required'),
-    color: z.string().min(1, 'color is required'),
-    type: z.enum([TxType.EXPENSE, TxType.INCOME])
-})
-
-export type CategoryFormData = z.infer<typeof PostCategorySchema>;
 
 
 /**
@@ -91,26 +82,10 @@ export type CategoryFormData = z.infer<typeof PostCategorySchema>;
  * @param setShowCreateCategory Function to set the visibility of the create category dialog
  * @param newCatType Type of the new category (TxType.EXPENSE or TxType.INCOME)
  * @param setNewCatType Function to set the kind of the new category
- * @param newCatName Name of the new category
- * @param setNewCatName Function to set the name of the new category
- * @param newCatIconId ID of the icon for the new category
- * @param setNewCatIconId Function to set the icon ID for the new category
- * @param newCatColorId ID of the color for the new category
- * @param setNewCatColorId Function to set the color ID for the new category
- * @param createCategory Function to create the new category
  * @param showManageCategories Boolean to control the visibility of the manage categories dialog
  * @param setShowManageCategories Function to set the visibility of the manage categories dialog
  * @param deleteCategory Function to delete a category
- * @param editingCategory Category being edited
- * @param setEditingCategory Function to set the category being edited
- * @param startEditCategory Function to start editing a category
- * @param editCatName Name of the category being edited
- * @param setEditCatName Function to set the name of the category being edited
- * @param editCatIconId ID of the icon for the category being edited
- * @param setEditCatIconId Function to set the icon ID for the category being edited
- * @param editCatColorId ID of the color for the category being edited
- * @param setEditCatColorId Function to set the color ID for the category being edited
- * @param saveEditCategory Function to save the edited category
+ * @param onSubmit Function to handle the submission of a new or edited category
  */
 export function QuickSpendCategoryDialogs({
     cats,
@@ -119,125 +94,220 @@ export function QuickSpendCategoryDialogs({
     setShowCreateCategory,
     newCatType,
     setNewCatType,
-    newCatName,
-    setNewCatName,
-    newCatIconId,
-    setNewCatIconId,
-    newCatColorId,
-    setNewCatColorId,
-    createCategory,
     showManageCategories,
     setShowManageCategories,
     deleteCategory,
-    editingCategory,
-    setEditingCategory,
-    startEditCategory,
-    editCatName,
-    setEditCatName,
-    editCatIconId,
-    setEditCatIconId,
-    editCatColorId,
-    setEditCatColorId,
-    saveEditCategory,
+
+    onSubmit, 
 }: Props) {
+
+    // values to use in selectors and in the form
+    const [newCatIconId, setNewCatIconId] = useState(availableIcons[0].id)
+    const [newCatColorId, setNewCatColorId] = useState(availableColors[0].id)
+    // editing category to extract values
+    const [editingCategory, setEditingCategory] = useState<Category | null>(null)
+
+    /** Form zod validator and values */
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isSubmitting },
+        reset,
+    } = useForm<CategoryFormData>({
+        resolver: zodResolver(categorySchema)
+        ,
+        defaultValues: {
+            name: '',
+            color: newCatColorId,
+            icon: newCatIconId,
+            type: newCatType,
+        }
+    });
+
+    /**
+     * Set the category to edit and update values on form
+     * @param cat category to edit and extract data from
+     */
+    const startEditCategory = (cat: Category) => {
+        
+        reset({
+            name: cat.name,
+            color: cat.color,
+            icon: cat.icon,
+            type: cat.type, // Assuming 'kind' maps to 'type'
+        });
+
+        setEditingCategory(cat);
+        console.log("Editing category:", editingCategory);
+        
+        setNewCatType(cat.type);
+        setNewCatColorId(cat.color);
+        setNewCatIconId(cat.icon);
+        
+        setShowCreateCategory(true); // Open dialog
+    }
     
+
+    const onSubmitHandler = async (data: CategoryFormData) => {
+        try {
+            data.color = newCatColorId;
+            data.icon = newCatIconId;
+            data.type = newCatType;
+
+            if(editingCategory?.id) {
+                // Editing existing category
+                const cat = await putCategory(editingCategory.id, data);
+                console.log("Updated category:", cat);
+                onSubmit(cat); // Call parent's submit handler
+                setShowManageCategories(false); // Close dialog
+
+            } else {
+                const cat = await postCategory(data);
+                onSubmit(cat); // Call parent's submit handler
+            }
+            
+            setShowCreateCategory(false);
+
+            setNewCatColorId(availableColors[0]?.id);
+            setNewCatIconId(availableIcons[0]?.id);
+            // reset form values too
+            reset({
+                name: '',
+                color: availableColors[0]?.id,
+                icon: availableIcons[0]?.id,
+                type: newCatType,
+            });
+        } catch (error) {
+            console.error('Submit error:', error);
+        }
+    };
+
     return (
         <>
-        <Dialog open={showCreateCategory} onOpenChange={setShowCreateCategory}>
+        <Dialog open={showCreateCategory}   onOpenChange={setShowCreateCategory}>
             <DialogContent className="w-[95vw] max-w-md">
-            <DialogHeader>
-                <DialogTitle>Nueva categoría</DialogTitle>
-            </DialogHeader>
+                <DialogHeader>
+                    <DialogTitle>
+                        {editingCategory ? 'Editar categoría ' : 'Nueva categoría'}
+                    </DialogTitle>
 
-            <div className="space-y-4 py-2">
-                <div className="flex bg-gray-100 rounded-lg p-1" role="tablist" aria-label="Tipo de categoría">
-                <button
-                    role="tab"
-                    aria-selected={newCatType === TxType.EXPENSE}
-                    onClick={() => setNewCatType(TxType.EXPENSE)}
-                    className={cn(
-                    "flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all",
-                    newCatType === TxType.EXPENSE
-                        ? "bg-white text-gray-900 shadow-sm border border-gray-200 ring-2 ring-red-200"
-                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50",
-                    )}
-                >
-                    💸 Gasto
-                </button>
-                <button
-                    role="tab"
-                    aria-selected={newCatType === TxType.INCOME}
-                    onClick={() => setNewCatType(TxType.INCOME)}
-                    className={cn(
-                    "flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all",
-                    newCatType === TxType.INCOME
-                        ? "bg-white text-gray-900 shadow-sm border border-gray-200 ring-2 ring-green-200"
-                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50",
-                    )}
-                >
-                    💰 Ingreso
-                </button>
-                </div>
-                <div>
-                <Label htmlFor="new-cat-name">Nombre</Label>
-                <Input
-                    id="new-cat-name"
-                    placeholder="Ej: Mascotas"
-                    value={newCatName}
-                    onChange={(e) => setNewCatName(e.target.value)}
-                />
-                </div>
-
-                <div>
-                <Label>Ícono</Label>
-                <div className="grid grid-cols-5 gap-2 mt-2">
-                    {availableIcons.map((i) => {
-                    const Icon = i.icon
-                    const active = newCatIconId === i.id
-                    return (
+                </DialogHeader>
+                {/* <form onSubmit={handleSubmit(onSubmitHandler)}> */}
+                    <form onSubmit={handleSubmit(onSubmitHandler)}>
+                    <div className="space-y-4 py-2">
+                        <div className="flex bg-gray-100 rounded-lg p-1" role="tablist" aria-label="Tipo de categoría">
                         <button
-                        key={i.id}
-                        onClick={() => setNewCatIconId(i.id)}
-                        className={cn(
-                            "p-2 rounded-lg border flex items-center justify-center",
-                            active ? "border-primary-600 bg-primary-50" : "border-gray-200 hover:bg-gray-50",
-                        )}
-                        title={i.name}
+                            role="tab"
+                            aria-selected={newCatType === TxType.EXPENSE}
+                            onClick={() => setNewCatType(TxType.EXPENSE)}
+                            className={cn(
+                            "flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all",
+                            newCatType === TxType.EXPENSE
+                                ? "bg-white text-gray-900 shadow-sm border border-gray-200 ring-2 ring-red-200"
+                                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50",
+                            )}
+                            type="button"
                         >
-                        <Icon className="w-5 h-5" />
+                            💸 Gasto
                         </button>
-                    )
-                    })}
-                </div>
-                </div>
-
-                <div>
-                <Label>Color</Label>
-                <div className="grid grid-cols-8 gap-2 mt-2">
-                    {availableColors.map((c) => {
-                    const active = newCatColorId === c.id
-                    return (
                         <button
-                        key={c.id}
-                        onClick={() => setNewCatColorId(c.id)}
-                        className={cn(
-                            "w-8 h-8 rounded-full border-2",
-                            c.class,
-                            active ? "border-gray-900" : "border-white",
-                        )}
-                        title={c.name}
+                            role="tab"
+                            aria-selected={newCatType === TxType.INCOME}
+                            onClick={() => setNewCatType(TxType.INCOME)}
+                            className={cn(
+                            "flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all",
+                            newCatType === TxType.INCOME
+                                ? "bg-white text-gray-900 shadow-sm border border-gray-200 ring-2 ring-green-200"
+                                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50",
+                            )}
+                            type="button"
+                        >
+                            💰 Ingreso
+                        </button>
+                        </div>
+                        <div>
+                        <Label htmlFor="name">Nombre</Label>
+                        <Input
+                            id="name"
+                            placeholder="Ej: Mascotas"
+                            {...register('name')}
+                            // value={newCatName}
+                            // onChange={(e) => setNewCatName(e.target.value)}
                         />
-                    )
-                    })}
-                </div>
-                </div>
-            </div>
-            <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => {setShowCreateCategory(false); setNewCatName("")}}>
-                Cancelar
-                </Button>
-                <Button type="button" onClick={createCategory}>Crear</Button>
-            </DialogFooter>
+                        {errors.name && ( // ← Show error message
+                            <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+                        )}
+                        </div>
+
+                        <div>
+                            <Label>Ícono</Label>
+                            <div className="grid grid-cols-5 gap-2 mt-2">
+                                {availableIcons.map((i) => {
+                                const Icon = i.icon
+                                const active = newCatIconId === i.id
+                                return (
+                                    <button
+                                    key={i.id}
+                                    onClick={() => setNewCatIconId(i.id)}
+                                    type="button"
+                                    className={cn(
+                                        "p-2 rounded-lg border flex items-center justify-center",
+                                        active ? "border-primary-600 bg-primary-50" : "border-gray-200 hover:bg-gray-50",
+                                    )}
+                                    title={i.name}
+                                    >
+                                    <Icon className="w-5 h-5" />
+                                    </button>
+                                )
+                                })}
+                            </div>
+                        </div>
+
+                        <div>
+                        <Label>Color</Label>
+                        <div className="grid grid-cols-8 gap-2 mt-2">
+                            {availableColors.map((c) => {
+                            const active = newCatColorId === c.id
+                            return (
+                                <button
+                                key={c.id}
+                                onClick={() => setNewCatColorId(c.id)}
+                                type="button"
+                                className={cn(
+                                    "w-8 h-8 rounded-full border-2",
+                                    c.class,
+                                    active ? "border-gray-900" : "border-white",
+                                )}
+                                title={c.name}
+                                />
+                            )
+                            })}
+                        </div>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => {
+                            console.log('Cancel clicked');
+                            setShowCreateCategory(false);
+                            setEditingCategory(null);
+                            setNewCatColorId(availableColors[0]?.id);
+                            setNewCatIconId(availableIcons[0]?.id);
+                            // reset form values too
+                            reset({
+                                name: '',
+                                color: availableColors[0]?.id,
+                                icon: availableIcons[0]?.id,
+                                type: newCatType,
+                            });
+
+                        }}>
+                            Cancelar
+                        </Button>
+                        <Button type="submit" >
+                              {isSubmitting ? 'Guardando...' : editingCategory ? 'Actualizar' : 'Crear'}
+                        </Button>
+                    </DialogFooter>
+                </form>
             </DialogContent>
         </Dialog>
 
@@ -250,8 +320,8 @@ export function QuickSpendCategoryDialogs({
             <div className="space-y-4 py-2 max-h-96 overflow-y-auto">
                 {cats.map((cat) => {
                 // const Icon = cat.icon
-                const Icon = iconComponents[cat.icon as keyof typeof iconComponents] // MAPPING icon to category string 
-                    
+                const Icon = iconComponents[cat.icon as keyof typeof iconComponents] // MAPPING icon to category string
+
                 const isEditing = editingCategory?.id === cat.id
                 const relatedTagsCount = allTags.filter((t) => t.categoryId === cat.id).length
 
@@ -300,75 +370,6 @@ export function QuickSpendCategoryDialogs({
             </DialogContent>
         </Dialog>
 
-        {/* Edit Category Dialog */}
-        <Dialog open={!!editingCategory} onOpenChange={() => setEditingCategory(null)}>
-            <DialogContent className="w-[95vw] max-w-md">
-            <DialogHeader>
-                <DialogTitle>Editar Categoría</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-2">
-                <div>
-                <Label htmlFor="edit-cat-name">Nombre</Label>
-                <Input
-                    id="edit-cat-name"
-                    placeholder="Nombre de la categoría"
-                    value={editCatName}
-                    onChange={(e) => setEditCatName(e.target.value)}
-                />
-                </div>
-
-                <div>
-                <Label>Ícono</Label>
-                <div className="grid grid-cols-5 gap-2 mt-2">
-                    {availableIcons.map((i) => {
-                    const Icon = i.icon
-                    const active = editCatIconId === i.id
-                    return (
-                        <button
-                        key={i.id}
-                        onClick={() => setEditCatIconId(i.id)}
-                        className={cn(
-                            "p-2 rounded-lg border flex items-center justify-center",
-                            active ? "border-primary-600 bg-primary-50" : "border-gray-200 hover:bg-gray-50",
-                        )}
-                        title={i.name}
-                        >
-                        <Icon className="w-5 h-5" />
-                        </button>
-                    )
-                    })}
-                </div>
-                </div>
-
-                <div>
-                <Label>Color</Label>
-                <div className="grid grid-cols-8 gap-2 mt-2">
-                    {availableColors.map((c) => {
-                    const active = editCatColorId === c.id
-                    return (
-                        <button
-                        key={c.id}
-                        onClick={() => setEditCatColorId(c.id)}
-                        className={cn(
-                            "w-8 h-8 rounded-full border-2",
-                            c.class,
-                            active ? "border-gray-900" : "border-white",
-                        )}
-                        title={c.name}
-                        />
-                    )
-                    })}
-                </div>
-                </div>
-            </div>
-            <DialogFooter>
-                <Button variant="outline" onClick={() => setEditingCategory(null)}>
-                Cancelar
-                </Button>
-                <Button onClick={saveEditCategory}>Guardar</Button>
-            </DialogFooter>
-            </DialogContent>
-        </Dialog>
         </>
     )
 }

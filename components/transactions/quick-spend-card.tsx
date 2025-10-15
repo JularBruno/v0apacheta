@@ -82,6 +82,8 @@ export default function QuickSpendCard({
     const fetchData = async () => {
       try {
         const cats = await getCategoriesByUser();
+        console.log('Fetched categories:', cats);
+        
         setCats(cats);
       } catch (error) {
         console.error('Failed to fetch categories:', error);
@@ -314,100 +316,20 @@ export default function QuickSpendCard({
 
   // Create Category dialog state and handlers
   const [showCreateCategory, setShowCreateCategory] = useState(false)
-  const [newCatName, setNewCatName] = useState("")
-  const [newCatIconId, setNewCatIconId] = useState(availableIcons[0].id)
-  const [newCatColorId, setNewCatColorId] = useState(availableColors[0].id)
   const [newCatType, setNewCatType] = useState<TxType>(type)
 
-  const createCategory = async () => {
-    if (!newCatName.trim()) {
-      alert("Ingresá un nombre de categoría.")
-      return
-    }
-
-    // building cat object
-    const iconObj = availableIcons.find((i) => i.id === newCatIconId) || availableIcons[0]
-    const colorObj = availableColors.find((c) => c.id === newCatColorId) || availableColors[0]
-
-    try {
-      // API call FIRST
-      const result = await postCategory({
-        name: newCatName.trim(),
-        icon: iconObj.id,
-        color: colorObj.class,
-        type: newCatType,
-      })
-
-      console.log("result", result);
-      
-      // if ('errors' in result || 'message' in result) {
-      //   alert(result.message || "Error al crear categoría")
-      //   return
-      // }
-
-      const cat = result as Category
-      setCats((prev) => [cat, ...prev]) // setCats! 
-
-      // set filtered cats based on creations
-      if (cat.type === TxType.EXPENSE) {
-        setSelectedExpenseCat(cat.id)
-        setType(TxType.EXPENSE)
-      } else {
-        setSelectedIncomeCat(cat.id)
-        setType(TxType.INCOME)
-      }
-
-      // close dialog and clean form
-      setShowCreateCategory(false)
-      setNewCatName("")
-      setNewCatIconId(availableIcons[0].id)
-      setNewCatColorId(availableColors[0].id)
-      setNewCatType(type)
-
-      announce(`Categoría ${cat.name} creada`)
-    } catch (error) {
-      console.log('error ', error);
-      
-      alert("Error al crear categoría")
-    }
+  const categorySubmit = (cat: Category) => {
+    console.log("categorySubmit", cat);
+    
+    setCats(prev => {
+      // Remove duplicates by ID
+      const filtered = prev.filter(filteredCat => filteredCat.id !== cat.id);
+      return [...filtered, cat];
+  });
   }
 
   // Manage Categories dialog state and handlers
   const [showManageCategories, setShowManageCategories] = useState(false)
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null)
-
-  const [editCatName, setEditCatName] = useState("")
-  const [editCatIconId, setEditCatIconId] = useState("")
-  const [editCatColorId, setEditCatColorId] = useState("")
-
-  const startEditCategory = (cat: Category) => {
-    setEditingCategory(cat)
-    setEditCatName(cat.name)
-    const Icon = iconComponents[cat.icon as keyof typeof iconComponents] // MAPPING icon to category string
-
-    const iconObj = availableIcons.find((i) => i.icon === Icon)
-    setEditCatIconId(iconObj?.id || availableIcons[0].id)
-    const colorObj = availableColors.find((c) => c.class === cat.color)
-    setEditCatColorId(colorObj?.id || availableColors[0].id)
-  }
-
-  const saveEditCategory = () => {
-    if (!editingCategory || !editCatName.trim()) return
-
-    const iconObj = availableIcons.find((i) => i.id === editCatIconId) || availableIcons[0]
-    const colorObj = availableColors.find((c) => c.id === editCatColorId) || availableColors[0]
-
-    const updatedCat: Category = {
-      ...editingCategory,
-      name: editCatName.trim(),
-      icon: iconObj.icon.name,
-      color: colorObj.class,
-    }
-
-    setCats((prev) => prev.map((c) => (c.id === editingCategory.id ? updatedCat : c)))
-    setEditingCategory(null)
-    announce(`Categoría ${updatedCat.name} actualizada`)
-  }
 
   /* deletion */
   const deleteCategory = async (catId: string) => {
@@ -560,32 +482,14 @@ export default function QuickSpendCard({
         setShowCreateCategory={setShowCreateCategory}
         showManageCategories={showManageCategories}
         setShowManageCategories={setShowManageCategories}
+
         // new form
-        newCatName={newCatName}
-        setNewCatName={setNewCatName}
-        newCatIconId={newCatIconId}
-        setNewCatIconId={setNewCatIconId}
-        newCatColorId={newCatColorId}
-        setNewCatColorId={setNewCatColorId}
-        newCatType={newCatType}
         setNewCatType={setNewCatType}
-        // edit form
-        startEditCategory={startEditCategory}
-        editingCategory={editingCategory}
-        setEditingCategory={setEditingCategory}
-
-        editCatName={editCatName}
-        setEditCatName={setEditCatName}
-        editCatIconId={editCatIconId}
-        setEditCatIconId={setEditCatIconId}
-        editCatColorId={editCatColorId}
-        setEditCatColorId={setEditCatColorId}
-        // actions
-        createCategory={createCategory}
-        saveEditCategory={saveEditCategory}
+        newCatType={newCatType}
+        
         deleteCategory={deleteCategory}
+        onSubmit={categorySubmit}
       />
-
     </Card>
   )
 }

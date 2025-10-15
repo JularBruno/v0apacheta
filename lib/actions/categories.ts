@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { Category } from '../schemas/category';
 import { z } from 'zod';
-import { getSession, getMethod, postMethod, deleteMethod } from "./utils";
+import { getSession, getMethod, postMethod, putMethod, deleteMethod } from "./utils";
 import { TxType } from '../schemas/definitions';
 
 const url = 'category'
@@ -31,7 +31,7 @@ const PostCategorySchema = z.object({
     type: z.enum([TxType.EXPENSE, TxType.INCOME])
 })
 
- const PostCategoryFormSchema = PostCategorySchema.omit({ userId: true });
+const PostCategoryFormSchema = PostCategorySchema.omit({ userId: true });
 
 export type CategoryState = {
     errors?: {
@@ -52,7 +52,6 @@ export async function postCategory(data: {
     const session = await getSession();
 
     if (!session?.user.id) throw new Error('User ID is missing'); // not sure if required
-    console.log('Received data:', data); // Log THIS first
 
     const validatedData = PostCategoryFormSchema.safeParse(data); 
 
@@ -61,6 +60,30 @@ export async function postCategory(data: {
     }
 
     const result = await postMethod<Category>(url, {
+        ...validatedData.data,
+        userId: session.user.id
+    });
+
+    return result;
+}
+
+export async function putCategory( id: string, data: {
+  name: string;
+  icon: string;
+  color: string;
+  type: string;
+}): Promise<Category>  {
+    const session = await getSession();
+
+    if (!session?.user.id) throw new Error('User ID is missing'); // not sure if required
+
+    const validatedData = PostCategoryFormSchema.safeParse(data); 
+
+    if (!validatedData.success) {
+        throw new Error(validatedData.error.errors.map(e => e.message).join(', '));
+    }
+
+    const result = await putMethod<Category>(url, id, {
         ...validatedData.data,
         userId: session.user.id
     });
