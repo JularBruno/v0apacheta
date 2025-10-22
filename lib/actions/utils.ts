@@ -17,7 +17,6 @@ export async function getSession(): Promise<Session | null> {
 
 // what to do when user not logged? Redirect!
 export async function unauthorized(): Promise<Session | null> {
-    // throw new Error("Unauthorized");
     return redirect("/login");
 };
 
@@ -31,7 +30,7 @@ export async function getMethod<T>(url: string, id?: string | number): Promise<T
     const session = await getSession();
 
     if (!session?.user?.id || !session?.accessToken) {
-        throw new Error("Unauthorized");
+        unauthorized();
     }
 
     const endpoint = id ? `${urlDev}/${url}/${id}` : `${urlDev}/${url}`;

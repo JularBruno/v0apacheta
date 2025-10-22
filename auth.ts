@@ -13,8 +13,8 @@ import { Router } from "next/router";
 const apiUrl = process.env.API_URL;
 
 /**
- * @title 
- * @notes 
+ * @title NEXT AUTH MODULE this the interface that the session will be using
+ * @notes So this creates the type that auth will retrieve when getting session
  */
 declare module 'next-auth' {
   interface Session extends DefaultSession {
@@ -35,16 +35,12 @@ declare module 'next-auth/jwt' {
   }
 }
 
-// Create a global error store
-/**
- * @title 
- * @notes 
- */
+// Create a global error store, for registering and login erros and retrieving them on ui
 export let lastAuthError: string | null = null;
 
 /**
- * @title From NextAuth auth method, signIn and signOut functions
- * @notes 
+ * @title From NextAuth auth method , signIn and signOut functions
+ * @notes auth method retrieveing in example the user logged 
  */
 export const { auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -134,7 +130,7 @@ export const { auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string;
-        session.accessToken = token.accessToken;
+        session.accessToken = token.accessToken as string;
       }
       return session;
     },

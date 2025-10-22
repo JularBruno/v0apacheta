@@ -2,61 +2,30 @@
 
 import type React from "react"
 import { useState } from "react"
+import { useForm } from 'react-hook-form';
 
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 
 import {
-  Utensils,
-  ShoppingCart,
-  Car,
-  Home,
-  Gamepad2,
-  Zap,
-  Gift,
-  Sparkles,
-  Briefcase,
-  Plane,
-  DollarSign,
-  Coffee,
-  Heart,
-  Music,
-  Camera,
-  Book,
-  Dumbbell,
-  Palette,
-  Wrench,
-  Smartphone,
-  Laptop,
-  Settings,
-  Plus,
   Edit,
   Trash2,
-  X,
 } from "lucide-react"
-import { z } from 'zod';
 
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { cn } from "@/lib/utils"
+
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Category } from "@/lib/schemas/category";
+import { Category, categorySchema } from "@/lib/schemas/category";
 import { postCategory, putCategory } from "@/lib/actions/categories";
 import { Tag } from "@/lib/schemas/tag";
-import { availableColors, availableIcons, iconComponents } from "./quick-spend-constants"
 import { TxType } from "@/lib/schemas/definitions";
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 
+import { availableColors, availableIcons, iconComponents } from "./quick-spend-constants"
 
-const categorySchema = z.object({
-    name: z.string().min(1, 'Ingresa un nombre').max(20, "Intenta que tenga menos de 20 caracteres"),
-    icon: z.string().min(1, 'icon is required'),
-    color: z.string().min(1, 'color is required'),
-    type: z.enum([TxType.EXPENSE, TxType.INCOME])
-})
-
-export type CategoryFormData = z.infer<typeof categorySchema>;
-
+type CategoryFormData = z.infer<typeof categorySchema>;
 
 type Props = {
     cats: Category[],
@@ -71,8 +40,6 @@ type Props = {
     //
     onSubmit: (data: Category) => void,
 }
-
-
 
 /**
  * Dialogs for creating and managing categories (used in QuickSpendCard component)
@@ -107,7 +74,7 @@ export function QuickSpendCategoryDialogs({
     // editing category to extract values
     const [editingCategory, setEditingCategory] = useState<Category | null>(null)
 
-    /** Form zod validator and values */
+    /** Form zod validator, values, handlers, errors and loading */
     const {
         register,
         handleSubmit,
@@ -192,7 +159,6 @@ export function QuickSpendCategoryDialogs({
                     </DialogTitle>
 
                 </DialogHeader>
-                {/* <form onSubmit={handleSubmit(onSubmitHandler)}> */}
                     <form onSubmit={handleSubmit(onSubmitHandler)}>
                     <div className="space-y-4 py-2">
                         <div className="flex bg-gray-100 rounded-lg p-1" role="tablist" aria-label="Tipo de categoría">
@@ -226,17 +192,17 @@ export function QuickSpendCategoryDialogs({
                         </button>
                         </div>
                         <div>
-                        <Label htmlFor="name">Nombre</Label>
-                        <Input
-                            id="name"
-                            placeholder="Ej: Mascotas"
-                            {...register('name')}
-                            // value={newCatName}
-                            // onChange={(e) => setNewCatName(e.target.value)}
-                        />
-                        {errors.name && ( // ← Show error message
-                            <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
-                        )}
+                            <Label htmlFor="name">Nombre</Label>
+                            <Input
+                                id="name"
+                                placeholder="Ej: Mascotas"
+                                {...register('name')}
+                                // value={newCatName}
+                                // onChange={(e) => setNewCatName(e.target.value)}
+                            />
+                            {errors.name && ( // ← Show error message
+                                <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+                            )}
                         </div>
 
                         <div>

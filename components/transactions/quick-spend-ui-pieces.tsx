@@ -2,6 +2,7 @@
 "use client"
 
 import type React from "react"
+import { UseFormRegister, FieldValues } from "react-hook-form";
 
 import { useMemo, useRef, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -19,6 +20,7 @@ import {
 import { cn } from "@/lib/utils"
 
 import {  iconComponents } from "./quick-spend-constants"
+import { Movement } from "@/lib/schemas/movement";
 
 type CategoryHeaderProps = {
     setShowCreateCategory: (open: boolean) => void,
@@ -145,6 +147,9 @@ type TagRowProps = {
     selectTag: (id: string) => void,
     // clearToNew: () => void,
     // onTagInputKeyDown: () => void
+    tagNameError?: string | undefined
+    onInputKeyDown?: () => void
+    // register: UseFormRegister<Movement>
 }
 
 export function TagRow({
@@ -158,6 +163,9 @@ export function TagRow({
     selectTag,
     // clearToNew,
     // onTagInputKeyDown
+    tagNameError,
+    onInputKeyDown,
+    // register
 }: TagRowProps
 ) {
     const tagInputRef = useRef<HTMLInputElement>(null)
@@ -166,33 +174,35 @@ export function TagRow({
     return (
         <>
             <div className="space-y-2">
-                    <Label className="text-sm text-gray-600">Tag</Label>
+                    <Label className="text-sm text-gray-600">Descripción</Label>
                     <p id="tag-hint" className="sr-only">
-                    Escribe para buscar o crear un nuevo tag. Presiona Enter para crear.
+                        Escribe una descripción, o selecciona un movimiento previo
                     </p>
-                    <div className="flex gap-2">
-                    <Input
-                        ref={tagInputRef}
-                        role="combobox"
-                        aria-autocomplete="list"
-                        // aria-expanded={matchingSuggestions.length > 0}
-                        aria-controls={listId}
-                        aria-describedby="tag-hint"
-                        placeholder="Escribe para buscar o crear (Enter)"
-                        value={tagInput}
-                        onChange={(e) => {
-                            console.log('onChange fired, activeElement:', document.activeElement)
-            
-                        setTagInput(e.target.value)
-                        setTagId("") // typing implies "draft" new tag selection
-                        }}
-                        // onKeyDown={onTagInputKeyDown}
-                        autoCapitalize="none"
-                        autoCorrect="off"
-                        autoComplete="off"
-                        enterKeyHint="done"
-                        className="flex-1"
-                    />
+                    <div className=" gap-2">
+                        <Input
+                            ref={tagInputRef}
+                            role="combobox"
+                            aria-autocomplete="list"
+                            // aria-expanded={matchingSuggestions.length > 0}
+                            aria-controls={listId}
+                            aria-describedby="tag-hint"
+                            placeholder="Escribe una descripción, o selecciona un movimiento previo"
+                            value={tagInput}
+                            // {...register('amount')}
+                            onChange={(e) => {
+                                setTagInput(e.target.value)
+                                setTagId("") // typing implies "draft" new tag selection
+                            }} 
+                            onKeyDown={onInputKeyDown} 
+                            autoCapitalize="none"
+                            autoCorrect="off"
+                            autoComplete="off"
+                            enterKeyHint="done"
+                            className="flex-1"
+                        />
+                        {tagNameError && ( // ← Show error message
+                            <p className="text-red-500 text-sm mt-1">{tagNameError}</p>
+                        )}
                     </div>
             
                     {/* Desktop suggestions with "Nuevo" pill */}
@@ -230,25 +240,26 @@ export function TagRow({
                     <div role="listbox" className="md:hidden">
                     <div className="flex flex-col sm:flex-row gap-2 pb-2">
                         <button
-                        type="button"
-                        // onClick={clearToNew}
-                        // className="shrink-0 px-3 py-1.5 rounded-full border text-sm  transition-colors"
-                        className={cn(
-                            "shrink-0 px-3 py-1.5 rounded-full border text-sm transition-all whitespace-nowrap",
-                            tagId === ""
-                                ? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-200 shadow-md"
-                                : "border-gray-200 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm",
-                            )}
-                        aria-label="Crear nuevo tag"
-                        role="option"
-                        aria-selected={tagId === ""}
-                        >
-                        Nuevo +
+                            type="button"
+                            // onClick={clearToNew}
+                            // className="shrink-0 px-3 py-1.5 rounded-full border text-sm  transition-colors"
+                            className={cn(
+                                "shrink-0 px-3 py-1.5 rounded-full border text-sm transition-all whitespace-nowrap",
+                                tagId === ""
+                                    ? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-200 shadow-md"
+                                    : "border-gray-200 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm",
+                                )}
+                            aria-label="Crear nuevo tag"
+                            role="option"
+                            aria-selected={tagId === ""}
+                            >
+                            Nuevo +
                         </button>
                         {matchingSuggestionsMobile.map((t) => (
                         <button
                             key={t.id}
                             role="option"
+                            type="button"
                             aria-selected={t.id === tagId}
                             onClick={() => selectTag(t.id)}
                             className={cn(
