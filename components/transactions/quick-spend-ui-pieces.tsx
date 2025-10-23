@@ -3,6 +3,7 @@
 
 import type React from "react"
 import { UseFormRegister, FieldValues } from "react-hook-form";
+import { z } from 'zod';
 
 import { useMemo, useRef, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -20,7 +21,8 @@ import {
 import { cn } from "@/lib/utils"
 
 import {  iconComponents } from "./quick-spend-constants"
-import { Movement } from "@/lib/schemas/movement";
+import { Movement, movementSchema, MovementFormData } from "@/lib/schemas/movement";
+
 
 type CategoryHeaderProps = {
     setShowCreateCategory: (open: boolean) => void,
@@ -37,6 +39,7 @@ export function CategoryHeaderDesktop({
                 <Label className="text-sm text-gray-600">Categoría</Label>
                 <div className="flex items-center gap-2">
                 <Button
+                    type="button"
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowCreateCategory(true)}
@@ -46,6 +49,7 @@ export function CategoryHeaderDesktop({
                     Nueva
                 </Button>
                 <Button
+                    type="button"
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowManageCategories(true)}
@@ -70,6 +74,7 @@ export function CategoryHeaderMobile({
                 <Label className="text-sm text-gray-600">Categoría</Label>
                 <div className="flex items-center gap-1">
                     <Button
+                    type="button"
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowCreateCategory(true)}
@@ -79,6 +84,7 @@ export function CategoryHeaderMobile({
                     Nueva
                     </Button>
                     <Button
+                    type="button"
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowManageCategories(true)}
@@ -113,6 +119,7 @@ export function CategoryGrid({
                     const active = categoryId === c.id
                     return (
                     <button
+                        type="button"
                         key={c.id}
                         onClick={() => setCategory(c.id)}
                         className={cn(
@@ -140,16 +147,16 @@ type TagRowProps = {
     // tagInputRef: HTMLInputElement,
     tagInput: string,
     setTagInput: (name: string) => void,
-    tagId: string,
+    tagId: string | undefined,
     setTagId: (id: string) => void,
     matchingSuggestions: Tag[],
     matchingSuggestionsMobile: Tag[],
-    selectTag: (id: string) => void,
+    selectTag: (id?: string) => void,
     // clearToNew: () => void,
     // onTagInputKeyDown: () => void
-    tagNameError?: string | undefined
-    onInputKeyDown?: () => void
-    // register: UseFormRegister<Movement>
+    tagNameError?: string,
+    onInputKeyDown?: () => void,
+    register: UseFormRegister<MovementFormData>
 }
 
 export function TagRow({
@@ -165,10 +172,10 @@ export function TagRow({
     // onTagInputKeyDown
     tagNameError,
     onInputKeyDown,
-    // register
+    register
 }: TagRowProps
 ) {
-    const tagInputRef = useRef<HTMLInputElement>(null)
+    // const tagInputRef = useRef<HTMLInputElement>(null)
 
     const listId = "tag-suggestions"
     return (
@@ -180,19 +187,25 @@ export function TagRow({
                     </p>
                     <div className=" gap-2">
                         <Input
-                            ref={tagInputRef}
+                            // ref={tagInputRef}
                             role="combobox"
                             aria-autocomplete="list"
                             // aria-expanded={matchingSuggestions.length > 0}
                             aria-controls={listId}
                             aria-describedby="tag-hint"
                             placeholder="Escribe una descripción, o selecciona un movimiento previo"
-                            value={tagInput}
-                            // {...register('amount')}
-                            onChange={(e) => {
-                                setTagInput(e.target.value)
-                                setTagId("") // typing implies "draft" new tag selection
-                            }} 
+                            // value={tagInput}
+                            // {...register('tagName')}
+                            // onChange={(e) => {
+                            //     setTagInput(e.target.value)
+                            //     setTagId("") // typing implies "draft" new tag selection
+                            // }} 
+                            {...register('tagName', {
+                                onChange: (e) => {
+                                    setTagInput(e.target.value);
+                                    setTagId("");
+                                }
+                            })}
                             onKeyDown={onInputKeyDown} 
                             autoCapitalize="none"
                             autoCorrect="off"
@@ -200,7 +213,7 @@ export function TagRow({
                             enterKeyHint="done"
                             className="flex-1"
                         />
-                        {tagNameError && ( // ← Show error message
+                        {tagNameError && ( 
                             <p className="text-red-500 text-sm mt-1">{tagNameError}</p>
                         )}
                     </div>
@@ -221,6 +234,7 @@ export function TagRow({
                         <button
                         key={t.id}
                         role="option"
+                        type="button"
                         aria-selected={t.id === tagId}
                         onClick={() => selectTag(t.id)}
                         className={cn(

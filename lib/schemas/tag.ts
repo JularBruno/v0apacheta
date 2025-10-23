@@ -3,9 +3,8 @@
  * 
  */
 export type Tag = {
-  id: string
+  id: string | undefined
   name: string
   categoryId: string
   amount: number
-  color: string
 }
