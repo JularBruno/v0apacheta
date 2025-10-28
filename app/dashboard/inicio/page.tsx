@@ -19,6 +19,7 @@ import SpendingChart from "@/components/dashboard/spending-chart"
 import RecentExpenses from "@/components/dashboard/recent-expenses"
 import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
+import { toast } from "@/hooks/use-toast"
 import { Progress } from "@/components/ui/progress" // Import Progress component
 import QuickSpendCard from "@/components/transactions/quick-spend-card"
 //
@@ -27,7 +28,6 @@ import { useEffect, useState } from 'react';
 import { User } from "@/lib/schemas/user"
 import { Movement } from "@/lib/schemas/movement"
 import { TxType } from "@/lib/schemas/definitions";
-
 
 interface Transaction {
   type: "gasto" | "ingreso"
@@ -71,6 +71,7 @@ export default function InicioPage() {
   }
 
   const [userProfile, setUserProfile] = useState<User | null>(null);
+  const [userBalance, setUserBalance] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null); // TODO whats this
   
@@ -83,6 +84,7 @@ export default function InicioPage() {
         const profile = await getProfile();
         console.log('userProfile:', profile);
         setUserProfile(profile);
+        setUserBalance(profile.balance);
       } catch (err) {
         console.error('Error fetching profile:', err);
         setError('Failed to load profile');
@@ -105,8 +107,8 @@ export default function InicioPage() {
           <CardContent>
             {loading ? (
               <div>Loading...</div>
-            ) : userProfile ? (
-              <div className="text-2xl font-bold">${userProfile.balance} ARS</div>
+            ) : userBalance ? (
+              <div className="text-2xl font-bold">${userBalance.toFixed(0)} ARS</div>
             ) : (
               <div className="text-2xl font-bold">$0 ARS</div>
             )}
@@ -131,7 +133,7 @@ export default function InicioPage() {
                 <span>31 jul</span> {/* Mock end date */}
               </div>
               <p className="text-sm text-gray-500 mt-2">
-                Puede gastar ${dailySpendSuggestion.toFixed(2)}/día para {daysRemaining} más días
+                Puede gastar ${dailySpendSuggestion.toFixed(2)}/día para {daysRemaining} más días.
               </p>
             </div>
           </CardContent>
@@ -151,12 +153,21 @@ export default function InicioPage() {
       </div>
       
       <QuickSpendCard
-        onAdd={(data: Movement) => {
-          console.log("Quick spend:", data)
-          alert(`${data.type === TxType.INCOME ? "Ingreso" : "Gasto"} • ${data.amount} • ${data.tagId}`)
-          // TODO: push to your store/backend and refresh recent lists
-          // ALSO: update balance
-        }}
+          onAdd={(data: Movement) => {
+            // console.log("Quick spend:", data)
+            // alert(`${data.type === TxType.INCOME ? "Ingreso" : "Gasto"} • ${data.amount} • ${data.tagId}`)
+            // TODO: push to your store/backend and refresh recent lists
+            // ALSO: update balance
+            let newBalance = data.type === TxType.INCOME ? userBalance + data.amount : userBalance - data.amount;
+            setUserBalance(newBalance);
+            console.log('aout to toast');
+            
+            toast({
+              variant: "success", // or "destructive" for errors
+              title: "Success!",
+              description: "Operation completed",
+            })
+          }}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

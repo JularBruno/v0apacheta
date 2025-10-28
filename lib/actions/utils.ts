@@ -29,8 +29,14 @@ export async function unauthorized(): Promise<Session | null> {
 export async function getMethod<T>(url: string, id?: string | number): Promise<T> {
     const session = await getSession();
 
-    if (!session?.user?.id || !session?.accessToken) {
-        unauthorized();
+    console.log('session', session);
+    console.log('session?.user?.id', session?.user?.id);
+    console.log('!session?.accessToken', !session?.accessToken);
+
+    if (!session?.user?.id || !session.accessToken) {
+        throw new Error("unauthorized");
+
+        // redirect("/login");
     }
 
     const endpoint = id ? `${urlDev}/${url}/${id}` : `${urlDev}/${url}`;
@@ -46,6 +52,7 @@ export async function getMethod<T>(url: string, id?: string | number): Promise<T
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
+            
         }
 
         const data = await response.json();
@@ -69,10 +76,10 @@ export async function postMethod<T>(
     body?: object, 
     requiresAuth: boolean = true // Add flag for auth requirement
 ): Promise<T> {
-    
     // Only check session for authenticated endpoints
     if (requiresAuth) {
         const session = await getSession();
+
         if (!session?.user?.id || !session?.accessToken) {
             unauthorized();
         }

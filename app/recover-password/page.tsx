@@ -1,13 +1,17 @@
 "use client"
 
 import { useActionState } from "react"
-import { recoverPassword } from "./actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
 
 export default function RecoverPasswordPage() {
+  const recoverPassword = () => { // formData: FormData
+    console.log('recoverPassword called');
+    return;
+  }
+    
   const [state, formAction, isPending] = useActionState(recoverPassword, null)
 
   return (
@@ -43,11 +47,11 @@ export default function RecoverPasswordPage() {
             {isPending ? "Sending..." : "Send Reset Link"}
           </Button>
 
-          {state?.message && (
+          {/* {state?.message && (
             <p className={`mt-4 text-center text-sm ${state.success ? "text-green-600" : "text-red-600"}`}>
               {state.message}
             </p>
-          )}
+          )} */}
         </form>
         <div className="text-center text-sm text-gray-600">
           Remember your password?{" "}

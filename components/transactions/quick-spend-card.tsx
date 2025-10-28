@@ -363,11 +363,14 @@ export default function QuickSpendCard({
         });
 
         // // create new tag locally for populating tags
-        if (!data.tagId) {
-          createTagAndUpdateArray(movement);
-        }
+        // if (!data.tagId) {
+        //   createTagAndUpdateArray(movement);
+        // }
         setTagInput("");
         setTagId("");
+
+        onAdd(movement); // CALL PARENT
+
 
       } catch (error) {
           console.error('Submit error:', error);
