@@ -15,53 +15,41 @@ export async function getSession(): Promise<Session | null> {
     return await auth();
 };
 
-// what to do when user not logged? Redirect!
-export async function unauthorized(): Promise<Session | null> {
-    return redirect("/login");
-};
-
 /**
  * @title Default getMethod
  * @param url - url to get from
  * @param id - id to add to url if required
  * @returns response or error
+ * removed trycatch wrapping because of next redirect error
  */
 export async function getMethod<T>(url: string, id?: string | number): Promise<T> {
     const session = await getSession();
 
-    console.log('session', session);
-    console.log('session?.user?.id', session?.user?.id);
-    console.log('!session?.accessToken', !session?.accessToken);
-
     if (!session?.user?.id || !session.accessToken) {
-        throw new Error("unauthorized");
-
-        // redirect("/login");
+        redirect("/login");
     }
 
     const endpoint = id ? `${urlDev}/${url}/${id}` : `${urlDev}/${url}`;
 
-    try {
-        const response = await fetch(endpoint, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${session?.accessToken}`,
-            'Content-Type': 'application/json',
-          }
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-            
+    const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: {
+        'Authorization': `Bearer ${session?.accessToken}`,
+        'Content-Type': 'application/json',
         }
+    });
 
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.log(error);
-        
-      throw error;
+    if (response.status === 401) {
+        redirect("/login"); // ← Also redirect on 401 from API
     }
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+        
+    }
+
+    const data = await response.json();
+    return data;
 };
 
 /**
@@ -81,7 +69,7 @@ export async function postMethod<T>(
         const session = await getSession();
 
         if (!session?.user?.id || !session?.accessToken) {
-            unauthorized();
+            redirect("/login");
         }
     }
 
@@ -139,7 +127,8 @@ export async function putMethod<T>(
         // Only check session for authenticated endpoints
         const session = await getSession();
         if (!session?.user?.id || !session?.accessToken) {
-            unauthorized();
+            redirect("/login");
+
         }
 
         const response = await fetch(`${urlDev}/${url}/${id}`, {
@@ -181,8 +170,7 @@ export async function deleteMethod<T>(url: string, id: string): Promise<T> {
     const session = await getSession();
 
     if (!session?.user?.id || !session?.accessToken) {
-    //   throw new Error("Unauthorized");
-        unauthorized();
+        redirect("/login");
     }
 
     try {

@@ -101,8 +101,6 @@ export const { auth, signIn, signOut } = NextAuth({
           const data = await response.json();
 
           // Return a user object that NextAuth can use
-          // console.log('before return login 200')
-
           return {
             id: data.user.id, 
             email: data.user.email,

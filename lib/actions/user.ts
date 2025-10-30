@@ -112,13 +112,5 @@ export async function register(prevState: UserState, formData: FormData) {
  */
 export async function getProfile() {
     const url = 'user/profile';
-    try {
-        let userProfile = await getMethod<User>(url);
-        console.log('userProfile ', userProfile);
-        return userProfile;    
-    } catch (error) {
-        console.log(error);
-        throw error;
-    }
-    
+    return await getMethod<User>(url);
 }

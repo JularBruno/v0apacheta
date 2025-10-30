@@ -12,17 +12,24 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      // console.log('IMPORTANT isLoggedIn ', isLoggedIn);
-
       const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
+      // const isOnLogin = nextUrl.pathname === '/login';
+      const publicPaths = ['/login'];
+      const isPublic = publicPaths.includes(nextUrl.pathname);
 
-      if (isOnDashboard) {
-        if (isLoggedIn) return true;
-        return Response.redirect(new URL('/', nextUrl));
-      } else if (isLoggedIn) {
+      console.log(isLoggedIn);
+      console.log(isOnDashboard);
+
+      if (isOnDashboard && !isLoggedIn) {
+        return false; // Redirects to signIn page (/login)
+      }
+
+      // If logged in and trying to access login, redirect to dashboard
+      if (isPublic && isLoggedIn) {
         return Response.redirect(new URL('/dashboard/inicio', nextUrl));
       }
 
+      // Allow everything else
       return true;
     },
     
