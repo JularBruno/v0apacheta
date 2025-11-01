@@ -1,66 +1,65 @@
 'use server';
 
-import { getSession, getMethod, postMethod } from "./utils";
-import { Movement } from '../schemas/movement';
+import { getSession, getMethod, postMethod } from './utils';
+import { Movement, Movements } from '../schemas/movement';
 import { TxType } from '../schemas/definitions';
 
-const url = 'movement'
+const url = 'movement';
 
 //// get Movements with filter TODO FILTERS
-export async function getMovementsByUserAndFilter(): Promise<Array<Movement>> {
-    const session = await getSession();
-    const url = 'movement/user'
+// export async function getMovementsByUserAndFilter(): Promise<Array<Movement>> {
+//     const session = await getSession();
+//     const url = 'movement/user'
 
-    return await getMethod<Array<Movement>>(url, await session?.user.id);
+//     return await getMethod<Array<Movement>>(url, await session?.user.id);
+// }
+
+type MovementFilters = {
+  categoryId?: string;
+  tagId?: string;
+  startDate?: string; // ISO date string
+  endDate?: string;
+};
+
+export async function getMovementsByUserAndFilter(
+  filters?: MovementFilters,
+): Promise<Array<Movements>> {
+  const session = await getSession();
+
+  // Build query params
+  const params = new URLSearchParams({
+    userId: session!.user.id,
+  });
+
+  if (filters?.categoryId) params.append('categoryId', filters.categoryId);
+  if (filters?.tagId) params.append('tagId', filters.tagId);
+  if (filters?.startDate) params.append('startDate', filters.startDate);
+  if (filters?.endDate) params.append('endDate', filters.endDate);
+
+  const url = `movement?${params.toString()}`;
+
+  return await getMethod<Array<Movements>>(url);
 }
 
 export async function deleteMovement() {
-
-    // await deleteMethod<Category>(url, id);
+  // await deleteMethod<Category>(url, id);
 }
 
 export async function postMovement(data: {
-    // userId: string 
-    type: TxType
-    categoryId: string
-    tagId?: string
-    tagName: string
-    amount: number
-    description: string
-}): Promise<Movement>  {
-    const session = await getSession();
+  // userId: string
+  type: TxType;
+  categoryId: string;
+  tagId?: string;
+  tagName: string;
+  amount: number;
+  description: string;
+}): Promise<Movement> {
+  const session = await getSession();
 
-    const result = await postMethod<Movement>(url, {
-        ...data,
-        userId: session!.user.id
-    });
+  const result = await postMethod<Movement>(url, {
+    ...data,
+    userId: session!.user.id,
+  });
 
-    return result;
+  return result;
 }
-
-// const PostMovementFormSchema = z.object({
-//     userId: z.string(),
-//     categoryId: z.string(),
-//     tagId: z.string(),
-//     amount: z.coerce
-//       .number()
-//       .gt(0, { message: 'Please enter an amount greater than $0.' }),
-//     type: z.string(),
-//     description: z.string(),
-// })
-  
-// const PostMovement = PostMovementFormSchema.omit({ userId: true });
-
-
-// export type MovementState = {
-//     errors?: {
-//         categoryId?: string[];
-//         tagId?: string[];
-//         amount?: string[];
-//         type?: string[];
-//         description?: string[];
-//     };
-//     message?: string | null;
-// };
-
-

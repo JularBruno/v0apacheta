@@ -30,10 +30,7 @@ describe('Register action', () => {
     formData.append('email', 'test@example.com');
     formData.append('password', 'password123');
 
-    const result = await register(
-      { errors: {}, message: null }, 
-      formData
-    );
+    const result = await register({ errors: {}, message: null }, formData);
 
     expect(result.errors?.name).toBeDefined();
     expect(result.message).toBe('Missing fields.');

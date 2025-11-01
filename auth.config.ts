@@ -13,12 +13,8 @@ export const authConfig = {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
-      // const isOnLogin = nextUrl.pathname === '/login';
       const publicPaths = ['/login'];
       const isPublic = publicPaths.includes(nextUrl.pathname);
-
-      console.log(isLoggedIn);
-      console.log(isOnDashboard);
 
       if (isOnDashboard && !isLoggedIn) {
         return false; // Redirects to signIn page (/login)
@@ -32,7 +28,6 @@ export const authConfig = {
       // Allow everything else
       return true;
     },
-    
   },
-  providers: []
+  providers: [],
 } satisfies NextAuthConfig;

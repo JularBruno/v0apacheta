@@ -1,0 +1,6 @@
+{
+    "editor.formatOnSave": true,
+    "editor.tabSize": 4,
+	"editor.insertSpaces": false,      // use tabs, not spaces
+	"editor.detectIndentation": false, // don't auto-detect from file
+}

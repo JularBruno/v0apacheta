@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 
 import {
-  X,
+	X,
 } from "lucide-react"
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -32,11 +32,11 @@ import { CategoryHeaderDesktop, CategoryHeaderMobile, CategoryGrid, TagRow } fro
 
 // this very nice but not sure how it works TODO review
 function nowInfo() {
-  const d = new Date()
-  return {
-    date: d.toLocaleDateString("es-AR"),
-    time: d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" }),
-  }
+	const d = new Date()
+	return {
+		date: d.toLocaleDateString("es-AR"),
+		time: d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" }),
+	}
 }
 
 /**
@@ -47,479 +47,470 @@ function nowInfo() {
  * @returns 
  */
 export default function QuickSpendCard({
-  onAdd,
-  initialType,
-  onCancel,
+	onAdd,
+	initialType,
+	onCancel,
 }: {
-  onAdd: (data: Movement) => void
-  initialType?: TxType
-  onCancel?: () => void
+	onAdd: (data: Movement) => void
+	initialType?: TxType
+	onCancel?: () => void
 }) {
 
-  /** By using an ARIA live region, you make your app accessible (A11y = accessibility). */
-  // A11y live region
-  const liveRegionRef = useRef<HTMLDivElement>(null)
-  // screen readers (used by blind/visually impaired users) will read that message out loud, even though it's invisible on screen.
-  const announce = (msg: string) => { 
-    if (!liveRegionRef.current) return
-    liveRegionRef.current.textContent = msg
-    setTimeout(() => {
-      if (liveRegionRef.current) liveRegionRef.current.textContent = ""
-    }, 800)
-  }
+	/** By using an ARIA live region, you make your app accessible (A11y = accessibility). */
+	// A11y live region
+	const liveRegionRef = useRef<HTMLDivElement>(null)
+	// screen readers (used by blind/visually impaired users) will read that message out loud, even though it's invisible on screen.
+	const announce = (msg: string) => {
+		if (!liveRegionRef.current) return
+		liveRegionRef.current.textContent = msg
+		setTimeout(() => {
+			if (liveRegionRef.current) liveRegionRef.current.textContent = ""
+		}, 800)
+	}
 
-  /**
-   * 
-   * TYPE
-   * 
-   */
-  // type selection and useful for when opening modal with an already selected option
-  const [type, setType] = useState<TxType>(initialType || TxType.EXPENSE)
+	/**
+	 * 
+	 * TYPE
+	 * 
+	 */
+	// type selection and useful for when opening modal with an already selected option
+	const [type, setType] = useState<TxType>(initialType || TxType.EXPENSE)
 
-  // Switch between "gasto" (expense) and "ingreso" (income) types
-  // and make sure a valid category is selected for the new type
-  const switchType = (next: TxType) => { // next: the type we're switching TO
-    setType(next)// Update the transaction type
-    // Get the first available category for the new type (or undefined if none exist)
-    const first = next === TxType.EXPENSE ? expenseCats[0]?.id : incomeCats[0]?.id
-    if (next === TxType.EXPENSE) {
-      // For expenses: keep current selection, OR use first available, OR fallback to "comida"
-      setSelectedExpenseCat((prev) => prev || first || "comida")
-    } else {
-      setSelectedIncomeCat((prev) => prev || first || "trabajo")
-    }
-  }
-  
-  /**
-   * 
-   * CATEGORY cats and card handlers
-   * 
-   */
-  
-  // Categories state (allows creation, setsnewone after created)
-  const [cats, setCats] = useState<Category[]>([]) // TODO Validate what to do when null or empty
+	// Switch between "gasto" (expense) and "ingreso" (income) types
+	// and make sure a valid category is selected for the new type
+	const switchType = (next: TxType) => { // next: the type we're switching TO
+		setType(next)// Update the transaction type
+		// Get the first available category for the new type (or undefined if none exist)
+		const first = next === TxType.EXPENSE ? expenseCats[0]?.id : incomeCats[0]?.id
+		if (next === TxType.EXPENSE) {
+			// For expenses: keep current selection, OR use first available, OR fallback to "comida"
+			setSelectedExpenseCat((prev) => prev || first || "comida")
+		} else {
+			setSelectedIncomeCat((prev) => prev || first || "trabajo")
+		}
+	}
 
-  /**
-   * Fetch Categories
-   * TODO Validate if this should be on parent component
-   * This is the "lift state up" pattern. If it gets too deep (prop drilling), use Context.
-   */
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const cats = await getCategoriesByUser();
-        console.log('Fetched categories:', cats);
-        
-        setCats(cats);
-      } catch (error) {
-        console.error('Failed to fetch categories:', error);
-      }
-    };
-    
-    fetchData();
-  }, []);
+	/**
+	 * 
+	 * CATEGORY cats and card handlers
+	 * 
+	 */
 
-  // fitlered cats
-  const expenseCats = useMemo(() => cats.filter((c) => c.type === TxType.EXPENSE), [cats]) 
-  const incomeCats = useMemo(() => cats.filter((c) => c.type === TxType.INCOME), [cats])
+	// Categories state (allows creation, setsnewone after created)
+	const [cats, setCats] = useState<Category[]>([]) // TODO Validate what to do when null or empty
 
-  // Track a selected category per type so switching is smooth
-  const [selectedExpenseCat, setSelectedExpenseCat] = useState<string>(expenseCats[0]?.id ) // || "comida" // TODO Validate what to do when null or empty or not this id
-  const [selectedIncomeCat, setSelectedIncomeCat] = useState<string>(incomeCats[0]?.id)
+	/**
+	 * Fetch Categories
+	 * TODO Validate if this should be on parent component
+	 * This is the "lift state up" pattern. If it gets too deep (prop drilling), use Context.
+	 */
+	useEffect(() => {
+		const fetchData = async () => {
+			try {
+				const cats = await getCategoriesByUser();
+				setCats(cats);
+			} catch (error) {
+				console.error('Failed to fetch categories:', error);
+			}
+		};
 
-  // Selected category
-  const categoryId = type === TxType.EXPENSE ? selectedExpenseCat : selectedIncomeCat
+		fetchData();
+	}, []);
 
-  /**
-   * Set selected Category
-   * @param id 
-   */
-  const setCategory = (id: string) => {
-    const c = cats.find((x) => x.id === id)
-    if (!c) return
-    if (c.type === TxType.EXPENSE) {
-      setSelectedExpenseCat(id)
-      if (type !== TxType.EXPENSE) setType(TxType.EXPENSE)
-    } else {
-      setSelectedIncomeCat(id)
-      if (type !== TxType.INCOME) setType(TxType.INCOME)
-    }
-    setValue('categoryId', id); // Update form category id, just in case, but it should be verified before submit with zod i think
+	// fitlered cats
+	const expenseCats = useMemo(() => cats.filter((c) => c.type === TxType.EXPENSE), [cats])
+	const incomeCats = useMemo(() => cats.filter((c) => c.type === TxType.INCOME), [cats])
 
-    announce(`Categoría ${c.name} seleccionada`)
-  }
+	// Track a selected category per type so switching is smooth
+	const [selectedExpenseCat, setSelectedExpenseCat] = useState<string>(expenseCats[0]?.id) // || "comida" // TODO Validate what to do when null or empty or not this id
+	const [selectedIncomeCat, setSelectedIncomeCat] = useState<string>(incomeCats[0]?.id)
 
-  // Categories to display based on selected type
-  const shownCategories = type === TxType.EXPENSE ? expenseCats : incomeCats
+	// Selected category
+	const categoryId = type === TxType.EXPENSE ? selectedExpenseCat : selectedIncomeCat
 
-  /**
-   * 
-   * CATEGORY dialog handlers and functions
-   * 
-   */
+	/**
+	 * Set selected Category
+	 * @param id 
+	 */
+	const setCategory = (id: string) => {
+		const c = cats.find((x) => x.id === id)
+		if (!c) return
+		if (c.type === TxType.EXPENSE) {
+			setSelectedExpenseCat(id)
+			if (type !== TxType.EXPENSE) setType(TxType.EXPENSE)
+		} else {
+			setSelectedIncomeCat(id)
+			if (type !== TxType.INCOME) setType(TxType.INCOME)
+		}
+		setValue('categoryId', id); // Update form category id, just in case, but it should be verified before submit with zod i think
 
-  // Create Category dialog state and handlers
-  const [showCreateCategory, setShowCreateCategory] = useState(false)
-  const [newCatType, setNewCatType] = useState<TxType>(type)
+		announce(`Categoría ${c.name} seleccionada`)
+	}
 
-  // After submiting a category in dialog, add it to state
-  const categorySubmit = (cat: Category) => {
-    setCats(prev => {
-      // Remove duplicates by ID
-      const filtered = prev.filter(filteredCat => filteredCat.id !== cat.id);
-      return [...filtered, cat];
-  });
-  }
+	// Categories to display based on selected type
+	const shownCategories = type === TxType.EXPENSE ? expenseCats : incomeCats
 
-  // Manage Categories dialog state and handlers
-  const [showManageCategories, setShowManageCategories] = useState(false)
+	/**
+	 * 
+	 * CATEGORY dialog handlers and functions
+	 * 
+	 */
 
-  /* deletion */
-  const deleteCategory = async (catId: string) => {
-    const cat = cats.find((c) => c.id === catId)
-    if (!cat) return
+	// Create Category dialog state and handlers
+	const [showCreateCategory, setShowCreateCategory] = useState(false)
+	const [newCatType, setNewCatType] = useState<TxType>(type)
 
-    // Check if there are tags using this category
-    const relatedTags = allTags.filter((t) => t.categoryId === catId)
-    if (relatedTags.length > 0) {
-      const confirmDelete = confirm( // TODO this should be a nicer component
-        `Esta categoría tiene ${relatedTags.length} tag(s) asociado(s). ¿Estás seguro de que quieres eliminarla? Esto también eliminará todos los tags asociados.`,
-      )
-      if (!confirmDelete) return
+	// After submiting a category in dialog, add it to state
+	const categorySubmit = (cat: Category) => {
+		setCats(prev => {
+			// Remove duplicates by ID
+			const filtered = prev.filter(filteredCat => filteredCat.id !== cat.id);
+			return [...filtered, cat];
+		});
+	}
 
-      // Remove related tags
-      setAllTags((prev) => prev.filter((t) => t.categoryId !== catId))
-    }
+	// Manage Categories dialog state and handlers
+	const [showManageCategories, setShowManageCategories] = useState(false)
 
-    await deleteCategoryById(cat.id); // DELETION
+	/* deletion */
+	const deleteCategory = async (catId: string) => {
+		const cat = cats.find((c) => c.id === catId)
+		if (!cat) return
 
-    setCats((prev) => prev.filter((c) => c.id !== catId))
+		// Check if there are tags using this category
+		const relatedTags = allTags.filter((t) => t.categoryId === catId)
+		if (relatedTags.length > 0) {
+			const confirmDelete = confirm( // TODO this should be a nicer component
+				`Esta categoría tiene ${relatedTags.length} tag(s) asociado(s). ¿Estás seguro de que quieres eliminarla? Esto también eliminará todos los tags asociados.`,
+			)
+			if (!confirmDelete) return
 
-    // Reset selection if deleted category was selected
-    if (categoryId === catId) {
-      const remaining = cats.filter((c) => c.id !== catId && c.type === type)
-      if (remaining.length > 0) {
-        if (type === TxType.EXPENSE) setSelectedExpenseCat(remaining[0].id)
-        else setSelectedIncomeCat(remaining[0].id)
-      }
-    }
+			// Remove related tags
+			setAllTags((prev) => prev.filter((t) => t.categoryId !== catId))
+		}
 
-    announce(`Categoría ${cat.name} eliminada`)
-  }
+		await deleteCategoryById(cat.id); // DELETION
 
-  /**
-   * 
-   * Tags
-   * 
-   */
+		setCats((prev) => prev.filter((c) => c.id !== catId))
 
-  // Selected tag to be used in form
-  const [tagId, setTagId] = useState<string | undefined>("")
-  // Selected tag name to be used as selected reference
-  const [tagInput, setTagInput] = useState<string>("")
+		// Reset selection if deleted category was selected
+		if (categoryId === catId) {
+			const remaining = cats.filter((c) => c.id !== catId && c.type === type)
+			if (remaining.length > 0) {
+				if (type === TxType.EXPENSE) setSelectedExpenseCat(remaining[0].id)
+				else setSelectedIncomeCat(remaining[0].id)
+			}
+		}
 
-  // Tags (global suggestions; not filtered by category initially)
-  const [allTags, setAllTags] = useState<Tag[]>([])
-  
-  /**
-   * Fetch Tags
-   */
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const allTags = await getTagsByUser();
-        setAllTags(allTags);
-      } catch (error) {
-        console.error('Failed to fetch tags:', error);
-      }
-    };
-    
-    fetchData();
-  }, []);
-  
-  // Match the amount of tag pills to diplay
-  const matchingSuggestions = useMemo(() => {
-    return allTags.slice(0, 12)
-  }, [allTags])
+		announce(`Categoría ${cat.name} eliminada`)
+	}
 
-  const matchingSuggestionsMobile = useMemo(() => {
-    return allTags.slice(0, 4)
-  }, [allTags])
+	/**
+	 * 
+	 * Tags
+	 * 
+	 */
 
-  /**
-   * 
-   * MOVEMENT
-   * 
-   */
+	// Selected tag to be used in form
+	const [tagId, setTagId] = useState<string | undefined>("")
+	// Selected tag name to be used as selected reference
+	const [tagInput, setTagInput] = useState<string>("")
 
-  /** Form zod validator, values, handlers, errors and loading */
-  const {
-      register,
-      handleSubmit,
-      formState: { errors, isSubmitting },
-      reset,
-      setValue,
-      clearErrors
-  } = useForm<MovementFormData>({
-      resolver: zodResolver(movementSchema)
-      ,
-      defaultValues: {
-          type: type,
-          categoryId: '',
-          tagId: '',
-          tagName: '',
-          amount: undefined,
-          description: ''
-      }
-  });
+	// Tags (global suggestions; not filtered by category initially)
+	const [allTags, setAllTags] = useState<Tag[]>([])
 
-  function handleTagKeyDown() {
-    // clear specific error when typing again
-    clearErrors("tagName");
-  }
+	/**
+	 * Fetch Tags
+	 */
+	useEffect(() => {
+		const fetchData = async () => {
+			try {
+				const allTags = await getTagsByUser();
+				setAllTags(allTags);
+			} catch (error) {
+				console.error('Failed to fetch tags:', error);
+			}
+		};
 
-  // Selecting tag and its actions
-  const selectTag = (id?: string) => { // when removing the optional id, TS yells at calling without param, IT SHOULD be okey since makes sense when creating new tag after submit
-    const t = allTags.find((tg) => tg.id === id)  
-    if (!t) return
-    setTagId(t.id)
-    setValue('amount', t.amount || 0); // Update form amount too
-    setValue('tagName', t.name ); // Update form amount too
+		fetchData();
+	}, []);
 
-    // match category and type to tag
-    const cat = cats.find((c) => c.id === t.categoryId)
-    if (cat) {
-      if (cat.type === TxType.EXPENSE) setSelectedExpenseCat(cat.id)
-      else setSelectedIncomeCat(cat.id)
-      setType(cat.type)
-    }
-    announce(`Tag ${t.name} seleccionado`)
-  }
+	// Match the amount of tag pills to diplay
+	const matchingSuggestions = useMemo(() => {
+		return allTags.slice(0, 12)
+	}, [allTags])
 
-  // Creating and setting new tag after submiting movement
-  const createTagObject = (data: Movement): Tag => {
-    const cat = cats.find((c) => data.categoryId === categoryId)!
-    
-    return {
-      id: data.tagId || undefined,
-      name: data.tagName,
-      categoryId: cat.id,
-      amount: data.amount,
-    }
-  }
+	const matchingSuggestionsMobile = useMemo(() => {
+		return allTags.slice(0, 4)
+	}, [allTags])
 
-  // TODO VALIDATE THIS since submiting a movement might have tag data to useEffect setalltags
-  const createTagAndUpdateArray = (data: Movement) => {
-    const newTag = createTagObject(data)
-    setAllTags((prev) => [newTag, ...prev])
-    // setTagId(newTag.id)
-    // setTagInput(newTag.name)
-    // category stays as-is; tag inherits current category
-    announce(`Tag ${newTag.name} creado`)
-  }
+	/**
+	 * 
+	 * MOVEMENT
+	 * 
+	 */
 
-  /**
-   * Movement submit
-   * @param data movementform data from schema, to be submited
-   */
-  const onSubmitHandler = async (data: MovementFormData) => {
-      
-      try {
-        if (!categoryId) return alert("Seleccioná una categoría.")
+	/** Form zod validator, values, handlers, errors and loading */
+	const {
+		register,
+		handleSubmit,
+		formState: { errors, isSubmitting },
+		reset,
+		setValue,
+		clearErrors
+	} = useForm<MovementFormData>({
+		resolver: zodResolver(movementSchema)
+		,
+		defaultValues: {
+			type: type,
+			categoryId: '',
+			tagId: '',
+			tagName: '',
+			amount: undefined,
+			description: ''
+		}
+	});
 
-        const movementData: Movement = {
-          ...data,
-          userId: undefined, // will be set in post method
-          categoryId: categoryId,
-          type: type,
-          tagId: tagId ? tagId : undefined,
-          description: data.tagName,
-        };
+	function handleTagKeyDown() {
+		// clear specific error when typing again
+		clearErrors("tagName");
+	}
 
-        console.log("Submitting movement:", data);
+	// Selecting tag and its actions
+	const selectTag = (id?: string) => { // when removing the optional id, TS yells at calling without param, IT SHOULD be okey since makes sense when creating new tag after submit
+		const t = allTags.find((tg) => tg.id === id)
+		if (!t) return
+		setTagId(t.id)
+		setValue('amount', t.amount || 0); // Update form amount too
+		setValue('tagName', t.name); // Update form amount too
 
-        const movement = await postMovement(movementData);
+		// match category and type to tag
+		const cat = cats.find((c) => c.id === t.categoryId)
+		if (cat) {
+			if (cat.type === TxType.EXPENSE) setSelectedExpenseCat(cat.id)
+			else setSelectedIncomeCat(cat.id)
+			setType(cat.type)
+		}
+		announce(`Tag ${t.name} seleccionado`)
+	}
 
-        console.log("Movement added:", movement);
+	// Creating and setting new tag after submiting movement
+	const createTagObject = (data: Movement): Tag => {
+		const cat = cats.find((c) => data.categoryId === categoryId)!
 
-        let currentTag = allTags.find((t) => t.id === tagId)
+		return {
+			id: data.tagId || undefined,
+			name: data.tagName,
+			categoryId: cat.id,
+			amount: data.amount,
+		}
+	}
 
-        // TODO best to do after submiting?!? is it to keep form?
-        // Always update tag default amount to last used
-        if (currentTag) {
-          const updated = { ...currentTag, amount: data.amount }
-          setAllTags((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
-        }
+	// TODO VALIDATE THIS since submiting a movement might have tag data to useEffect setalltags
+	const createTagAndUpdateArray = (data: Movement) => {
+		const newTag = createTagObject(data)
+		setAllTags((prev) => [newTag, ...prev])
+		// setTagId(newTag.id)
+		// setTagInput(newTag.name)
+		// category stays as-is; tag inherits current category
+		announce(`Tag ${newTag.name} creado`)
+	}
 
-        // AFTER SUBMITING reset form and states
-        // reset form values
-        reset( {
-          type: TxType.EXPENSE,
-          // categoryId: TxType.EXPENSE : selectedExpenseCat ? selectedIncomeCat,
-          tagId: undefined,
-          tagName: '',
-          amount: 0,
-          description: ''
-        });
+	/**
+	 * Movement submit
+	 * @param data movementform data from schema, to be submited
+	 */
+	const onSubmitHandler = async (data: MovementFormData) => {
 
-        // // create new tag locally for populating tags
-        // if (!data.tagId) {
-        //   createTagAndUpdateArray(movement);
-        // }
-        setTagInput("");
-        setTagId("");
+		try {
+			if (!categoryId) return alert("Seleccioná una categoría.")
 
-        onAdd(movement); // CALL PARENT
+			const movementData: Movement = {
+				...data,
+				userId: undefined, // will be set in post method
+				categoryId: categoryId,
+				type: type,
+				tagId: tagId ? tagId : undefined,
+				description: data.tagName,
+			};
 
+			const movement = await postMovement(movementData);
 
-      } catch (error) {
-          console.error('Submit error:', error);
-      }
-  };
+			let currentTag = allTags.find((t) => t.id === tagId)
 
-  /**
-   * 
-   * ADD TRANSACTION
-   * 
-   */
-  return (
-    <Card className="w-full max-w-none">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base">Agregar transacción</CardTitle>
-          {onCancel && (
-            <Button variant="ghost" size="icon" onClick={onCancel} className="h-8 w-8">
-              <X className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4 p-4">
-        <form onSubmit={handleSubmit(onSubmitHandler)}>
+			// TODO best to do after submiting?!? is it to keep form?
+			// Always update tag default amount to last used
+			if (currentTag) {
+				const updated = { ...currentTag, amount: data.amount }
+				setAllTags((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
+			}
 
-        {/* A11y live region */}
-        <div ref={liveRegionRef} className="sr-only" aria-live="polite" aria-atomic="true"></div>
+			// AFTER SUBMITING reset form and states
+			// reset form values
+			reset({
+				type: TxType.EXPENSE,
+				// categoryId: TxType.EXPENSE : selectedExpenseCat ? selectedIncomeCat,
+				tagId: undefined,
+				tagName: '',
+				amount: 0,
+				description: ''
+			});
 
-        {/* Type selector - Big buttons */}
-        <div className="grid grid-cols-2 gap-2" role="tablist" aria-label="Tipo de transacción">
-          <button
-            role="tab"
-            aria-selected={type === TxType.EXPENSE}
-            onClick={() => switchType(TxType.EXPENSE)}
-            className={cn(
-              "py-3 px-4 rounded-lg text-base font-semibold transition-all border-2 md:py-4 md:px-6 md:text-lg",
-              type === TxType.EXPENSE
-                ? "bg-red-50 border-red-500 text-red-700 shadow-md ring-2 ring-red-200"
-                : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100",
-            )}
-          >
-            <span className="block sm:inline">💸</span> Gasto
-          </button>
-          <button
-            role="tab"
-            aria-selected={type === TxType.INCOME}
-            onClick={() => switchType(TxType.INCOME)}
-            className={cn(
-              "py-3 px-4 rounded-lg text-base font-semibold transition-all border-2 md:py-4 md:px-6 md:text-lg",
-              type === TxType.INCOME
-                ? "bg-green-50 border-green-500 text-green-700 shadow-md ring-2 ring-green-200"
-                : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100",
-            )}
-          >
-            <span className="block sm:inline">💰</span> Ingreso
-          </button>
-        </div>
+			// reset local states
+			setTagInput("");
+			setTagId("");
 
-        {/* Category: mobile header */}
-        <CategoryHeaderMobile 
-          setShowCreateCategory={setShowCreateCategory} 
-          setShowManageCategories={setShowManageCategories}
-        />
+			onAdd(movement); // CALL PARENT
+		} catch (error) {
+			console.error('Submit error:', error);
+		}
+	};
 
-        {/* Category: desktop header*/}
-        <CategoryHeaderDesktop 
-          setShowCreateCategory={setShowCreateCategory} 
-          setShowManageCategories={setShowManageCategories}
-        />
+	/**
+	 * 
+	 * ADD TRANSACTION
+	 * 
+	 */
+	return (
+		<Card className="w-full max-w-none">
+			<CardHeader>
+				<div className="flex items-center justify-between">
+					<CardTitle className="text-base">Agregar transacción</CardTitle>
+					{onCancel && (
+						<Button variant="ghost" size="icon" onClick={onCancel} className="h-8 w-8">
+							<X className="h-4 w-4" />
+						</Button>
+					)}
+				</div>
+			</CardHeader>
+			<CardContent className="space-y-4 p-4">
+				<form onSubmit={handleSubmit(onSubmitHandler)}>
 
-        {/* Category: grid */}
-        <CategoryGrid 
-          items={shownCategories} 
-          categoryId={categoryId}
-          setCategory={setCategory}
-        />
+					{/* A11y live region */}
+					<div ref={liveRegionRef} className="sr-only" aria-live="polite" aria-atomic="true"></div>
 
-        {/* Tags */}
-        <TagRow
-          tagInput={tagInput}
-          setTagInput={setTagInput}
+					{/* Type selector - Big buttons */}
+					<div className="grid grid-cols-2 gap-2" role="tablist" aria-label="Tipo de transacción">
+						<button
+							role="tab"
+							type="button"
+							aria-selected={type === TxType.EXPENSE}
+							onClick={() => switchType(TxType.EXPENSE)}
+							className={cn(
+								"py-3 px-4 rounded-lg text-base font-semibold transition-all border-2 md:py-4 md:px-6 md:text-lg",
+								type === TxType.EXPENSE
+									? "bg-red-50 border-red-500 text-red-700 shadow-md ring-2 ring-red-200"
+									: "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100",
+							)}
+						>
+							<span className="block sm:inline">💸</span> Gasto
+						</button>
+						<button
+							role="tab"
+							type="button"
+							aria-selected={type === TxType.INCOME}
+							onClick={() => switchType(TxType.INCOME)}
+							className={cn(
+								"py-3 px-4 rounded-lg text-base font-semibold transition-all border-2 md:py-4 md:px-6 md:text-lg",
+								type === TxType.INCOME
+									? "bg-green-50 border-green-500 text-green-700 shadow-md ring-2 ring-green-200"
+									: "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100",
+							)}
+						>
+							<span className="block sm:inline">💰</span> Ingreso
+						</button>
+					</div>
 
-          tagId={tagId}
-          setTagId={setTagId}
+					{/* Category: mobile header */}
+					<CategoryHeaderMobile
+						setShowCreateCategory={setShowCreateCategory}
+						setShowManageCategories={setShowManageCategories}
+					/>
 
-          matchingSuggestions={matchingSuggestions}
-          matchingSuggestionsMobile={matchingSuggestionsMobile}
-          
-          selectTag={selectTag}
-          // clearToNew={ clearToNew}
-          // onTagInputKeyDown={ onTagInputKeyDown }
-          tagNameError={errors.tagName?.message}
-          onInputKeyDown={handleTagKeyDown}
+					{/* Category: desktop header*/}
+					<CategoryHeaderDesktop
+						setShowCreateCategory={setShowCreateCategory}
+						setShowManageCategories={setShowManageCategories}
+					/>
 
-          register={register}
-        />
+					{/* Category: grid */}
+					<CategoryGrid
+						items={shownCategories}
+						categoryId={categoryId}
+						setCategory={setCategory}
+					/>
 
-        {/* Amount */}
-        <div className="space-y-2 pb-4">
-          <Label className="text-sm text-gray-600">Monto</Label>
-          <div className="relative gap-2 ">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-            <Input
-              type="number"
-              id="amount"
-              aria-label="Monto"
-              inputMode="decimal"
-              pattern="[0-9]*"
-              enterKeyHint="done"
-              // {...register('amount')}
-              {...register('amount', { valueAsNumber: true })}
+					{/* Tags */}
+					<TagRow
+						tagInput={tagInput}
+						setTagInput={setTagInput}
 
-              className="pl-8 h-12 text-xl font-semibold md:text-2xl"
-              placeholder="1000.00"
-              onKeyDown={() => clearErrors("amount")}
-            />
-          </div>
-          {errors?.amount && ( // ← Show error message
-              <p className="text-red-500 text-sm mt-1">{errors?.amount.message}</p>
-          )}
-        </div>
+						tagId={tagId}
+						setTagId={setTagId}
 
-        <Button type="submit" className="w-full h-12 text-base font-semibold" >
-          {type === TxType.EXPENSE ? "Gastar" : "Agregar"}
-        </Button>
-        
-        </form>
+						matchingSuggestions={matchingSuggestions}
+						matchingSuggestionsMobile={matchingSuggestionsMobile}
 
-      </CardContent>
-      
-      {/* Category Dialogs */}
-      <QuickSpendCategoryDialogs
-        // objects
-        cats={cats}
-        allTags={allTags}
-        // handlers for popup
-        showCreateCategory={showCreateCategory}
-        setShowCreateCategory={setShowCreateCategory}
-        showManageCategories={showManageCategories}
-        setShowManageCategories={setShowManageCategories}
+						selectTag={selectTag}
+						// clearToNew={ clearToNew}
+						// onTagInputKeyDown={ onTagInputKeyDown }
+						tagNameError={errors.tagName?.message}
+						onInputKeyDown={handleTagKeyDown}
 
-        // new form
-        setNewCatType={setNewCatType}
-        newCatType={newCatType}
-        
-        deleteCategory={deleteCategory}
-        onSubmit={categorySubmit}
-      />
-    </Card>
-  )
+						register={register}
+					/>
+
+					{/* Amount */}
+					<div className="space-y-2 pb-4">
+						<Label className="text-sm text-gray-600">Monto</Label>
+						<div className="relative gap-2 ">
+							<span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+							<Input
+								type="number"
+								id="amount"
+								aria-label="Monto"
+								inputMode="decimal"
+								pattern="[0-9]*"
+								enterKeyHint="done"
+								// {...register('amount')}
+								{...register('amount', { valueAsNumber: true })}
+
+								className="pl-8 h-12 text-xl font-semibold md:text-2xl"
+								placeholder="1000.00"
+								onKeyDown={() => clearErrors("amount")}
+							/>
+						</div>
+						{errors?.amount && ( // ← Show error message
+							<p className="text-red-500 text-sm mt-1">{errors?.amount.message}</p>
+						)}
+					</div>
+
+					<Button type="submit" className="w-full h-12 text-base font-semibold" >
+						{type === TxType.EXPENSE ? "Gastar" : "Agregar"}
+					</Button>
+
+				</form>
+
+			</CardContent>
+
+			{/* Category Dialogs */}
+			<QuickSpendCategoryDialogs
+				// objects
+				cats={cats}
+				allTags={allTags}
+				// handlers for popup
+				showCreateCategory={showCreateCategory}
+				setShowCreateCategory={setShowCreateCategory}
+				showManageCategories={showManageCategories}
+				setShowManageCategories={setShowManageCategories}
+
+				// new form
+				setNewCatType={setNewCatType}
+				newCatType={newCatType}
+
+				deleteCategory={deleteCategory}
+				onSubmit={categorySubmit}
+			/>
+		</Card>
+	)
 }

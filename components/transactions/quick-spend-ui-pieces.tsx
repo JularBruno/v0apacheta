@@ -20,7 +20,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-import {  iconComponents } from "./quick-spend-constants"
+import { iconComponents } from "@/lib/quick-spend-constants"
 import { Movement, movementSchema, MovementFormData } from "@/lib/schemas/movement";
 
 
