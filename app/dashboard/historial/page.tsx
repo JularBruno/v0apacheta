@@ -9,17 +9,6 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Progress } from "@/components/ui/progress"
 import {
-	Utensils,
-	ShoppingCart,
-	Car,
-	Home,
-	Gamepad2,
-	Zap,
-	Gift,
-	Sparkles,
-	Briefcase,
-	Plane,
-	DollarSign,
 	Search,
 	Filter,
 	X,
@@ -34,106 +23,23 @@ import { TxType } from "@/lib/schemas/definitions";
 import { Category } from "@/lib/schemas/category";
 import { getCategoriesByUser, deleteCategoryById } from "@/lib/actions/categories";
 import { getMovementsByUserAndFilter, postMovement } from "@/lib/actions/movements";
-import { iconComponents, formatDate } from "@/lib/quick-spend-constants";
+import { iconComponents, formatDate, quickFilters } from "@/lib/quick-spend-constants";
 import { PeriodSelector } from "@/components/transactions/period-selector"
 
-// Mock transaction data
-const mockTransactions = [
-	{
-		id: "1",
-		title: "Almuerzo en restaurante",
-		amount: 45.5,
-		type: "gasto" as const,
-		category: "comida",
-		date: "2024-07-09",
-		time: "14:30",
-	},
-	{
-		id: "2",
-		title: "Supermercado Coto",
-		amount: 89.2,
-		type: "gasto" as const,
-		category: "comestibles",
-		date: "2024-07-08",
-		time: "18:45",
-	},
-	{
-		id: "3",
-		title: "Uber al centro",
-		amount: 12.75,
-		type: "gasto" as const,
-		category: "transporte",
-		date: "2024-07-08",
-		time: "16:20",
-	},
-	{
-		id: "4",
-		title: "Salario mensual",
-		amount: 2500.0,
-		type: "ingreso" as const,
-		category: "trabajo",
-		date: "2024-07-01",
-		time: "09:00",
-	},
-	{
-		id: "5",
-		title: "Netflix suscripción",
-		amount: 8.99,
-		type: "gasto" as const,
-		category: "entretenimiento",
-		date: "2024-07-02",
-		time: "10:00",
-	},
-	{
-		id: "6",
-		title: "Café con amigos",
-		amount: 15.3,
-		type: "gasto" as const,
-		category: "comida",
-		date: "2024-07-02",
-		time: "16:15",
-	},
-	{
-		id: "7",
-		title: "Gasolina",
-		amount: 35.0,
-		type: "gasto" as const,
-		category: "transporte",
-		date: "2024-07-01",
-		time: "08:30",
-	},
-	{
-		id: "8",
-		title: "Compras en farmacia",
-		amount: 22.5,
-		type: "gasto" as const,
-		category: "belleza",
-		date: "2024-06-30",
-		time: "19:15",
-	},
-]
-
-const dateFilters = [
-	{ id: "today", label: "Hoy" },
-	{ id: "week", label: "Esta semana" },
-	{ id: "month", label: "Este mes" },
-	{ id: "3months", label: "Últimos 3 meses" },
-	{ id: "custom", label: "Personalizado" },
-]
-
 export default function HistorialPage() {
+
+	const allFilteredId = "all"; // this the id for when selecting all on a picker as a constant
+
 	const [searchTerm, setSearchTerm] = useState("")
 	const [selectedCategory, setSelectedCategory] = useState("all")
 	const [selectedType, setSelectedType] = useState("all")
+
 	const [selectedDateFilter, setSelectedDateFilter] = useState("month")
-	const [minAmount, setMinAmount] = useState("")
-	const [maxAmount, setMaxAmount] = useState("")
+
 	const [showFilters, setShowFilters] = useState(false)
 
 	// Hide or show category on mobile
 	const [showCategoryBreakdown, setShowCategoryBreakdown] = useState(false)
-
-
 
 	/**
 	 * 
@@ -148,8 +54,11 @@ export default function HistorialPage() {
 
 	const thisYear = now.getFullYear();
 
-	const startDate = new Date(now.getFullYear(), now.getMonth(), 1); // first day of month
-	const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999); // last day of month
+	const startDate = new Date(now.getFullYear(), now.getMonth(), 1); // first day of this month
+	const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999); // last day of this month
+
+	const oneMonthAgo = now; // One month ago used in basic fetch
+	oneMonthAgo.setMonth(now.getMonth() - 1);
 
 	/**
 	 * 
@@ -183,33 +92,28 @@ export default function HistorialPage() {
 	 * 
 	 */
 
-
 	// Filter transactions based on current filters
-	const filteredTransactions = mockTransactions.filter((transaction) => {
-		const matchesSearch = transaction.title.toLowerCase().includes(searchTerm.toLowerCase())
-		const matchesCategory = selectedCategory === "all" || transaction.category === selectedCategory
-		const matchesType = selectedType === "all" || transaction.type === selectedType
-		const matchesMinAmount = !minAmount || transaction.amount >= Number.parseFloat(minAmount)
-		const matchesMaxAmount = !maxAmount || transaction.amount <= Number.parseFloat(maxAmount)
+	// const filteredTransactions = mockTransactions.filter((transaction) => {
+	// 	const matchesSearch = transaction.title.toLowerCase().includes(searchTerm.toLowerCase())
+	// 	const matchesCategory = selectedCategory === "all" || transaction.category === selectedCategory
+	// 	const matchesType = selectedType === "all" || transaction.type === selectedType
+	// 	const matchesMinAmount = !minAmount || transaction.amount >= Number.parseFloat(minAmount)
+	// 	const matchesMaxAmount = !maxAmount || transaction.amount <= Number.parseFloat(maxAmount)
 
-		return matchesSearch && matchesCategory && matchesType && matchesMinAmount && matchesMaxAmount
-	})
+	// 	return matchesSearch && matchesCategory && matchesType && matchesMinAmount && matchesMaxAmount
+	// })
 
 	const clearFilters = () => {
 		setSearchTerm("")
 		setSelectedCategory("all")
 		setSelectedType("all")
 		setSelectedDateFilter("month")
-		setMinAmount("")
-		setMaxAmount("")
 	}
 
 	const activeFiltersCount = [
 		searchTerm,
 		selectedCategory !== "all" ? selectedCategory : "",
 		selectedType !== "all" ? selectedType : "",
-		minAmount,
-		maxAmount,
 	].filter(Boolean).length
 
 	// 
@@ -219,21 +123,65 @@ export default function HistorialPage() {
 	/**
 	 * Fetch Movements
 	 */
+
+	// API Fetch and api filters
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
-				// const movements = await getMovementsByUserAndFilter({
-				//   startDate: startDate.toString(), endDate: endDate.toString()
-				// })
-
-				// TODO MISSING PAGINATION ON API
+				// Make pagination based on time periods
 				let filters: any = {
-					startDate: startDate.toString(), endDate: endDate.toString()
+					startDate: oneMonthAgo
 				};
+
+				// Bring based on filter, since is the best option for pagination
+
+				switch (selectedDateFilter) {
+					case quickFilters[0].id: // last 24 hours (yesterday to now)
+						filters.startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+						filters.endDate = now;
+						break;
+
+					case quickFilters[1].id: // last week (7 days ago to now)
+						filters.startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+						filters.endDate = now;
+						break;
+
+					case quickFilters[2].id: // last month (30 days ago to now)
+						filters.startDate = now.getMonth() - 1;
+						// filters.endDate = now;
+						break;
+
+					case quickFilters[3].id: // last 3 months (90 days ago to now)
+						filters.startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+
+						break;
+
+					default:
+						// Handle specific month selection: "month-9-2024"
+						if (selectedDateFilter.startsWith("month-")) {
+							const [_, monthStr, yearStr] = selectedDateFilter.split("-");
+							const month = parseInt(monthStr, 10); // 9 = October (0-indexed)
+							const year = parseInt(yearStr, 10);
+
+							filters.startDate = new Date(year, month, 1, 0, 0, 0, 0); // First day of month
+							filters.endDate = new Date(year, month + 1, 0, 23, 59, 59, 999); // Last day of month
+						} else {
+							// Default: this month
+							filters.startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+							filters.endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+						}
+						break;
+				}
+
+				// console.log('Date filters:', {
+				// 	startDate: filters.startDate.toISOString(),
+				// 	// endDate: filters.endDate.toISOString()
+				// });
 
 				// get movement with filters for API
 				const movements = await getMovementsByUserAndFilter(filters)
-				console.log(movements);
+
+				console.log('movements fetched ', movements);
 
 
 				// sort by date because these come unsorted from the backend
@@ -241,66 +189,52 @@ export default function HistorialPage() {
 					(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
 				);
 
-				console.log(sortedMovements);
-
-
-				// search term input
-				// if (!searchTerm) {
-				// 	console.log("Applying search term filter:", searchTerm);
-
-				// 	sortedMovements = sortedMovements.filter((transaction) => {
-				// 		transaction.tagName.toLowerCase().includes(searchTerm.toLowerCase())
-				// 	})
-				// }
-
-				// // category filter
-				// if(!searchTerm){
-				//   sortedMovements.filter((transaction) => {
-				//     transaction.tagName.toLowerCase().includes(searchTerm.toLowerCase())
-				//   })
-				// }
+				console.log('sortedMovements ', sortedMovements);
 
 				setMovements(sortedMovements);
-
-				const filteredMovements = movements.filter(m => {
-					const date = new Date(m.createdAt);
-					return date.getMonth() === thisMonth && date.getFullYear() === thisYear;
-				});
-
-				console.log(filteredMovements);
-
-				setFilteredMovements(filteredMovements);
-
+				setFilteredMovements(sortedMovements);
 			} catch (error) {
 				console.error('Failed to fetch movements:', error);
 			}
 		};
 
 		fetchData();
-	}, []);
+	}, [selectedDateFilter]);
 
+	// UI FILTERS
+	useEffect(() => {
+		let filtered = movements;
 
-	// // Filter client-side when searchTerm changes
-	// useEffect(() => {
-	// 	let filtered = allMovements;
+		// Apply category filter
+		if (selectedCategory !== allFilteredId) {
+			filtered = movements.filter((m) => m.categoryId === selectedCategory);
+		}
 
-	// 	// Apply search term filter
-	// 	if (searchTerm) {
-	// 		filtered = filtered.filter((m) =>
-	// 		m.tagName.toLowerCase().includes(searchTerm.toLowerCase())
-	// 		);
-	// 	}
+		// Apply type filter (only if no category is selected)
+		else if (selectedType !== allFilteredId) {
+			filtered = movements.filter((m) => m.type === selectedType);
+		}
 
-	// 	setFilteredMovements(filtered);
+		// search term input
+		// if (!searchTerm) {
+		// 	console.log("Applying search term filter:", searchTerm);
 
-	// 	// Calculate this month
-	// 	const thisMonthMovements = filtered.filter(m => {
-	// 		const date = new Date(m.createdAt);
-	// 		return date.getMonth() === thisMonth && date.getFullYear() === thisYear;
-	// 	});
-	// 	setMovementsThisMonth(thisMonthMovements);
+		// 	sortedMovements = sortedMovements.filter((transaction) => {
+		// 		transaction.tagName.toLowerCase().includes(searchTerm.toLowerCase())
+		// 	})
+		// }
 
-	// }, [movements, searchTerm]); // Runs when data or searchTerm changes
+		setFilteredMovements(filtered);
+	}, [movements, selectedCategory, selectedType, searchTerm]);
+
+	// Reset the opposite filter when one is changed
+	useEffect(() => {
+		if (selectedCategory !== allFilteredId) setSelectedType(allFilteredId);
+	}, [selectedCategory]);
+
+	useEffect(() => {
+		if (selectedType !== allFilteredId) setSelectedCategory(allFilteredId);
+	}, [selectedType]);
 
 	return (
 		<div className="space-y-6">
@@ -539,7 +473,7 @@ export default function HistorialPage() {
 											<SelectValue />
 										</SelectTrigger>
 										<SelectContent>
-											<SelectItem key={'all'} value={'all'}>
+											<SelectItem key={allFilteredId} value={allFilteredId}>
 												<div className="flex items-center gap-2">
 													<div className="w-3 h-3 rounded-full bg-gray-500" />
 													Todas
@@ -566,48 +500,13 @@ export default function HistorialPage() {
 											<SelectValue />
 										</SelectTrigger>
 										<SelectContent>
-											<SelectItem value="all">Todos</SelectItem>
-											<SelectItem value="gasto">Gastos</SelectItem>
-											<SelectItem value="ingreso">Ingresos</SelectItem>
+											<SelectItem value={allFilteredId}>Todos</SelectItem>
+											<SelectItem value={TxType.EXPENSE}>Gastos</SelectItem>
+											<SelectItem value={TxType.INCOME}>Ingresos</SelectItem>
 										</SelectContent>
 									</Select>
 								</div>
 
-								{/* Date Filter */}
-								{/* <div>
-									<Label>Período</Label>
-									<Select value={selectedDateFilter} onValueChange={setSelectedDateFilter}>
-										<SelectTrigger>
-											<SelectValue />
-										</SelectTrigger>
-										<SelectContent>
-											{dateFilters.map((filter) => (
-												<SelectItem key={filter.id} value={filter.id}>
-													{filter.label}
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
-								</div> */}
-
-								{/* Amount Range */}
-								{/* <div>
-									<Label>Monto</Label>
-									<div className="flex gap-2">
-										<Input
-											placeholder="Min"
-											type="number"
-											value={minAmount}
-											onChange={(e) => setMinAmount(e.target.value)}
-										/>
-										<Input
-											placeholder="Max"
-											type="number"
-											value={maxAmount}
-											onChange={(e) => setMaxAmount(e.target.value)}
-										/>
-									</div>
-								</div> */}
 							</div>
 
 							{/* Clear Filters */}
@@ -629,36 +528,36 @@ export default function HistorialPage() {
 				</CardHeader>
 
 				<CardContent>
-					{movements.length === 0 ? (
+					{filteredMovements.length === 0 ? (
 						<div className="text-center py-8 text-gray-500">
 							<p>No se encontraron transacciones con los filtros aplicados</p>
 						</div>
 					) : (
 						<div className="space-y-2">
-							{movements.map((transaction) => {
-								// const categoryInfo = getCategoryInfo(transaction.categoryId)
-								const Icon = iconComponents[transaction.category.icon as keyof typeof iconComponents]
+							{filteredMovements.map((movement) => {
+								// const categoryInfo = getCategoryInfo(movement.categoryId)
+								const Icon = iconComponents[movement.category.icon as keyof typeof iconComponents]
 
 								return (
-									<Card key={transaction.id} className="p-4 hover:shadow-sm transition-all">
+									<Card key={movement.id} className="p-4 hover:shadow-sm transition-all">
 										<div className="flex items-center justify-between">
 											{/* Left side: Icon and details */}
 											<div className="flex items-center space-x-3">
 												<div
 													className={cn(
 														"w-12 h-12 rounded-xl flex items-center justify-center shadow-sm",
-														transaction.category.color,
+														movement.category.color,
 													)}
 												>
 													<Icon className="w-6 h-6 text-white" />
 												</div>
 												<div>
-													<p className="font-semibold text-sm text-gray-900">{transaction.tagName}</p>
+													<p className="font-semibold text-sm text-gray-900">{movement.tag.name}</p>
 													<div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
-														<span className="bg-gray-100 px-2 py-1 rounded-full">{transaction.category.name}</span>
+														<span className="bg-gray-100 px-2 py-1 rounded-full">{movement.category.name}</span>
 														<span>•</span>
 														<span>
-															{formatDate(transaction.createdAt)}
+															{formatDate(movement.createdAt)}
 														</span>
 													</div>
 												</div>
@@ -669,12 +568,12 @@ export default function HistorialPage() {
 												<span
 													className={cn(
 														"font-bold text-lg",
-														transaction.type === TxType.INCOME ? "text-green-600" : "text-gray-900",
+														movement.type === TxType.INCOME ? "text-green-600" : "text-gray-900",
 													)}
 												>
-													{transaction.type === TxType.INCOME ? "+" : "-"}${transaction.amount}
+													{movement.type === TxType.INCOME ? "+" : "-"}${movement.amount}
 												</span>
-												<p className="text-xs text-gray-500 capitalize mt-1">{transaction.type}</p>
+												<p className="text-xs text-gray-500 capitalize mt-1">{movement.type}</p>
 											</div>
 										</div>
 									</Card>

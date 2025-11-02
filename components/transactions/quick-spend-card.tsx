@@ -118,8 +118,8 @@ export default function QuickSpendCard({
 	}, []);
 
 	// fitlered cats
-	const expenseCats = useMemo(() => cats.filter((c) => c.type === TxType.EXPENSE), [cats])
-	const incomeCats = useMemo(() => cats.filter((c) => c.type === TxType.INCOME), [cats])
+	const expenseCats = useMemo(() => cats?.filter((c) => c.type === TxType.EXPENSE), [cats])
+	const incomeCats = useMemo(() => cats?.filter((c) => c.type === TxType.INCOME), [cats])
 
 	// Track a selected category per type so switching is smooth
 	const [selectedExpenseCat, setSelectedExpenseCat] = useState<string>(expenseCats[0]?.id) // || "comida" // TODO Validate what to do when null or empty or not this id

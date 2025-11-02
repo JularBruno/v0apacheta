@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { quickFilters } from "@/lib/quick-spend-constants"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -29,13 +30,6 @@ interface PeriodSelectorProps {
 export function PeriodSelector({ selected, onSelect }: PeriodSelectorProps) {
 	const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
 
-	// const quickFilters = [
-	// 	{ id: "today", label: "Hoy" },
-	// 	{ id: "week", label: "Esta semana" },
-	// 	{ id: "month", label: "Este mes" },
-	// 	{ id: "3months", label: "3 meses" },
-	// ]
-
 	const monthId = (monthIndex: number) => `month-${monthIndex}-${currentYear}`
 	const isCurrentYear = currentYear === new Date().getFullYear()
 	const currentMonth = new Date().getMonth()
@@ -43,7 +37,7 @@ export function PeriodSelector({ selected, onSelect }: PeriodSelectorProps) {
 	return (
 		<div className="space-y-3">
 			{/* Quick filters */}
-			{/* <div className="flex gap-2 flex-wrap">
+			<div className="flex gap-2 flex-wrap">
 				{quickFilters.map((filter) => (
 					<Button
 						key={filter.id}
@@ -55,7 +49,7 @@ export function PeriodSelector({ selected, onSelect }: PeriodSelectorProps) {
 						{filter.label}
 					</Button>
 				))}
-			</div> */}
+			</div>
 
 			{/* Calendar grid */}
 			<Card className="p-4">
