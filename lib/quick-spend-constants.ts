@@ -120,7 +120,16 @@ export function formatDate(isoString: string) {
 	});
 }
 
+// Cool af formated number
+export function formatToBalance(balance: number) {
+	const formatted = new Intl.NumberFormat('es-AR', {
+		style: 'currency',
+		currency: 'ARS',
+		minimumFractionDigits: 0,
+	}).format(balance);
 
+	return formatted;
+}
 
 export const quickFilters = [
 	{ id: "today", label: "Hoy" },

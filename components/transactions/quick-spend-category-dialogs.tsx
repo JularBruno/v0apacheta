@@ -64,7 +64,6 @@ export function QuickSpendCategoryDialogs({
 	showManageCategories,
 	setShowManageCategories,
 	deleteCategory,
-
 	onSubmit,
 }: Props) {
 

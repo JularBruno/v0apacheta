@@ -4,7 +4,7 @@
 
 import { TxType } from './definitions';
 import { User } from '@/lib/schemas/user';
-import { Tag } from '@/lib/schemas/tag';
+import { Tags } from '@/lib/schemas/tag';
 import { Category } from '@/lib/schemas/category';
 import { z } from 'zod';
 
@@ -27,7 +27,7 @@ export type Movements = Movement & {
 	createdAt: string; // comes as ISO string from API (e.g., "2025-10-28T19:53:28.725Z")
 	updatedAt: string;
 	user: User;
-	tag: Tag;
+	tag: Tags;
 	category: Category;
 };
 

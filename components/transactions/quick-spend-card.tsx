@@ -19,8 +19,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 import { cn } from "@/lib/utils"
 
-import { Tag } from "@/lib/schemas/tag";
-import { Movement, movementSchema, MovementFormData } from "@/lib/schemas/movement";
+import { Tag, Tags } from "@/lib/schemas/tag";
+import { Movement, movementSchema, MovementFormData, Movements } from "@/lib/schemas/movement";
 import { TxType } from "@/lib/schemas/definitions";
 import { Category } from "@/lib/schemas/category";
 import { getCategoriesByUser, deleteCategoryById } from "@/lib/actions/categories";
@@ -29,15 +29,6 @@ import { postMovement } from "@/lib/actions/movements";
 
 import { QuickSpendCategoryDialogs } from "./quick-spend-category-dialogs"
 import { CategoryHeaderDesktop, CategoryHeaderMobile, CategoryGrid, TagRow } from "./quick-spend-ui-pieces"
-
-// this very nice but not sure how it works TODO review
-function nowInfo() {
-	const d = new Date()
-	return {
-		date: d.toLocaleDateString("es-AR"),
-		time: d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" }),
-	}
-}
 
 /**
  * @title Quick Spend Card used in home and asset
@@ -50,10 +41,18 @@ export default function QuickSpendCard({
 	onAdd,
 	initialType,
 	onCancel,
+	cats,
+	setCats,
+	allTags,
+	setAllTags
 }: {
 	onAdd: (data: Movement) => void
 	initialType?: TxType
 	onCancel?: () => void
+	cats: Category[]
+	setCats: React.Dispatch<React.SetStateAction<Category[]>>
+	allTags: Tags[],
+	setAllTags: React.Dispatch<React.SetStateAction<Tags[]>>
 }) {
 
 	/** By using an ARIA live region, you make your app accessible (A11y = accessibility). */
@@ -96,37 +95,33 @@ export default function QuickSpendCard({
 	 * 
 	 */
 
-	// Categories state (allows creation, setsnewone after created)
-	const [cats, setCats] = useState<Category[]>([]) // TODO Validate what to do when null or empty
-
-	/**
-	 * Fetch Categories
-	 * TODO Validate if this should be on parent component
-	 * This is the "lift state up" pattern. If it gets too deep (prop drilling), use Context.
-	 */
-	useEffect(() => {
-		const fetchData = async () => {
-			try {
-				const cats = await getCategoriesByUser();
-				setCats(cats);
-			} catch (error) {
-				console.error('Failed to fetch categories:', error);
-			}
-		};
-
-		fetchData();
-	}, []);
 
 	// fitlered cats
-	const expenseCats = useMemo(() => cats?.filter((c) => c.type === TxType.EXPENSE), [cats])
-	const incomeCats = useMemo(() => cats?.filter((c) => c.type === TxType.INCOME), [cats])
 
-	// Track a selected category per type so switching is smooth
-	const [selectedExpenseCat, setSelectedExpenseCat] = useState<string>(expenseCats[0]?.id) // || "comida" // TODO Validate what to do when null or empty or not this id
-	const [selectedIncomeCat, setSelectedIncomeCat] = useState<string>(incomeCats[0]?.id)
+	const expenseCats = useMemo(
+		() => cats?.filter((c) => c.type === TxType.EXPENSE) || [],
+		[cats]
+	);
+	const incomeCats = useMemo(
+		() => cats?.filter((c) => c.type === TxType.INCOME) || [],
+		[cats]
+	);
+
+	const [selectedExpenseCat, setSelectedExpenseCat] = useState<string | null>(null);
+	const [selectedIncomeCat, setSelectedIncomeCat] = useState<string | null>(null);
+
+	// Initialize selected categories when cats are fetched
+	useEffect(() => {
+		if (expenseCats.length && !selectedExpenseCat)
+			setSelectedExpenseCat(expenseCats[0].id);
+		if (incomeCats.length && !selectedIncomeCat)
+			setSelectedIncomeCat(incomeCats[0].id);
+	}, [expenseCats, incomeCats]);
 
 	// Selected category
-	const categoryId = type === TxType.EXPENSE ? selectedExpenseCat : selectedIncomeCat
+	const categoryId = type === TxType.EXPENSE
+		? selectedExpenseCat || expenseCats[0]?.id || ''
+		: selectedIncomeCat || incomeCats[0]?.id || '';
 
 	/**
 	 * Set selected Category
@@ -162,7 +157,7 @@ export default function QuickSpendCard({
 
 	// After submiting a category in dialog, add it to state
 	const categorySubmit = (cat: Category) => {
-		setCats(prev => {
+		setCats((prev: Category[]) => {
 			// Remove duplicates by ID
 			const filtered = prev.filter(filteredCat => filteredCat.id !== cat.id);
 			return [...filtered, cat];
@@ -215,25 +210,6 @@ export default function QuickSpendCard({
 	const [tagId, setTagId] = useState<string | undefined>("")
 	// Selected tag name to be used as selected reference
 	const [tagInput, setTagInput] = useState<string>("")
-
-	// Tags (global suggestions; not filtered by category initially)
-	const [allTags, setAllTags] = useState<Tag[]>([])
-
-	/**
-	 * Fetch Tags
-	 */
-	useEffect(() => {
-		const fetchData = async () => {
-			try {
-				const allTags = await getTagsByUser();
-				setAllTags(allTags);
-			} catch (error) {
-				console.error('Failed to fetch tags:', error);
-			}
-		};
-
-		fetchData();
-	}, []);
 
 	// Match the amount of tag pills to diplay
 	const matchingSuggestions = useMemo(() => {
@@ -295,7 +271,7 @@ export default function QuickSpendCard({
 	}
 
 	// Creating and setting new tag after submiting movement
-	const createTagObject = (data: Movement): Tag => {
+	const createTagObject = (data: Movement): Tags => {
 		const cat = cats.find((c) => data.categoryId === categoryId)!
 
 		return {
@@ -303,11 +279,12 @@ export default function QuickSpendCard({
 			name: data.tagName,
 			categoryId: cat.id,
 			amount: data.amount,
+			createdAt: Date.now().toString()
 		}
 	}
 
 	// TODO VALIDATE THIS since submiting a movement might have tag data to useEffect setalltags
-	const createTagAndUpdateArray = (data: Movement) => {
+	const createTagAndUpdateArray = (data: Movements) => {
 		const newTag = createTagObject(data)
 		setAllTags((prev) => [newTag, ...prev])
 		// setTagId(newTag.id)

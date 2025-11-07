@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,7 +16,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import TransactionDonutChart from "@/components/dashboard/transaction-donut-chart"
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Movement, movementSchema, MovementFormData, Movements } from "@/lib/schemas/movement";
 import { TxType } from "@/lib/schemas/definitions";
 import { Category } from "@/lib/schemas/category";
@@ -92,17 +91,6 @@ export default function HistorialPage() {
 	 * 
 	 */
 
-	// Filter transactions based on current filters
-	// const filteredTransactions = mockTransactions.filter((transaction) => {
-	// 	const matchesSearch = transaction.title.toLowerCase().includes(searchTerm.toLowerCase())
-	// 	const matchesCategory = selectedCategory === "all" || transaction.category === selectedCategory
-	// 	const matchesType = selectedType === "all" || transaction.type === selectedType
-	// 	const matchesMinAmount = !minAmount || transaction.amount >= Number.parseFloat(minAmount)
-	// 	const matchesMaxAmount = !maxAmount || transaction.amount <= Number.parseFloat(maxAmount)
-
-	// 	return matchesSearch && matchesCategory && matchesType && matchesMinAmount && matchesMaxAmount
-	// })
-
 	const clearFilters = () => {
 		setSearchTerm("")
 		setSelectedCategory("all")
@@ -116,8 +104,9 @@ export default function HistorialPage() {
 		selectedType !== "all" ? selectedType : "",
 	].filter(Boolean).length
 
-	// 
+	// ALl movements from api. Filtered by default one month ago 
 	const [movements, setMovements] = useState<Movements[]>([])
+	// All movements filtered in UI for selectedCategory, selectedType, and searchTerm
 	const [filteredMovements, setFilteredMovements] = useState<Movements[]>([])
 
 	/**
@@ -409,14 +398,14 @@ export default function HistorialPage() {
 					<div className="flex flex-col space-y-4">
 						<div className="flex items-center justify-between">
 							<CardTitle className="text-lg">Transacciones ({movements.length})</CardTitle>
-							<Button
+							{/* <Button
 								variant="destructive"
 								size="sm"
 								onClick={() => console.log("Undo Last Clicked")}
 								className="hidden sm:flex"
 							>
 								Deshacer Último
-							</Button>
+							</Button> */}
 						</div>
 
 						{/* Search and Filter Controls - Mobile optimized */}

@@ -22,12 +22,18 @@ import { Separator } from "@/components/ui/separator"
 import { toast } from "@/hooks/use-toast"
 import { Progress } from "@/components/ui/progress" // Import Progress component
 import QuickSpendCard from "@/components/transactions/quick-spend-card"
+import { formatToBalance } from "@/lib/quick-spend-constants"
 //
 import { getProfile } from "@/lib/actions/user";
 import { useEffect, useState } from 'react';
 import { User } from "@/lib/schemas/user"
-import { Movement } from "@/lib/schemas/movement"
+import { Movement, Movements } from "@/lib/schemas/movement"
 import { TxType } from "@/lib/schemas/definitions";
+import { Category } from "@/lib/schemas/category";
+import { getCategoriesByUser } from "@/lib/actions/categories";
+import { getMovementsByUserAndFilter, deleteMovement } from "@/lib/actions/movements"
+import { getTagsByUser } from "@/lib/actions/tags"
+import { Tag, Tags } from "@/lib/schemas/tag"
 
 interface PaymentItem {
 	id: string
@@ -37,6 +43,76 @@ interface PaymentItem {
 }
 
 export default function InicioPage() {
+
+	const now = new Date();
+
+	/**
+	 * 
+	 * Categories
+	 * 
+	 */
+
+	// Categories state (allows creation, setsnewone after created)
+	const [cats, setCats] = useState<Category[]>([]) // TODO Validate what to do when null or empty
+
+	/**
+	 * Fetch Categories
+	 * TODO Validate if this should be on parent component
+	 * This is the "lift state up" pattern. If it gets too deep (prop drilling), use Context.
+	 */
+	useEffect(() => {
+		const fetchData = async () => {
+			try {
+				const cats = await getCategoriesByUser();
+				setCats(cats);
+			}
+			catch (err: any) {
+				console.error('Failed to fetch categories:', err);
+				setCats([]);
+			}
+		};
+
+		fetchData();
+	}, []);
+
+	/**
+	 * 
+	 * Tags
+	 * 
+	 */
+
+	// Tags (global suggestions; not filtered by category initially)
+	const [allTags, setAllTags] = useState<Tags[]>([])
+
+	/**
+	 * Fetch Tags
+	 */
+	const fetchTags = async () => {
+		try {
+			const allTags = await getTagsByUser();
+			setAllTags(allTags);
+
+			const sortedTags = allTags.sort(
+				(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+			);
+
+
+		} catch (error) {
+			console.error('Failed to fetch tags:', error);
+		}
+	};
+
+	// Initial fetch of movements
+	useEffect(() => {
+		fetchTags();
+	}, []);
+
+	/**
+	 * 
+	 * MOCKS for aplying to ui required to integrate still
+	 * 
+	 */
+
 	// Mock data for budget summary and progress
 	const monthlyBudget = 1000 // Example total budget
 	const totalSpent = 200 // Example spent amount
@@ -55,10 +131,14 @@ export default function InicioPage() {
 	const daysRemaining = 4 // This would be dynamic in a real app
 	const dailySpendSuggestion = monthlyBudgetRemaining > 0 ? monthlyBudgetRemaining / daysRemaining : 0
 
+	/**
+	 * 
+	 * User
+	 * 
+	 */
 	const [userProfile, setUserProfile] = useState<User | null>(null);
 	const [userBalance, setUserBalance] = useState<number>(0);
 	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null); // TODO whats this
 
 	useEffect(() => {
 		const fetchProfile = async () => {
@@ -73,7 +153,6 @@ export default function InicioPage() {
 					// Redirect is happening, ignore
 					return;
 				}
-				setError('Failed to load profile');
 			} finally {
 				setLoading(false);
 			}
@@ -82,9 +161,106 @@ export default function InicioPage() {
 		fetchProfile();
 	}, []);
 
+	/**
+	 * 
+	 * Movements
+	 * 
+	 */
+
+	// Five last movements
+	const [movements, setMovements] = useState<Movements[]>([]);
+	const [lastFiveAmount, setlastFiveAmount] = useState<number>(0);
+
+	/**
+	 * Fetch Movements
+	 */
+
+	// Fetch movements function (extract it so you can reuse)
+	const fetchMovements = async () => {
+		try {
+			const filters: any = {
+				startDate: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+			};
+
+			const movements = await getMovementsByUserAndFilter(filters);
+
+			const sortedMovements = movements.sort(
+				(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+			);
+
+			const lastFive = sortedMovements.slice(0, 5); // First 5 (most recent)
+			const lastFiveAmount = lastFive.reduce((sum, item) => {
+				if (item.type === TxType.EXPENSE) {
+					return sum + item.amount;
+				}
+				return sum;
+			}, 0);
+
+			setMovements(lastFive);
+			setlastFiveAmount(lastFiveAmount);
+		} catch (error) {
+			console.error('Failed to fetch movements:', error);
+		}
+	};
+
+	// Initial fetch of movements
+	useEffect(() => {
+		fetchMovements();
+	}, []);
+
+	/**
+	 * On balance update add or remove balance, to not call api again
+	 */
+	const onBalanceUpdate = async (data: Movement) => {
+		// Update balance immediately
+		const newBalance = data.type === TxType.INCOME
+			? userBalance + data.amount
+			: userBalance - data.amount;
+
+		setUserBalance(newBalance);
+	}
+
+	/**
+	 * After adding movement
+	 */
+	const onAddMovement = async (data: Movement) => {
+		// Update balance immediately
+		onBalanceUpdate(data);
+
+		// Refetch movements to get populated data
+		await fetchMovements();
+		await fetchTags();
+
+		toast({
+			variant: "success",
+			title: "Movimiento realizado!",
+			description: `Se realizó tu ${data.type === TxType.INCOME ? "Ingreso" : "Gasto"} de $${data.amount}`,
+		});
+	}
+
+	/**
+	 * Delete latest movement based on array last item id
+	 */
+	const deleteLatestMovement = async () => {
+		const last = movements[0];
+		if (last) {
+			deleteMovement(last.id);
+			onBalanceUpdate(last);
+		}
+
+		// Refetch movements to get populated data
+		await fetchMovements();
+
+		toast({
+			variant: "success",
+			title: "Movimiento borrado!",
+			description: `Se eliminó tu último movimiento`,
+		});
+	};
+
 	return (
 		<div className="space-y-6">
-			{/* Budget Overview (existing small cards) */}
+			{/* Budget Overview*/}
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<Card>
 					<CardHeader className="pb-2">
@@ -94,12 +270,12 @@ export default function InicioPage() {
 						{loading ? (
 							<div>Loading...</div>
 						) : userBalance ? (
-							<div className="text-2xl font-bold">${userBalance.toFixed(0)} ARS</div>
+							<div className="text-2xl font-bold">{formatToBalance(userBalance)} ARS</div>
 						) : (
 							<div className="text-2xl font-bold">$0 ARS</div>
 						)}
 						{/* <div className="text-2xl font-bold">${userProfile: userProfile?.balance | 0 } ars</div> */}
-						<p className="text-sm text-gray-500">0 transacciones</p>
+						<p className="text-sm text-gray-500">0 transacciones</p> {/* TODO */}
 					</CardContent>
 				</Card>
 
@@ -125,101 +301,33 @@ export default function InicioPage() {
 					</CardContent>
 				</Card>
 
-
-				{/* <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Cuenta</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">$0</div>
-            <p className="text-sm text-gray-500">Balance actual</p>
-          </CardContent>
-        </Card> */}
-
 			</div>
 
 
 			<QuickSpendCard
 				/**
 				 * QuickSpendCard onAdd callback! useful for actions after movement
-				 * TODO validate position in code and balance update
-				 * 
 				 */
-				onAdd={(data: Movement) => {
-					let newBalance = data.type === TxType.INCOME ? userBalance + data.amount : userBalance - data.amount;
-					setUserBalance(newBalance);
-
-					toast({
-						variant: "success", // or "destructive" for errors
-						title: "Movimiento realizado!",
-						description: `Se realizó tu ${data.type === TxType.INCOME ? "Ingreso" : "Gasto"} de $${data.amount}, sigue anotando!`,
-					})
-				}}
+				cats={cats}
+				setCats={setCats}
+				onAdd={onAddMovement}
+				allTags={allTags}
+				setAllTags={setAllTags}
 			/>
 
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-				<RecentExpenses />
-			</div>
+				{/* History of last expenses */}
+				<RecentExpenses cats={cats} movements={movements} lastFiveAmount={lastFiveAmount} deleteLatestMovement={deleteLatestMovement} />
 
-
-			{/* Combined Financial Summary & Upcoming Payments Card AND Add Transaction Section */}
-			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-				{/* Left Column: Combined Financial Summary & Upcoming Payments */}
+				{/* Upcoming Payments Card */}
 				<Card>
-					{/* <CardHeader>
-            <CardTitle>Resumen Financiero</CardTitle>
-          </CardHeader> */}
+					<CardHeader>
+						<CardTitle>Resumen Financiero</CardTitle>
+					</CardHeader>
 					<CardContent className="space-y-6">
-						{/* Budget Progress Section */}
-						{/* 
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-lg font-semibold">Presupuesto</h3>
-                <span className="text-sm text-gray-500">Hoy</span>
-              </div>
-              <div className="text-2xl font-bold mb-2">
-                ${monthlyBudgetRemaining.toFixed(2)} restante de ${monthlyBudget.toFixed(2)}
-              </div>
-              <Progress value={progressPercentage} className="h-2 mb-4" />
-              <div className="flex justify-between text-sm text-gray-500">
-                <span>1 jul</span>
-                <span>{progressPercentage.toFixed(0)}%</span>
-                <span>31 jul</span>
-              </div>
-              <p className="text-sm text-gray-500 mt-2">
-                Puede gastar ${dailySpendSuggestion.toFixed(2)}/día para {daysRemaining} más días
-              </p>
-            </div> */}
 
-
-						{/* Separator between budget progress and net worth */}
-						{/* Net Worth Summary Section */}
-						{/* <Separator /> 
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center">
-                <p className="text-sm text-gray-500">Activos Totales</p>
-                <p className="text-2xl font-bold text-green-600">${(1500 + 5000 + 200).toFixed(2)}</p> 
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-gray-500">Pasivos Totales</p>
-                <p className="text-2xl font-bold text-red-600">-${(300 + 1200).toFixed(2)}</p> 
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-gray-500">Patrimonio Neto</p>
-                <p
-                  className={cn(
-                    "text-2xl font-bold",
-                    1500 + 5000 + 200 - 300 - 1200 >= 0 ? "text-primary-600" : "text-red-600",
-                  )}
-                >
-                  ${(1500 + 5000 + 200 - 300 - 1200).toFixed(2)}
-                </p>
-              </div>
-            </div> */}
-
-						<Separator /> {/* Separator between net worth and payments */}
-						{/* Upcoming Payments Section */}
+						<Separator />
+						{/* Upcoming Payments Section, could also be improved to hold  */}
 						<div>
 							<h3 className="text-lg font-semibold flex items-center gap-2 mb-3">
 								<CalendarDays className="w-5 h-5 text-blue-600" /> Próximos Pagos
@@ -253,13 +361,10 @@ export default function InicioPage() {
 					</CardContent>
 
 				</Card>
-			</div>
 
-			{/* Bottom Section: Recent Expenses and Spending Chart (existing) */}
-			{/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <RecentExpenses />
-        <SpendingChart />
-      </div> */}
+				<SpendingChart />
+
+			</div>
 
 		</div>
 	)
