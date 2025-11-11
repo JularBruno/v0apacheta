@@ -2,17 +2,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-	Utensils,
-	ShoppingCart,
-	Car,
-	Home,
-	Gamepad2,
-	Zap,
-	Gift,
-	Sparkles,
-	Briefcase,
-	Plane,
-	DollarSign,
 	CalendarDays,
 } from "lucide-react"
 import SpendingChart from "@/components/dashboard/spending-chart"
@@ -34,6 +23,7 @@ import { getCategoriesByUser } from "@/lib/actions/categories";
 import { getMovementsByUserAndFilter, deleteMovement } from "@/lib/actions/movements"
 import { getTagsByUser } from "@/lib/actions/tags"
 import { Tag, Tags } from "@/lib/schemas/tag"
+import { Loading } from "@/components/ui/loading"
 
 interface PaymentItem {
 	id: string
@@ -83,6 +73,8 @@ export default function InicioPage() {
 
 	// Tags (global suggestions; not filtered by category initially)
 	const [allTags, setAllTags] = useState<Tags[]>([])
+	// Set this to false when tags loaded so skeleton of quickspendcard disappears
+	const [loadingQuickSpendCard, setLoadingQuickSpendCard] = useState<boolean>(true);
 
 	/**
 	 * Fetch Tags
@@ -90,13 +82,14 @@ export default function InicioPage() {
 	const fetchTags = async () => {
 		try {
 			const allTags = await getTagsByUser();
-			setAllTags(allTags);
 
 			const sortedTags = allTags.sort(
 				(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
 			);
 
+			setAllTags(sortedTags);
 
+			setLoadingQuickSpendCard(false);
 		} catch (error) {
 			console.error('Failed to fetch tags:', error);
 		}
@@ -138,12 +131,12 @@ export default function InicioPage() {
 	 */
 	const [userProfile, setUserProfile] = useState<User | null>(null);
 	const [userBalance, setUserBalance] = useState<number>(0);
-	const [loading, setLoading] = useState(true);
+	const [loadingUser, setLoadingUser] = useState(true);
 
 	useEffect(() => {
 		const fetchProfile = async () => {
 			try {
-				setLoading(true);
+				setLoadingUser(true);
 				const profile = await getProfile();
 				setUserProfile(profile);
 				setUserBalance(profile.balance);
@@ -154,7 +147,7 @@ export default function InicioPage() {
 					return;
 				}
 			} finally {
-				setLoading(false);
+				setLoadingUser(false);
 			}
 		}
 
@@ -170,6 +163,7 @@ export default function InicioPage() {
 	// Five last movements
 	const [movements, setMovements] = useState<Movements[]>([]);
 	const [lastFiveAmount, setlastFiveAmount] = useState<number>(0);
+	const [loadingMovements, setLoadingMovements] = useState(true);
 
 	/**
 	 * Fetch Movements
@@ -177,6 +171,7 @@ export default function InicioPage() {
 
 	// Fetch movements function (extract it so you can reuse)
 	const fetchMovements = async () => {
+
 		try {
 			const filters: any = {
 				startDate: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
@@ -198,6 +193,8 @@ export default function InicioPage() {
 
 			setMovements(lastFive);
 			setlastFiveAmount(lastFiveAmount);
+
+			setLoadingMovements(false);
 		} catch (error) {
 			console.error('Failed to fetch movements:', error);
 		}
@@ -267,8 +264,8 @@ export default function InicioPage() {
 						<CardTitle className="text-sm font-medium text-gray-600">Balance personal</CardTitle>
 					</CardHeader>
 					<CardContent>
-						{loading ? (
-							<div>Loading...</div>
+						{loadingUser ? (
+							<Loading></Loading>
 						) : userBalance ? (
 							<div className="text-2xl font-bold">{formatToBalance(userBalance)} ARS</div>
 						) : (
@@ -313,11 +310,12 @@ export default function InicioPage() {
 				onAdd={onAddMovement}
 				allTags={allTags}
 				setAllTags={setAllTags}
+				loading={loadingQuickSpendCard}
 			/>
 
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 				{/* History of last expenses */}
-				<RecentExpenses cats={cats} movements={movements} lastFiveAmount={lastFiveAmount} deleteLatestMovement={deleteLatestMovement} />
+				<RecentExpenses loading={loadingMovements} cats={cats} movements={movements} lastFiveAmount={lastFiveAmount} deleteLatestMovement={deleteLatestMovement} />
 
 				{/* Upcoming Payments Card */}
 				<Card>

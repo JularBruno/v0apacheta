@@ -6,22 +6,29 @@ import { cn } from "@/lib/utils";
 import { Movements } from "@/lib/schemas/movement";
 import { Category } from "@/lib/schemas/category";
 import { iconComponents, formatToBalance, formatDate } from "@/lib/quick-spend-constants";
+import { Loading } from "../ui/loading";
 
+/**
+ * 
+ * Recent expenses card showing a resume of last expenses
+ * 
+ */
 export default function RecentExpenses({
 	cats,
 	movements,
 	lastFiveAmount,
-	deleteLatestMovement
+	deleteLatestMovement,
+	loading
 }: {
 	cats: Category[],
 	movements: Movements[],
 	lastFiveAmount: number,
 	deleteLatestMovement: () => void
+	loading: boolean
 }) {
 	return (
 		<Card>
 			<CardHeader>
-				{/* <div className="flex items-center justify-between"> */}
 				<div className="flex items-center justify-between">
 
 					<div className="flex items-center space-x-3">
@@ -45,45 +52,48 @@ export default function RecentExpenses({
 				</div>
 			</CardHeader>
 			<CardContent>
-				{movements.length === 0 ? (
-					<div className="text-center py-8 text-gray-500">
-						<p>No se encontraron transacciones </p>
-					</div>
-				) : (
-					<div className="space-y-4">
+				{loading ? (
+					<Loading></Loading>
+				) :
+					movements.length === 0 ? (
+						<div className="text-center py-8 text-gray-500">
+							<p>No se encontraron transacciones </p>
+						</div>
+					) : (
+						<div className="space-y-4">
 
-						{movements.map((movement) => {
-							// const categoryInfo = getCategoryInfo(movement.categoryId)
-							const Icon = iconComponents[movement.category.icon as keyof typeof iconComponents]
+							{movements.map((movement) => {
+								// const categoryInfo = getCategoryInfo(movement.categoryId)
+								const Icon = iconComponents[movement.category.icon as keyof typeof iconComponents]
 
-							return (
-								<div
-									key={movement.id}
-									className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
-								>
-									{/* Left side: Icon and details */}
-									<div className="flex items-center space-x-3">
-										<div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", movement.category.color)}>
-											<Icon className="w-5 h-5 text-white" />
+								return (
+									<div
+										key={movement.id}
+										className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
+									>
+										{/* Left side: Icon and details */}
+										<div className="flex items-center space-x-3">
+											<div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", movement.category.color)}>
+												<Icon className="w-5 h-5 text-white" />
+											</div>
+											<div>
+												<p className="font-medium text-gray-900 text-sm">{movement.tag.name}</p>
+												<p className="text-xs text-gray-500">
+													{movement.category.name} • {formatDate(movement.createdAt)}
+												</p>
+											</div>
 										</div>
-										<div>
-											<p className="font-medium text-gray-900 text-sm">{movement.tag.name}</p>
-											<p className="text-xs text-gray-500">
-												{movement.category.name} • {formatDate(movement.createdAt)}
-											</p>
+
+										{/* Right side: Amount */}
+										<div className="flex items-center">
+											<span className="font-semibold text-gray-900">-${movement.tag.amount}</span>
 										</div>
 									</div>
-
-									{/* Right side: Amount */}
-									<div className="flex items-center">
-										<span className="font-semibold text-gray-900">-${movement.tag.amount}</span>
-									</div>
-								</div>
-							)
-						})
-						}
-					</div>
-				)}
+								)
+							})
+							}
+						</div>
+					)}
 
 				{/* Summary at bottom */}
 				<div className="border-t pt-4 mt-4">

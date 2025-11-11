@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { Loading } from "@/components/ui/loading"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Progress } from "@/components/ui/progress"
 import {
@@ -13,6 +14,7 @@ import {
 	X,
 	ChevronDown,
 	ChevronUp,
+	Trash
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import TransactionDonutChart from "@/components/dashboard/transaction-donut-chart"
@@ -21,9 +23,10 @@ import { Movement, movementSchema, MovementFormData, Movements } from "@/lib/sch
 import { TxType } from "@/lib/schemas/definitions";
 import { Category } from "@/lib/schemas/category";
 import { getCategoriesByUser, deleteCategoryById } from "@/lib/actions/categories";
-import { getMovementsByUserAndFilter, postMovement } from "@/lib/actions/movements";
+import { deleteMovement, getMovementsByUserAndFilter, postMovement } from "@/lib/actions/movements";
 import { iconComponents, formatDate, quickFilters } from "@/lib/quick-spend-constants";
 import { PeriodSelector } from "@/components/transactions/period-selector"
+import { toast } from "@/hooks/use-toast"
 
 export default function HistorialPage() {
 
@@ -47,15 +50,7 @@ export default function HistorialPage() {
 	 */
 
 	const now = new Date();
-
-	const thisMonth = now.getMonth();
 	const monthName = now.toLocaleString('es-ES', { month: 'long' });
-
-	const thisYear = now.getFullYear();
-
-	const startDate = new Date(now.getFullYear(), now.getMonth(), 1); // first day of this month
-	const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999); // last day of this month
-
 	const oneMonthAgo = now; // One month ago used in basic fetch
 	oneMonthAgo.setMonth(now.getMonth() - 1);
 
@@ -91,13 +86,14 @@ export default function HistorialPage() {
 	 * 
 	 */
 
+	// clear filters but date
 	const clearFilters = () => {
 		setSearchTerm("")
 		setSelectedCategory("all")
 		setSelectedType("all")
 		setSelectedDateFilter("month")
 	}
-
+	// counting active filters for badge
 	const activeFiltersCount = [
 		searchTerm,
 		selectedCategory !== "all" ? selectedCategory : "",
@@ -108,13 +104,32 @@ export default function HistorialPage() {
 	const [movements, setMovements] = useState<Movements[]>([])
 	// All movements filtered in UI for selectedCategory, selectedType, and searchTerm
 	const [filteredMovements, setFilteredMovements] = useState<Movements[]>([])
+	// refresh trigger for fetching movements on deletion on when refresh required
+	const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+	// Loading movements for spinner
+	const [loadingMovements, setLoadingMovements] = useState(true);
+
 
 	/**
-	 * Fetch Movements
+	 * Delete latest movement based on array last item id
 	 */
+	const deleteSelectedMovement = async (movement: Movements) => {
+		deleteMovement(movement.id);
+		toast({
+			variant: "success",
+			title: "Movimiento borrado!",
+			description: `Se eliminó el movimiento ${movement.tag.name} y se actualizó tu balance`,
+		});
+		setRefreshTrigger(prev => prev + 1); // ← Triggers useEffect
+	};
 
-	// API Fetch and api filters
+	/**
+	 * API Fetch and api filters
+	 */
 	useEffect(() => {
+		setLoadingMovements(true);
+
 		const fetchData = async () => {
 			try {
 				// Make pagination based on time periods
@@ -162,23 +177,13 @@ export default function HistorialPage() {
 						break;
 				}
 
-				// console.log('Date filters:', {
-				// 	startDate: filters.startDate.toISOString(),
-				// 	// endDate: filters.endDate.toISOString()
-				// });
-
 				// get movement with filters for API
 				const movements = await getMovementsByUserAndFilter(filters)
-
-				console.log('movements fetched ', movements);
-
 
 				// sort by date because these come unsorted from the backend
 				let sortedMovements = movements.sort(
 					(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
 				);
-
-				console.log('sortedMovements ', sortedMovements);
 
 				setMovements(sortedMovements);
 				setFilteredMovements(sortedMovements);
@@ -188,35 +193,38 @@ export default function HistorialPage() {
 		};
 
 		fetchData();
-	}, [selectedDateFilter]);
+	}, [selectedDateFilter, refreshTrigger]);
 
-	// UI FILTERS
+	/**
+	 * 
+	 * UI FILTERS for getting movements called by useeffect when filtering 
+	 * 
+	 */
 	useEffect(() => {
+		// remmember this is called when movements update
+		setLoadingMovements(true);
+
 		let filtered = movements;
 
 		// Apply category filter
 		if (selectedCategory !== allFilteredId) {
 			filtered = movements.filter((m) => m.categoryId === selectedCategory);
 		}
-
 		// Apply type filter (only if no category is selected)
 		else if (selectedType !== allFilteredId) {
 			filtered = movements.filter((m) => m.type === selectedType);
 		}
 
 		// search term input
-		// if (!searchTerm) {
-		// 	console.log("Applying search term filter:", searchTerm);
-
-		// 	sortedMovements = sortedMovements.filter((transaction) => {
-		// 		transaction.tagName.toLowerCase().includes(searchTerm.toLowerCase())
-		// 	})
-		// }
+		if (searchTerm) {
+			filtered = filtered.filter((transaction) => transaction.tag.name.toLowerCase().includes(searchTerm.toLowerCase()))
+		}
 
 		setFilteredMovements(filtered);
+		setLoadingMovements(false);
 	}, [movements, selectedCategory, selectedType, searchTerm]);
 
-	// Reset the opposite filter when one is changed
+	// selectedCategory selectedType Reset the opposite filter when one is changed for common sense usage, attempted to do in if but required useeffect
 	useEffect(() => {
 		if (selectedCategory !== allFilteredId) setSelectedType(allFilteredId);
 	}, [selectedCategory]);
@@ -225,9 +233,12 @@ export default function HistorialPage() {
 		if (selectedType !== allFilteredId) setSelectedCategory(allFilteredId);
 	}, [selectedType]);
 
+
 	return (
 		<div className="space-y-6">
-			{/* Donut Chart */}
+			{/* 
+			* Donut Chart and categories presupuestos
+			*/}
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 				{/* Chart - always visible */}
 				<div className="lg:col-span-2 xl:col-span-1">
@@ -390,10 +401,16 @@ export default function HistorialPage() {
 				</div>
 			</div>
 
-			{/* Transactions List 
+			{/* 
+			* Movements List 
 			* with integrated search and filters 
 			*/}
 			<Card>
+
+				{/*
+				* Card header includes not only basic filters
+				* but also the Period selector
+				*/}
 				<CardHeader className="pb-4">
 					<div className="flex flex-col space-y-4">
 						<div className="flex items-center justify-between">
@@ -420,7 +437,7 @@ export default function HistorialPage() {
 								/>
 							</div>
 
-							<div className="flex gap-2">
+							<div className="flex gap-2 ">
 								<Button
 									variant="outline"
 									onClick={() => setShowFilters(!showFilters)}
@@ -435,14 +452,14 @@ export default function HistorialPage() {
 									)}
 								</Button>
 
-								<Button
+								{/* <Button
 									variant="destructive"
 									size="sm"
 									onClick={() => console.log("Undo Last Clicked")}
 									className="sm:hidden"
 								>
 									Deshacer último
-								</Button>
+								</Button> */}
 							</div>
 						</div>
 					</div>
@@ -499,7 +516,7 @@ export default function HistorialPage() {
 							</div>
 
 							{/* Clear Filters */}
-							{activeFiltersCount > 0 && ( //  TODO this fine just improve it
+							{activeFiltersCount > 0 && (
 								<div className="flex justify-end">
 									<Button variant="ghost" size="sm" onClick={clearFilters} className="flex items-center gap-1">
 										<X className="w-4 h-4" />
@@ -507,6 +524,7 @@ export default function HistorialPage() {
 									</Button>
 								</div>
 							)}
+							{/* Period selector */}
 							<div className="border-t pt-4">
 								<Label className="mb-3 block">Período</Label>
 								<PeriodSelector selected={selectedDateFilter} onSelect={setSelectedDateFilter} />
@@ -516,8 +534,13 @@ export default function HistorialPage() {
 					)}
 				</CardHeader>
 
+				{/*
+				* Card content with list of movements
+				*/}
 				<CardContent>
-					{filteredMovements.length === 0 ? (
+					{loadingMovements ? (
+						<Loading></Loading>
+					) : filteredMovements.length === 0 ? (
 						<div className="text-center py-8 text-gray-500">
 							<p>No se encontraron transacciones con los filtros aplicados</p>
 						</div>
@@ -553,7 +576,7 @@ export default function HistorialPage() {
 											</div>
 
 											{/* Right side: Amount */}
-											<div className="text-right">
+											<div className="flex items-center gap-3 text-right">
 												<span
 													className={cn(
 														"font-bold text-lg",
@@ -562,8 +585,17 @@ export default function HistorialPage() {
 												>
 													{movement.type === TxType.INCOME ? "+" : "-"}${movement.amount}
 												</span>
-												<p className="text-xs text-gray-500 capitalize mt-1">{movement.type}</p>
+												<p className="text-xs text-gray-500 capitalize mt-1">{movement.type === TxType.INCOME ? "Ingreso" : "Gasto"}</p>
+												<Button
+													variant="outline"
+													size="sm"
+													onClick={() => deleteSelectedMovement(movement)}
+												>
+													<Trash className="w-5 h-5" />
+												</Button>
 											</div>
+
+
 										</div>
 									</Card>
 								)

@@ -29,6 +29,7 @@ import { postMovement } from "@/lib/actions/movements";
 
 import { QuickSpendCategoryDialogs } from "./quick-spend-category-dialogs"
 import { CategoryHeaderDesktop, CategoryHeaderMobile, CategoryGrid, TagRow } from "./quick-spend-ui-pieces"
+import QuickSpendSkeleton from "./quick-spend-skeleton";
 
 /**
  * @title Quick Spend Card used in home and asset
@@ -44,7 +45,8 @@ export default function QuickSpendCard({
 	cats,
 	setCats,
 	allTags,
-	setAllTags
+	setAllTags,
+	loading
 }: {
 	onAdd: (data: Movement) => void
 	initialType?: TxType
@@ -53,6 +55,7 @@ export default function QuickSpendCard({
 	setCats: React.Dispatch<React.SetStateAction<Category[]>>
 	allTags: Tags[],
 	setAllTags: React.Dispatch<React.SetStateAction<Tags[]>>
+	loading: boolean
 }) {
 
 	/** By using an ARIA live region, you make your app accessible (A11y = accessibility). */
@@ -348,7 +351,11 @@ export default function QuickSpendCard({
 	 * ADD TRANSACTION
 	 * 
 	 */
+	if (loading) {
+		return <QuickSpendSkeleton />;
+	}
 	return (
+
 		<Card className="w-full max-w-none">
 			<CardHeader>
 				<div className="flex items-center justify-between">
