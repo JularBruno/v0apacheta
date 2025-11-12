@@ -1,5 +1,5 @@
 import NextAuth, { DefaultSession } from 'next-auth';
-import { authConfig } from './auth.config';
+import { authConfig } from './middleware';
 import Credentials from 'next-auth/providers/credentials';
 import { z } from 'zod';
 import 'next-auth/jwt';
@@ -43,6 +43,7 @@ export let lastAuthError: string | null = null;
  */
 export const { auth, signIn, signOut } = NextAuth({
 	...authConfig,
+	trustHost: true, // ADD THIS LINE
 	providers: [
 		Credentials({
 			credentials: {

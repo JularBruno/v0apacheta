@@ -18,3 +18,6 @@ Also any setup requires an .env of project Neptuno(API).
 - Local: Generate one secret for your machine
 - Dev: Different secret for dev server
 - Never commit secrets to git
+
+`AUTH_TRUST_HOST`
+- Remmember to add api as trust host

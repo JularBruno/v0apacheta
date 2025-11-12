@@ -61,6 +61,7 @@ export default function HistorialPage() {
 	 */
 
 	const [cats, setCats] = useState<Category[]>([])
+	const [loadingCats, setLoadingCats] = useState<boolean>(true)
 
 	/**
 	 * Fetch Categories
@@ -70,7 +71,7 @@ export default function HistorialPage() {
 			try {
 				const cats = await getCategoriesByUser();
 				setCats(cats);
-
+				setLoadingCats(false);
 			} catch (error) {
 				console.error('Failed to fetch categories:', error);
 			}
@@ -109,7 +110,6 @@ export default function HistorialPage() {
 
 	// Loading movements for spinner
 	const [loadingMovements, setLoadingMovements] = useState(true);
-
 
 	/**
 	 * Delete latest movement based on array last item id
@@ -242,7 +242,7 @@ export default function HistorialPage() {
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 				{/* Chart - always visible */}
 				<div className="lg:col-span-2 xl:col-span-1">
-					{/* <TransactionDonutChart transactions={filteredTransactions} categories={categories} /> */}
+					<TransactionDonutChart movements={movements} categories={cats} />
 				</div>
 
 				{/* Category breakdown 
@@ -263,70 +263,72 @@ export default function HistorialPage() {
 									{showCategoryBreakdown ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
 								</Button>
 							</CardHeader>
-							{showCategoryBreakdown && (
-								<CardContent className="pt-0">
-									<div className="grid gap-4">
-										{cats
-											.filter((cat) => cat.type == TxType.EXPENSE)
-											.map((category) => {
-												const Icon = iconComponents[category.icon as keyof typeof iconComponents]
-												const amountUsedThisMonth = filteredMovements.filter(m => m.categoryId === category.id).reduce((sum, m) => sum + m.amount, 0);
+							{loadingCats ? (
+								<Loading></Loading>
+							) :
+								showCategoryBreakdown && (
+									<CardContent className="pt-0">
+										<div className="grid gap-4">
+											{cats
+												.filter((cat) => cat.type == TxType.EXPENSE)
+												.map((category) => {
+													const Icon = iconComponents[category.icon as keyof typeof iconComponents]
+													const amountUsedThisMonth = filteredMovements.filter(m => m.categoryId === category.id).reduce((sum, m) => sum + m.amount, 0);
 
-												// const spent = filteredTransactions
-												//   .filter((t) => t.type === "gasto" && t.category === category.id)
-												//   .reduce((sum, t) => sum + t.amount, 0)
-												// const remaining = category.budget - spent
-												// const percentage = (spent / category.budget) * 100
+													// const spent = filteredTransactions
+													//   .filter((t) => t.type === "gasto" && t.category === category.id)
+													//   .reduce((sum, t) => sum + t.amount, 0)
+													// const remaining = category.budget - spent
+													// const percentage = (spent / category.budget) * 100
 
-												return (
-													<Card key={category.id} className="p-4">
-														<div className="flex items-center justify-between mb-3">
-															<div className="flex items-center gap-3">
-																<div
-																	className={cn(
-																		"w-10 h-10 rounded-lg flex items-center justify-center",
-																		category.color,
-																	)}
-																>
-																	<Icon className="w-5 h-5 text-white" />
+													return (
+														<Card key={category.id} className="p-4">
+															<div className="flex items-center justify-between mb-3">
+																<div className="flex items-center gap-3">
+																	<div
+																		className={cn(
+																			"w-10 h-10 rounded-lg flex items-center justify-center",
+																			category.color,
+																		)}
+																	>
+																		<Icon className="w-5 h-5 text-white" />
+																	</div>
+																	<div>
+																		<p className="font-medium text-sm">{category.name}</p>
+																		<p className="text-xs text-gray-500">
+																			{/* ${spent.toFixed(0)} de ${category.budget} */}
+																		</p>
+																	</div>
 																</div>
-																<div>
-																	<p className="font-medium text-sm">{category.name}</p>
-																	<p className="text-xs text-gray-500">
-																		{/* ${spent.toFixed(0)} de ${category.budget} */}
+																<div className="text-right">
+																	<p
+																		className={cn(
+																			// "font-semibold text-sm",
+																			// spent > category.budget ? "text-red-600" : "text-gray-900",
+																			"font-semibold text-sm text-red-600",
+																		)}
+																	>
+																		{/* ${remaining.toFixed(0)} restante */}
+																		${100} restante
 																	</p>
+																	<p className="text-xs text-gray-500">{0}% usado. Total gastado: ${amountUsedThisMonth}</p>
 																</div>
 															</div>
-															<div className="text-right">
-																<p
-																	className={cn(
-																		// "font-semibold text-sm",
-																		// spent > category.budget ? "text-red-600" : "text-gray-900",
-																		"font-semibold text-sm text-red-600",
-																	)}
-																>
-																	{/* ${remaining.toFixed(0)} restante */}
-																	${100} restante
-																</p>
-																{/* <p className="text-xs text-gray-500">{percentage.toFixed(0)}% usado</p> */}
-																<p className="text-xs text-gray-500">{0}% usado. Total gastado: ${amountUsedThisMonth}</p>
-															</div>
-														</div>
-														<Progress
-															// value={Math.min(100, percentage)}
-															// className={cn(
-															//   "h-2",
-															//   spent > category.budget ? "[&>div]:bg-red-500" : "[&>div]:bg-primary-500",
-															// )}
-															value={400}
-															className="h-2 bg-red-500"
-														/>
-													</Card>
-												)
-											})}
-									</div>
-								</CardContent>
-							)}
+															<Progress
+																// value={Math.min(100, percentage)}
+																// className={cn(
+																//   "h-2",
+																//   spent > category.budget ? "[&>div]:bg-red-500" : "[&>div]:bg-primary-500",
+																// )}
+																value={400}
+																className="h-2 bg-red-500"
+															/>
+														</Card>
+													)
+												})}
+										</div>
+									</CardContent>
+								)}
 						</Card>
 					</div>
 
@@ -338,10 +340,13 @@ export default function HistorialPage() {
 							</CardHeader>
 							<CardContent>
 								<div className="grid gap-4">
-									{cats
+									{loadingCats ? (
+										<Loading></Loading>
+									) : cats
 										// .filter((cat) => cat.budget > 0)
 										.map((category) => {
 											const Icon = iconComponents[category.icon as keyof typeof iconComponents]
+											const amountUsedThisMonth = filteredMovements.filter(m => m.categoryId === category.id).reduce((sum, m) => sum + m.amount, 0);
 
 											// const spent = filteredTransactions
 											//   .filter((t) => t.type === "gasto" && t.category === category.id)
@@ -378,7 +383,7 @@ export default function HistorialPage() {
 																${100} restante
 															</p>
 															{/* <p className="text-xs text-gray-500">{percentage.toFixed(0)}% usado</p> */}
-															<p className="text-xs text-gray-500">{0}% usado</p>
+															<p className="text-xs text-gray-500">{0}% usado. Total gastado: ${amountUsedThisMonth}</p>
 														</div>
 													</div>
 													<Progress
