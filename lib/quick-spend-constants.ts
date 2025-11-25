@@ -109,10 +109,28 @@ export const iconComponents = {
 	X,
 };
 
+export const quickFilters = [
+	{ id: "today", label: "Hoy" },
+	{ id: "week", label: "Última semana" },
+	{ id: "month", label: "Último mes" },
+	{ id: "3months", label: "Últimos 3 meses" },
+]
+
+/* this should be in another file  TODO **/
 export function formatDate(isoString: string) {
 	const date = new Date(isoString);
 	return date.toLocaleDateString('es-AR', {
 		year: 'numeric',
+		month: 'short',
+		day: 'numeric',
+		hour: '2-digit',
+		minute: '2-digit',
+	});
+}
+
+export function formatDateNoYear(isoString: string) {
+	const date = new Date(isoString);
+	return date.toLocaleDateString('es-AR', {
 		month: 'short',
 		day: 'numeric',
 		hour: '2-digit',
@@ -130,10 +148,3 @@ export function formatToBalance(balance: number) {
 
 	return formatted;
 }
-
-export const quickFilters = [
-	{ id: "today", label: "Hoy" },
-	{ id: "week", label: "Última semana" },
-	{ id: "month", label: "Último mes" },
-	{ id: "3months", label: "Últimos 3 meses" },
-]

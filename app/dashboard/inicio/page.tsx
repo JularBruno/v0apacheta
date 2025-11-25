@@ -43,7 +43,7 @@ export default function InicioPage() {
 	 */
 
 	// Categories state (allows creation, setsnewone after created)
-	const [cats, setCats] = useState<Category[]>([]) // TODO Validate what to do when null or empty
+	const [cats, setCats] = useState<Category[]>([]);
 
 	/**
 	 * Fetch Categories
@@ -73,6 +73,8 @@ export default function InicioPage() {
 
 	// Tags (global suggestions; not filtered by category initially)
 	const [allTags, setAllTags] = useState<Tags[]>([])
+	// Tags filtered when selecting tags	
+	const [allTagsFiltered, setAllTagsFiltered] = useState<Tags[]>([])
 	// Set this to false when tags loaded so skeleton of quickspendcard disappears
 	const [loadingQuickSpendCard, setLoadingQuickSpendCard] = useState<boolean>(true);
 
@@ -129,7 +131,7 @@ export default function InicioPage() {
 	 * User
 	 * 
 	 */
-	const [userProfile, setUserProfile] = useState<User | null>(null);
+	// const [userProfile, setUserProfile] = useState<User | null>(null);
 	const [userBalance, setUserBalance] = useState<number>(0);
 	const [loadingUser, setLoadingUser] = useState(true);
 
@@ -138,7 +140,7 @@ export default function InicioPage() {
 			try {
 				setLoadingUser(true);
 				const profile = await getProfile();
-				setUserProfile(profile);
+				// setUserProfile(profile);
 				setUserBalance(profile.balance);
 			}
 			catch (error: any) {
@@ -160,7 +162,10 @@ export default function InicioPage() {
 	 * 
 	 */
 
-	// Five last movements
+	// used in childs
+	const [allMovements, setAllMovements] = useState<Movements[]>([]);
+
+	// Five last movements and amount to use in quick history
 	const [movements, setMovements] = useState<Movements[]>([]);
 	const [lastFiveAmount, setlastFiveAmount] = useState<number>(0);
 	const [loadingMovements, setLoadingMovements] = useState(true);
@@ -174,7 +179,8 @@ export default function InicioPage() {
 
 		try {
 			const filters: any = {
-				startDate: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+				// startDate: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000) // three monts ago
+				startDate: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) // a month ago
 			};
 
 			const movements = await getMovementsByUserAndFilter(filters);
@@ -182,6 +188,8 @@ export default function InicioPage() {
 			const sortedMovements = movements.sort(
 				(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
 			);
+
+			setAllMovements(sortedMovements);
 
 			const lastFive = sortedMovements.slice(0, 5); // First 5 (most recent)
 			const lastFiveAmount = lastFive.reduce((sum, item) => {
@@ -208,11 +216,19 @@ export default function InicioPage() {
 	/**
 	 * On balance update add or remove balance, to not call api again
 	 */
-	const onBalanceUpdate = async (data: Movement) => {
-		// Update balance immediately
-		const newBalance = data.type === TxType.INCOME
-			? userBalance + data.amount
-			: userBalance - data.amount;
+	const onBalanceUpdate = async (data: Movement, isDelete: boolean) => {
+		let newBalance = 0;
+
+		// Update balance immediately 
+		if (isDelete) { // If is updated on delete should change the values contrary as a normal movement
+			newBalance = data.type === TxType.INCOME
+				? userBalance - data.amount
+				: userBalance + data.amount;
+		} else {
+			newBalance = data.type === TxType.INCOME
+				? userBalance + data.amount
+				: userBalance - data.amount;
+		}
 
 		setUserBalance(newBalance);
 	}
@@ -222,7 +238,7 @@ export default function InicioPage() {
 	 */
 	const onAddMovement = async (data: Movement) => {
 		// Update balance immediately
-		onBalanceUpdate(data);
+		onBalanceUpdate(data, false);
 
 		// Refetch movements to get populated data
 		await fetchMovements();
@@ -242,7 +258,7 @@ export default function InicioPage() {
 		const last = movements[0];
 		if (last) {
 			deleteMovement(last.id);
-			onBalanceUpdate(last);
+			onBalanceUpdate(last, true);
 		}
 
 		// Refetch movements to get populated data
@@ -272,7 +288,7 @@ export default function InicioPage() {
 							<div className="text-2xl font-bold">$0 ARS</div>
 						)}
 						{/* <div className="text-2xl font-bold">${userProfile: userProfile?.balance | 0 } ars</div> */}
-						<p className="text-sm text-gray-500">0 transacciones</p> {/* TODO */}
+						<p className="text-sm text-gray-500">{allMovements.length} transacciones</p>
 					</CardContent>
 				</Card>
 
@@ -318,14 +334,14 @@ export default function InicioPage() {
 				<RecentExpenses loading={loadingMovements} cats={cats} movements={movements} lastFiveAmount={lastFiveAmount} deleteLatestMovement={deleteLatestMovement} />
 
 				{/* Upcoming Payments Card */}
-				<Card>
+				{/* <Card>
 					<CardHeader>
 						<CardTitle>Resumen Financiero</CardTitle>
 					</CardHeader>
 					<CardContent className="space-y-6">
 
 						<Separator />
-						{/* Upcoming Payments Section, could also be improved to hold  */}
+						{/* Upcoming Payments Section, could also be improved to hold 
 						<div>
 							<h3 className="text-lg font-semibold flex items-center gap-2 mb-3">
 								<CalendarDays className="w-5 h-5 text-blue-600" /> Próximos Pagos
@@ -343,8 +359,8 @@ export default function InicioPage() {
 													${payment.amount.toFixed(2)} • Vence: {payment.dueDate}
 												</p>
 											</div>
-											{/* Action button for payment, e.g., "Mark as Paid" */}
-											{/* <Button variant="outline" size="sm">Pagar</Button> */}
+											{/* Action button for payment, e.g., "Mark as Paid" 
+											{/* <Button variant="outline" size="sm">Pagar</Button> 
 										</div>
 									))
 								) : (
@@ -358,9 +374,9 @@ export default function InicioPage() {
 
 					</CardContent>
 
-				</Card>
+				</Card> */}
 
-				<SpendingChart />
+				<SpendingChart movements={allMovements.filter(a => a.type === TxType.EXPENSE)} />
 
 			</div>
 

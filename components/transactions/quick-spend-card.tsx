@@ -30,6 +30,7 @@ import { postMovement } from "@/lib/actions/movements";
 import { QuickSpendCategoryDialogs } from "./quick-spend-category-dialogs"
 import { CategoryHeaderDesktop, CategoryHeaderMobile, CategoryGrid, TagRow } from "./quick-spend-ui-pieces"
 import QuickSpendSkeleton from "./quick-spend-skeleton";
+import { Loading } from "@/components/ui/loading"
 
 /**
  * @title Quick Spend Card used in home and asset
@@ -250,6 +251,8 @@ export default function QuickSpendCard({
 		}
 	});
 
+	const [movementLoading, setMovementLoading] = useState<boolean>(false);
+
 	function handleTagKeyDown() {
 		// clear specific error when typing again
 		clearErrors("tagName");
@@ -273,34 +276,12 @@ export default function QuickSpendCard({
 		announce(`Tag ${t.name} seleccionado`)
 	}
 
-	// Creating and setting new tag after submiting movement
-	const createTagObject = (data: Movement): Tags => {
-		const cat = cats.find((c) => data.categoryId === categoryId)!
-
-		return {
-			id: data.tagId || undefined,
-			name: data.tagName,
-			categoryId: cat.id,
-			amount: data.amount,
-			createdAt: Date.now().toString()
-		}
-	}
-
-	// TODO VALIDATE THIS since submiting a movement might have tag data to useEffect setalltags
-	const createTagAndUpdateArray = (data: Movements) => {
-		const newTag = createTagObject(data)
-		setAllTags((prev) => [newTag, ...prev])
-		// setTagId(newTag.id)
-		// setTagInput(newTag.name)
-		// category stays as-is; tag inherits current category
-		announce(`Tag ${newTag.name} creado`)
-	}
-
 	/**
 	 * Movement submit
 	 * @param data movementform data from schema, to be submited
 	 */
 	const onSubmitHandler = async (data: MovementFormData) => {
+		setMovementLoading(true);
 
 		try {
 			if (!categoryId) return alert("Seleccioná una categoría.")
@@ -318,7 +299,6 @@ export default function QuickSpendCard({
 
 			let currentTag = allTags.find((t) => t.id === tagId)
 
-			// TODO best to do after submiting?!? is it to keep form?
 			// Always update tag default amount to last used
 			if (currentTag) {
 				const updated = { ...currentTag, amount: data.amount }
@@ -341,6 +321,7 @@ export default function QuickSpendCard({
 			setTagId("");
 
 			onAdd(movement); // CALL PARENT
+			setMovementLoading(false);
 		} catch (error) {
 			console.error('Submit error:', error);
 		}
@@ -469,8 +450,16 @@ export default function QuickSpendCard({
 						)}
 					</div>
 
-					<Button type="submit" className="w-full h-12 text-base font-semibold" >
-						{type === TxType.EXPENSE ? "Gastar" : "Agregar"}
+					<Button type="submit" className="w-full h-12 text-base font-semibold"
+						disabled={movementLoading}
+					>
+						{movementLoading
+							? <Loading></Loading>
+							: type === TxType.EXPENSE
+								? "Gastar"
+								: "Agregar"}
+
+						{/* {type === TxType.EXPENSE ? "Gastar" : "Agregar"} */}
 					</Button>
 
 				</form>

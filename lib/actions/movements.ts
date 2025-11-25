@@ -6,14 +6,6 @@ import { TxType } from '../schemas/definitions';
 
 const url = 'movement';
 
-//// get Movements with filter TODO FILTERS
-// export async function getMovementsByUserAndFilter(): Promise<Array<Movement>> {
-//     const session = await getSession();
-//     const url = 'movement/user'
-
-//     return await getMethod<Array<Movement>>(url, await session?.user.id);
-// }
-
 type MovementFilters = {
 	categoryId?: string;
 	tagId?: string;

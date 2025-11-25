@@ -149,7 +149,7 @@ export function QuickSpendCategoryDialogs({
 	return (
 		<>
 			<Dialog open={showCreateCategory} onOpenChange={setShowCreateCategory}>
-				<DialogContent className="w-[95vw] max-w-md">
+				<DialogContent className="w-[95vw] max-w-md max-h-[90vh] sm:max-h-[80vh] overflow-y-auto">
 					<DialogHeader>
 						<DialogTitle>
 							{editingCategory ? 'Editar categoría ' : 'Nueva categoría'}
