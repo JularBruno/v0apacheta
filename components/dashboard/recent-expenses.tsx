@@ -92,7 +92,7 @@ export default function RecentExpenses({
 											<span className={cn(
 												"font-semibold text-gray-900",
 												movement.type === TxType.INCOME ? "text-green-600" : "text-gray-900")}
-											>{movement.type === TxType.EXPENSE ? "-" : "+"} ${movement.tag.amount}</span>
+											>{movement.type === TxType.EXPENSE ? "-" : "+"} {formatToBalance(movement.tag.amount)}</span>
 										</div>
 									</div>
 								)

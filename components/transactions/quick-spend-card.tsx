@@ -7,7 +7,6 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 
@@ -19,18 +18,18 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 import { cn } from "@/lib/utils"
 
-import { Tag, Tags } from "@/lib/schemas/tag";
-import { Movement, movementSchema, MovementFormData, Movements } from "@/lib/schemas/movement";
+import { Tags } from "@/lib/schemas/tag";
+import { Movement, movementSchema, MovementFormData } from "@/lib/schemas/movement";
 import { TxType } from "@/lib/schemas/definitions";
 import { Category } from "@/lib/schemas/category";
-import { getCategoriesByUser, deleteCategoryById } from "@/lib/actions/categories";
-import { getTagsByUser } from "@/lib/actions/tags";
+import { deleteCategoryById } from "@/lib/actions/categories";
 import { postMovement } from "@/lib/actions/movements";
 
 import { QuickSpendCategoryDialogs } from "./quick-spend-category-dialogs"
 import { CategoryHeaderDesktop, CategoryHeaderMobile, CategoryGrid, TagRow } from "./quick-spend-ui-pieces"
 import QuickSpendSkeleton from "./quick-spend-skeleton";
 import { Loading } from "@/components/ui/loading"
+import { BalanceInput } from "./balance-input";
 
 /**
  * @title Quick Spend Card used in home and asset
@@ -232,6 +231,7 @@ export default function QuickSpendCard({
 
 	/** Form zod validator, values, handlers, errors and loading */
 	const {
+		control,
 		register,
 		handleSubmit,
 		formState: { errors, isSubmitting },
@@ -264,6 +264,7 @@ export default function QuickSpendCard({
 		if (!t) return
 		setTagId(t.id)
 		setValue('amount', t.amount || 0); // Update form amount too
+
 		setValue('tagName', t.name); // Update form amount too
 
 		// match category and type to tag
@@ -309,7 +310,6 @@ export default function QuickSpendCard({
 			// reset form values
 			reset({
 				type: TxType.EXPENSE,
-				// categoryId: TxType.EXPENSE : selectedExpenseCat ? selectedIncomeCat,
 				tagId: undefined,
 				tagName: '',
 				amount: 0,
@@ -417,8 +417,6 @@ export default function QuickSpendCard({
 						matchingSuggestionsMobile={matchingSuggestionsMobile}
 
 						selectTag={selectTag}
-						// clearToNew={ clearToNew}
-						// onTagInputKeyDown={ onTagInputKeyDown }
 						tagNameError={errors.tagName?.message}
 						onInputKeyDown={handleTagKeyDown}
 
@@ -430,24 +428,12 @@ export default function QuickSpendCard({
 						<Label className="text-sm text-gray-600">Monto</Label>
 						<div className="relative gap-2 ">
 							<span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-							<Input
-								type="number"
-								id="amount"
-								aria-label="Monto"
-								inputMode="decimal"
-								pattern="[0-9]*"
-								enterKeyHint="done"
-								// {...register('amount')}
-								{...register('amount', { valueAsNumber: true })}
-
-								className="pl-8 h-12 text-xl font-semibold md:text-2xl"
-								placeholder="1000.00"
-								onKeyDown={() => clearErrors("amount")}
+							<BalanceInput
+								errors={errors}
+								clearErrors={clearErrors}
+								control={control}
 							/>
 						</div>
-						{errors?.amount && ( // ← Show error message
-							<p className="text-red-500 text-sm mt-1">{errors?.amount.message}</p>
-						)}
 					</div>
 
 					<Button type="submit" className="w-full h-12 text-base font-semibold"
@@ -458,8 +444,6 @@ export default function QuickSpendCard({
 							: type === TxType.EXPENSE
 								? "Gastar"
 								: "Agregar"}
-
-						{/* {type === TxType.EXPENSE ? "Gastar" : "Agregar"} */}
 					</Button>
 
 				</form>

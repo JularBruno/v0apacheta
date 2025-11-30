@@ -241,9 +241,9 @@ export default function HistorialPage() {
 			*/}
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 				{/* Chart - always visible */}
-				<div className="lg:col-span-2 xl:col-span-1">
+				{/* <div className="lg:col-span-2 xl:col-span-1">
 					<TransactionDonutChart movements={movements} categories={cats} />
-				</div>
+				</div> */}
 
 				{/* Category breakdown 
 				* collapsible on mobile, always visible on desktop 
@@ -259,7 +259,7 @@ export default function HistorialPage() {
 									onClick={() => setShowCategoryBreakdown(!showCategoryBreakdown)}
 									className="flex items-center justify-between w-full p-0 h-auto"
 								>
-									<CardTitle className="text-lg">Desglose de gastos por categoría {monthName}</CardTitle>
+									<CardTitle className="text-lg">Gastos por categoría: {monthName}</CardTitle>
 									{showCategoryBreakdown ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
 								</Button>
 							</CardHeader>
@@ -556,8 +556,10 @@ export default function HistorialPage() {
 								const Icon = iconComponents[movement.category.icon as keyof typeof iconComponents]
 
 								return (
-									<Card key={movement.id} className="p-4 hover:shadow-sm transition-all">
+									// <Card key={movement.id} className="p-4 hover:shadow-sm transition-all">
+									<Card key={movement.id} className="p-1 hover:shadow-sm transition-all">
 										<div className="flex items-center justify-between">
+
 											{/* Left side: Icon and details */}
 											<div className="flex items-center space-x-3">
 												<div
@@ -568,14 +570,15 @@ export default function HistorialPage() {
 												>
 													<Icon className="w-6 h-6 text-white" />
 												</div>
+
 												<div>
 													<p className="font-semibold text-sm text-gray-900">{movement.tag.name}</p>
 													<div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
 														<span className="bg-gray-100 px-2 py-1 rounded-full">{movement.category.name}</span>
-														<span>•</span>
+														{/* <span>•</span>
 														<span>
 															{formatDate(movement.createdAt)}
-														</span>
+														</span> */}
 													</div>
 												</div>
 											</div>

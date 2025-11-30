@@ -2,11 +2,7 @@
 "use client"
 
 import type React from "react"
-import { UseFormRegister, FieldValues } from "react-hook-form";
-import { z } from 'zod';
-
-import { useMemo, useRef, useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { UseFormRegister } from "react-hook-form";
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -20,7 +16,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-import { iconComponents } from "@/lib/quick-spend-constants"
+import { formatToBalance, iconComponents } from "@/lib/quick-spend-constants"
 import { Movement, movementSchema, MovementFormData } from "@/lib/schemas/movement";
 
 
@@ -144,7 +140,6 @@ export function CategoryGrid({
 }
 
 type TagRowProps = {
-	// tagInputRef: HTMLInputElement,
 	tagInput: string,
 	setTagInput: (name: string) => void,
 	tagId: string | undefined,
@@ -152,24 +147,18 @@ type TagRowProps = {
 	matchingSuggestions: Tag[],
 	matchingSuggestionsMobile: Tag[],
 	selectTag: (id?: string) => void,
-	// clearToNew: () => void,
-	// onTagInputKeyDown: () => void
 	tagNameError?: string,
 	onInputKeyDown?: () => void,
 	register: UseFormRegister<MovementFormData>
 }
 
 export function TagRow({
-	// tagInputRef,
-	tagInput,
 	setTagInput,
 	tagId,
 	setTagId,
 	matchingSuggestions,
 	matchingSuggestionsMobile,
 	selectTag,
-	// clearToNew,
-	// onTagInputKeyDown
 	tagNameError,
 	onInputKeyDown,
 	register
@@ -187,19 +176,11 @@ export function TagRow({
 				</p>
 				<div className=" gap-2">
 					<Input
-						// ref={tagInputRef}
 						role="combobox"
 						aria-autocomplete="list"
-						// aria-expanded={matchingSuggestions.length > 0}
 						aria-controls={listId}
 						aria-describedby="tag-hint"
 						placeholder="Escribe una descripción, o selecciona un movimiento previo"
-						// value={tagInput}
-						// {...register('tagName')}
-						// onChange={(e) => {
-						//     setTagInput(e.target.value)
-						//     setTagId("") // typing implies "draft" new tag selection
-						// }} 
 						{...register('tagName', {
 							onChange: (e) => {
 								setTagInput(e.target.value);
@@ -244,8 +225,13 @@ export function TagRow({
 									: "border-gray-200 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm",
 							)}
 						>
-							{t.name} <span className="text-xs text-gray-500 ml-1">${t.amount}</span>
-							{/* AMOUNT SHOULD BE HIDDEN ON INCOME TAGS */}
+							{t.name}
+							<span className="text-xs text-gray-500 ml-1">{formatToBalance(t.amount)}</span>
+							{/* {t.category.type === "whatever" && (
+							<span className="text-xs text-gray-500 ml-1">
+								{formatToBalance(t.amount)}
+							</span>
+							)} */}
 						</button>
 					))}
 				</div>
@@ -255,8 +241,6 @@ export function TagRow({
 					<div className="flex flex-col sm:flex-row gap-2 pb-2">
 						<button
 							type="button"
-							// onClick={clearToNew}
-							// className="shrink-0 px-3 py-1.5 rounded-full border text-sm  transition-colors"
 							className={cn(
 								"shrink-0 px-3 py-1.5 rounded-full border text-sm transition-all whitespace-nowrap",
 								tagId === ""

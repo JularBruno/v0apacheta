@@ -148,3 +148,18 @@ export function formatToBalance(balance: number) {
 
 	return formatted;
 }
+
+// Format number to Argentine format string (for programmatic setValue)
+export function formatNumberToInput(num: number): string {
+	if (!num) return '';
+
+	// Convert to string with 2 decimals
+	const fixed = num.toFixed(2);
+	const [integer, decimal] = fixed.split('.');
+
+	// Add dots as thousands separators
+	const formattedInteger = integer.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+	// Return with comma as decimal separator
+	return `${formattedInteger},${decimal}`;
+}
