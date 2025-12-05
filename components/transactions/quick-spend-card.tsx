@@ -114,17 +114,22 @@ export default function QuickSpendCard({
 	const [selectedIncomeCat, setSelectedIncomeCat] = useState<string | null>(null);
 
 	// Initialize selected categories when cats are fetched
-	useEffect(() => {
-		if (expenseCats.length && !selectedExpenseCat)
-			setSelectedExpenseCat(expenseCats[0].id);
-		if (incomeCats.length && !selectedIncomeCat)
-			setSelectedIncomeCat(incomeCats[0].id);
-	}, [expenseCats, incomeCats]);
+	// useEffect(() => {
+	// 	if (expenseCats.length && !selectedExpenseCat)
+	// 		setSelectedExpenseCat(expenseCats[0].id);
+	// 	if (incomeCats.length && !selectedIncomeCat)
+	// 		setSelectedIncomeCat(incomeCats[0].id);
+	// }, [expenseCats, incomeCats]);
 
 	// Selected category
-	const categoryId = type === TxType.EXPENSE
-		? selectedExpenseCat || expenseCats[0]?.id || ''
-		: selectedIncomeCat || incomeCats[0]?.id || '';
+	// const categoryId = type === TxType.EXPENSE
+	// 	? selectedExpenseCat || expenseCats[0]?.id || ''
+	// 	: selectedIncomeCat || incomeCats[0]?.id || '';
+	// Selected category
+	const categoryId =
+		type === TxType.EXPENSE
+			? selectedExpenseCat || ''
+			: selectedIncomeCat || '';
 
 	/**
 	 * Set selected Category
@@ -214,14 +219,22 @@ export default function QuickSpendCard({
 	// Selected tag name to be used as selected reference
 	const [tagInput, setTagInput] = useState<string>("")
 
-	// Match the amount of tag pills to diplay
+	// Match the amount of tag pills to diplay and filter by category id when selected
 	const matchingSuggestions = useMemo(() => {
-		return allTags.slice(0, 12)
-	}, [allTags])
+		if (!categoryId) return allTags.slice(0, 12);
+
+		return allTags
+			.filter(t => t.categoryId === categoryId) // ← filter by selected category
+			.slice(0, 12);
+	}, [allTags, categoryId]);
 
 	const matchingSuggestionsMobile = useMemo(() => {
-		return allTags.slice(0, 4)
-	}, [allTags])
+		if (!categoryId) return allTags.slice(0, 4);
+
+		return allTags
+			.filter(t => t.categoryId === categoryId) // ← filter by selected category
+			.slice(0, 4);
+	}, [allTags, categoryId]);
 
 	/**
 	 * 
@@ -285,7 +298,7 @@ export default function QuickSpendCard({
 		setMovementLoading(true);
 
 		try {
-			if (!categoryId) return alert("Seleccioná una categoría.")
+			if (!categoryId) { setMovementLoading(false); return alert("Seleccioná una categoría."); };
 
 			const movementData: Movement = {
 				...data,

@@ -24,9 +24,18 @@ import { TxType } from "@/lib/schemas/definitions";
 import { Category } from "@/lib/schemas/category";
 import { getCategoriesByUser, deleteCategoryById } from "@/lib/actions/categories";
 import { deleteMovement, getMovementsByUserAndFilter, postMovement } from "@/lib/actions/movements";
-import { iconComponents, formatDate, quickFilters } from "@/lib/quick-spend-constants";
+import { iconComponents, formatDate, quickFilters, formatNumberToInput, formatToBalance, formatDateNoYear } from "@/lib/quick-spend-constants";
 import { PeriodSelector } from "@/components/transactions/period-selector"
 import { toast } from "@/hooks/use-toast"
+
+import {
+	DropdownMenu,
+	DropdownMenuTrigger,
+	DropdownMenuContent,
+	DropdownMenuItem
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal } from "lucide-react";
+
 
 export default function HistorialPage() {
 
@@ -114,15 +123,33 @@ export default function HistorialPage() {
 	/**
 	 * Delete latest movement based on array last item id
 	 */
+	// const deleteSelectedMovement = async (movement: Movements) => {
+	// 	deleteMovement(movement.id);
+	// 	toast({
+	// 		variant: "success",
+	// 		title: "Movimiento borrado!",
+	// 		description: `Se eliminó el movimiento ${movement.tag.name} y se actualizó tu balance`,
+	// 	});
+	// 	setRefreshTrigger(prev => prev + 1); // ← Triggers useEffect
+	// };
 	const deleteSelectedMovement = async (movement: Movements) => {
-		deleteMovement(movement.id);
+		const ok = confirm(
+			`¿Seguro que querés borrar el movimiento "${movement.tag.name}"?`
+		);
+
+		if (!ok) return;
+
+		await deleteMovement(movement.id);
+
 		toast({
 			variant: "success",
 			title: "Movimiento borrado!",
 			description: `Se eliminó el movimiento ${movement.tag.name} y se actualizó tu balance`,
 		});
-		setRefreshTrigger(prev => prev + 1); // ← Triggers useEffect
+
+		setRefreshTrigger(prev => prev + 1);
 	};
+
 
 	/**
 	 * API Fetch and api filters
@@ -555,55 +582,130 @@ export default function HistorialPage() {
 								// const categoryInfo = getCategoryInfo(movement.categoryId)
 								const Icon = iconComponents[movement.category.icon as keyof typeof iconComponents]
 
-								return (
-									// <Card key={movement.id} className="p-4 hover:shadow-sm transition-all">
-									<Card key={movement.id} className="p-1 hover:shadow-sm transition-all">
-										<div className="flex items-center justify-between">
+								// return (
+								// 	<Card key={movement.id} className="p-1 hover:shadow-sm transition-all">
+								// 		<div className="flex items-center justify-between">
 
-											{/* Left side: Icon and details */}
+								// 			{/* Left side: Icon and details */}
+								// 			<div className="flex items-center space-x-3">
+								// 				<div
+								// 					className={cn(
+								// 						"w-12 h-12 rounded-xl flex items-center justify-center shadow-sm",
+								// 						movement.category.color,
+								// 					)}
+								// 				>
+								// 					<Icon className="w-6 h-6 text-white" />
+								// 				</div>
+
+								// 				<div>
+
+								// 					<p className="font-semibold text-sm text-gray-900">
+								// 						{movement.tag.name}
+								// 					</p>
+
+								// 					{/* Row: badge + ingreso/gasto */}
+								// 					<div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+								// 						<span className="bg-gray-100 px-2 py-1 rounded-full">
+								// 							{movement.category.name}
+								// 						</span>
+
+								// 						{/* <p className="capitalize">
+								// 							{movement.type === TxType.INCOME ? "Ingreso" : "Gasto"}
+								// 						</p> */}
+								// 					</div>
+
+								// 					{/* Date BELOW the row */}
+								// 					<p className="text-xs text-gray-500 mt-1">
+								// 						{formatDateNoYear(movement.createdAt)}
+								// 					</p>
+
+
+								// 				</div>
+								// 			</div>
+
+								// 			{/* Right side: Amount */}
+								// 			<div className="flex flex-col items-end gap-2">
+								// 				{/* Menu on top */}
+								// 				<DropdownMenu>
+								// 					<DropdownMenuTrigger asChild>
+								// 						<button className="p-1 hover:bg-gray-100 rounded">
+								// 							<MoreHorizontal className="w-4 h-4 text-gray-500" />
+								// 						</button>
+								// 					</DropdownMenuTrigger>
+
+								// 					<DropdownMenuContent align="end">
+								// 						<DropdownMenuItem className="text-red-600" onClick={() => deleteSelectedMovement(movement)}>
+								// 							<Trash className="w-4 h-4 mr-2" />
+								// 							Borrar
+								// 						</DropdownMenuItem>
+								// 					</DropdownMenuContent>
+								// 				</DropdownMenu>
+
+								// 				{/* Amount below */}
+								// 				<span
+								// 					className={
+								// 						movement.type === TxType.INCOME ? "font-bold text-lg text-green-600" : "font-bold text-lg text-gray-900"
+								// 					}
+								// 				>
+								// 					{movement.type === TxType.INCOME ? "+" : "-"}
+								// 					{formatToBalance(movement.amount)}
+								// 				</span>
+								// 			</div>
+								// 		</div>
+								// 	</Card>
+								// )
+
+								return (
+									<Card key={movement.id} className="p-3 hover:shadow-sm transition-all md:p-4">
+										<div className="flex flex-col space-y-3">
+											{/* Top row: Badge (left) + Dropdown Menu (right) */}
+											<div className="flex items-center justify-between">
+												<span className="bg-gray-100 px-2.5 py-1 rounded-full text-xs font-medium text-gray-700">
+													{movement.category.name}
+												</span>
+												{/* Menu on top */}
+												<DropdownMenu>
+													<DropdownMenuTrigger asChild>
+														<button className="p-1 hover:bg-gray-100 rounded">
+															<MoreHorizontal className="w-4 h-4 text-gray-500" />
+														</button>
+													</DropdownMenuTrigger>
+													<DropdownMenuContent align="end">
+														<DropdownMenuItem className="text-red-600" onClick={() => deleteSelectedMovement(movement)}>
+															<Trash className="w-4 h-4 mr-2" />
+															Borrar
+														</DropdownMenuItem>
+													</DropdownMenuContent>
+												</DropdownMenu>
+											</div>
+
+											{/* Middle: Icon + Title */}
 											<div className="flex items-center space-x-3">
 												<div
 													className={cn(
-														"w-12 h-12 rounded-xl flex items-center justify-center shadow-sm",
+														"w-10 h-10 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0",
 														movement.category.color,
 													)}
 												>
-													<Icon className="w-6 h-6 text-white" />
+													<Icon className="w-5 h-5 text-white" />
 												</div>
-
-												<div>
-													<p className="font-semibold text-sm text-gray-900">{movement.tag.name}</p>
-													<div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
-														<span className="bg-gray-100 px-2 py-1 rounded-full">{movement.category.name}</span>
-														{/* <span>•</span>
-														<span>
-															{formatDate(movement.createdAt)}
-														</span> */}
-													</div>
-												</div>
+												<p className="font-semibold text-sm text-gray-900 line-clamp-2 flex-1">{movement.tag.name}</p>
 											</div>
 
-											{/* Right side: Amount */}
-											<div className="flex items-center gap-3 text-right">
-												<span
-													className={cn(
-														"font-bold text-lg",
-														movement.type === TxType.INCOME ? "text-green-600" : "text-gray-900",
-													)}
-												>
-													{movement.type === TxType.INCOME ? "+" : "-"}${movement.amount}
+											{/* Bottom row: Date (left) + Amount (right) */}
+											<div className="flex items-center justify-between">
+												<span className="text-xs text-gray-500">
+													{formatDateNoYear(movement.createdAt)}
 												</span>
-												<p className="text-xs text-gray-500 capitalize mt-1">{movement.type === TxType.INCOME ? "Ingreso" : "Gasto"}</p>
-												<Button
-													variant="outline"
-													size="sm"
-													onClick={() => deleteSelectedMovement(movement)}
+												<span
+													className={
+														movement.type === TxType.INCOME ? "font-bold text-lg text-green-600" : "font-bold text-lg text-gray-900"
+													}
 												>
-													<Trash className="w-5 h-5" />
-												</Button>
+													{movement.type === TxType.INCOME ? "+" : "-"}
+													{formatToBalance(movement.amount)}
+												</span>
 											</div>
-
-
 										</div>
 									</Card>
 								)

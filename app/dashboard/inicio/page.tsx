@@ -288,7 +288,7 @@ export default function InicioPage() {
 							<div className="text-2xl font-bold">$0 ARS</div>
 						)}
 						{/* <div className="text-2xl font-bold">${userProfile: userProfile?.balance | 0 } ars</div> */}
-						<p className="text-sm text-gray-500">{allMovements.length} transacciones</p>
+						<p className="text-sm text-gray-500">{allMovements.length} transacciones en el último mes</p>
 					</CardContent>
 				</Card>
 

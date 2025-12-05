@@ -31,7 +31,7 @@ export function CategoryHeaderDesktop({
 }: CategoryHeaderProps) {
 	return (
 		<>
-			<div className="hidden md:flex items-center justify-between py-2">
+			<div className="hidden md:flex items-center justify-between py-4">
 				<Label className="text-sm text-gray-600">Categorías</Label>
 				<div className="flex items-center gap-2">
 					<Button
@@ -66,7 +66,7 @@ export function CategoryHeaderMobile({
 }: CategoryHeaderProps) {
 	return (
 		<>
-			<div className="md:hidden flex items-center justify-between py-2">
+			<div className="md:hidden flex items-center justify-between py-4">
 				<Label className="text-sm text-gray-600">Categorías</Label>
 				<div className="flex items-center gap-1">
 					<Button
@@ -169,8 +169,8 @@ export function TagRow({
 	const listId = "tag-suggestions"
 	return (
 		<>
-			<div className="space-y-2">
-				<Label className="text-sm text-gray-600">Descripción</Label>
+			<div className="space-y-2 py-4">
+				<Label className="text-sm text-gray-600 ">Descripción</Label>
 				<p id="tag-hint" className="sr-only">
 					Escribe una descripción, o selecciona un movimiento previo
 				</p>

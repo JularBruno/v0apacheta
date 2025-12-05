@@ -6,32 +6,32 @@ import { UseFormRegister, FieldErrors, UseFormClearErrors, Control, useControlle
 interface BalanceInputProps {
 	errors: FieldErrors;
 	clearErrors: UseFormClearErrors<any>;
-	control: Control<any>;
+	control: Control<any>; // useController gives you more control. Instead of spreading props, you get an object with field that contains the current value and methods to update it.
 }
 
 export function BalanceInput({ errors, clearErrors, control }: BalanceInputProps) {
 
 	const { field } = useController({
-		name: 'amount',
+		name: 'amount', // here we setting up input just like using register
 		control,
 		defaultValue: '',
 	});
 
 	const [displayValue, setDisplayValue] = useState('');
 
-	// Format number for display
+	// formatForDisplay — Takes a number and makes it pretty for the user:
 	const formatForDisplay = (value: number | string): string => {
 		if (!value && value !== 0) return '';
 		const numValue = typeof value === 'string' ? parseFloat(value) : value;
 		if (isNaN(numValue)) return '';
 
-		return numValue.toLocaleString('es-AR', {
+		return numValue.toLocaleString('es-AR', { // toLocaleString with Spanish Argentina format (dots for thousands, comma for decimal)
 			minimumFractionDigits: 0,
 			maximumFractionDigits: 2,
 		});
 	};
 
-	// Parse display value back to number
+	// parseValue — Converts the display format back to a number for storage:
 	const parseValue = (displayStr: string): number => {
 		if (!displayStr) return 0;
 		const cleaned = displayStr.replace(/\./g, '').replace(',', '.');
@@ -72,7 +72,7 @@ export function BalanceInput({ errors, clearErrors, control }: BalanceInputProps
 		}, 0);
 	};
 
-	// When external setValue is called, update display
+	// This watches for changes to field.value (which comes from external setValue() calls). When it changes, it automatically formats that number for display
 	useEffect(() => {
 		if (field.value !== undefined && field.value !== null) {
 			const displayVal = formatForDisplay(field.value);
@@ -82,7 +82,6 @@ export function BalanceInput({ errors, clearErrors, control }: BalanceInputProps
 
 	return (
 		<div className="space-y-2 pb-4">
-			<Label className="text-sm text-gray-600">Monto</Label>
 			<div className="relative gap-2">
 				<span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
 				<Input
