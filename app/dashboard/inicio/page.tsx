@@ -73,8 +73,6 @@ export default function InicioPage() {
 
 	// Tags (global suggestions; not filtered by category initially)
 	const [allTags, setAllTags] = useState<Tags[]>([])
-	// Tags filtered when selecting tags	
-	const [allTagsFiltered, setAllTagsFiltered] = useState<Tags[]>([])
 	// Set this to false when tags loaded so skeleton of quickspendcard disappears
 	const [loadingQuickSpendCard, setLoadingQuickSpendCard] = useState<boolean>(true);
 
@@ -86,7 +84,7 @@ export default function InicioPage() {
 			const allTags = await getTagsByUser();
 
 			const sortedTags = allTags.sort(
-				(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+				(a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
 			);
 
 			setAllTags(sortedTags);

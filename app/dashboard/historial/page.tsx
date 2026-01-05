@@ -36,7 +36,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 
-
 export default function HistorialPage() {
 
 	const allFilteredId = "all"; // this the id for when selecting all on a picker as a constant
@@ -120,18 +119,6 @@ export default function HistorialPage() {
 	// Loading movements for spinner
 	const [loadingMovements, setLoadingMovements] = useState(true);
 
-	/**
-	 * Delete latest movement based on array last item id
-	 */
-	// const deleteSelectedMovement = async (movement: Movements) => {
-	// 	deleteMovement(movement.id);
-	// 	toast({
-	// 		variant: "success",
-	// 		title: "Movimiento borrado!",
-	// 		description: `Se eliminó el movimiento ${movement.tag.name} y se actualizó tu balance`,
-	// 	});
-	// 	setRefreshTrigger(prev => prev + 1); // ← Triggers useEffect
-	// };
 	const deleteSelectedMovement = async (movement: Movements) => {
 		const ok = confirm(
 			`¿Seguro que querés borrar el movimiento "${movement.tag.name}"?`
@@ -360,7 +347,7 @@ export default function HistorialPage() {
 					</div>
 
 					{/* Desktop: Always visible */}
-					<div className="hidden lg:col-span-2 xl:block">
+					<div className="hidden lg:col-span-1 xl:block">
 						<Card>
 							<CardHeader>
 								<CardTitle >Desglose de gastos por categoría {monthName}</CardTitle>
@@ -431,23 +418,25 @@ export default function HistorialPage() {
 						</Card>
 					</div>
 				</div>
-			</div>
 
-			{/* 
+
+				{/* </div> */}
+
+				{/* 
 			* Movements List 
 			* with integrated search and filters 
 			*/}
-			<Card>
+				<Card className="lg:col-span-1">
 
-				{/*
+					{/*
 				* Card header includes not only basic filters
 				* but also the Period selector
 				*/}
-				<CardHeader className="pb-4">
-					<div className="flex flex-col space-y-4">
-						<div className="flex items-center justify-between">
-							<CardTitle className="text-lg">Transacciones ({movements.length})</CardTitle>
-							{/* <Button
+					<CardHeader className="pb-4">
+						<div className="flex flex-col space-y-4">
+							<div className="flex items-center justify-between">
+								<CardTitle className="text-lg">Transacciones ({movements.length})</CardTitle>
+								{/* <Button
 								variant="destructive"
 								size="sm"
 								onClick={() => console.log("Undo Last Clicked")}
@@ -455,36 +444,36 @@ export default function HistorialPage() {
 							>
 								Deshacer Último
 							</Button> */}
-						</div>
-
-						{/* Search and Filter Controls - Mobile optimized */}
-						<div className="flex flex-col sm:flex-row gap-3">
-							<div className="relative flex-1">
-								<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-								<Input
-									placeholder="Buscar transacciones..."
-									value={searchTerm}
-									onChange={(e) => setSearchTerm(e.target.value)}
-									className="pl-10"
-								/>
 							</div>
 
-							<div className="flex gap-2 ">
-								<Button
-									variant="outline"
-									onClick={() => setShowFilters(!showFilters)}
-									className="flex items-center gap-2"
-								>
-									<Filter className="w-4 h-4" />
-									<span className="hidden sm:inline">Filtros</span>
-									{activeFiltersCount > 0 && (
-										<Badge variant="secondary" className="ml-1">
-											{activeFiltersCount}
-										</Badge>
-									)}
-								</Button>
+							{/* Search and Filter Controls - Mobile optimized */}
+							<div className="flex flex-col sm:flex-row gap-3">
+								<div className="relative flex-1">
+									<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+									<Input
+										placeholder="Buscar transacciones..."
+										value={searchTerm}
+										onChange={(e) => setSearchTerm(e.target.value)}
+										className="pl-10"
+									/>
+								</div>
 
-								{/* <Button
+								<div className="flex gap-2 ">
+									<Button
+										variant="outline"
+										onClick={() => setShowFilters(!showFilters)}
+										className="flex items-center gap-2"
+									>
+										<Filter className="w-4 h-4" />
+										<span className="hidden sm:inline">Filtros</span>
+										{activeFiltersCount > 0 && (
+											<Badge variant="secondary" className="ml-1">
+												{activeFiltersCount}
+											</Badge>
+										)}
+									</Button>
+
+									{/* <Button
 									variant="destructive"
 									size="sm"
 									onClick={() => console.log("Undo Last Clicked")}
@@ -492,228 +481,230 @@ export default function HistorialPage() {
 								>
 									Deshacer último
 								</Button> */}
+								</div>
 							</div>
 						</div>
-					</div>
 
-					{/* 
+						{/* 
 					* Rest of the filters section remains the same 
 					* If tilters not hidden on mobile, this will show
 					*/}
-					{showFilters && (
-						<div className="mt-4 pt-4 border-t space-y-4">
-							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-								{/* Category Filter */}
-								<div>
-									<Label>Categoría</Label>
-									<Select value={selectedCategory} onValueChange={setSelectedCategory}>
-										<SelectTrigger>
-											<SelectValue />
-										</SelectTrigger>
-										<SelectContent>
-											<SelectItem key={allFilteredId} value={allFilteredId}>
-												<div className="flex items-center gap-2">
-													<div className="w-3 h-3 rounded-full bg-gray-500" />
-													Todas
-												</div>
-											</SelectItem>
-											{cats.map((category) => (
-
-												<SelectItem key={category.id} value={category.id}>
+						{showFilters && (
+							<div className="mt-4 pt-4 border-t space-y-4">
+								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+									{/* Category Filter */}
+									<div>
+										<Label>Categoría</Label>
+										<Select value={selectedCategory} onValueChange={setSelectedCategory}>
+											<SelectTrigger>
+												<SelectValue />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem key={allFilteredId} value={allFilteredId}>
 													<div className="flex items-center gap-2">
-														<div className={cn("w-3 h-3 rounded-full", category.color)} />
-														{category.name}
+														<div className="w-3 h-3 rounded-full bg-gray-500" />
+														Todas
 													</div>
 												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
+												{cats.map((category) => (
+
+													<SelectItem key={category.id} value={category.id}>
+														<div className="flex items-center gap-2">
+															<div className={cn("w-3 h-3 rounded-full", category.color)} />
+															{category.name}
+														</div>
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+									</div>
+
+									{/* Type Filter */}
+									<div>
+										<Label>Tipo</Label>
+										<Select value={selectedType} onValueChange={setSelectedType}>
+											<SelectTrigger>
+												<SelectValue />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value={allFilteredId}>Todos</SelectItem>
+												<SelectItem value={TxType.EXPENSE}>Gastos</SelectItem>
+												<SelectItem value={TxType.INCOME}>Ingresos</SelectItem>
+											</SelectContent>
+										</Select>
+									</div>
+
 								</div>
 
-								{/* Type Filter */}
-								<div>
-									<Label>Tipo</Label>
-									<Select value={selectedType} onValueChange={setSelectedType}>
-										<SelectTrigger>
-											<SelectValue />
-										</SelectTrigger>
-										<SelectContent>
-											<SelectItem value={allFilteredId}>Todos</SelectItem>
-											<SelectItem value={TxType.EXPENSE}>Gastos</SelectItem>
-											<SelectItem value={TxType.INCOME}>Ingresos</SelectItem>
-										</SelectContent>
-									</Select>
+								{/* Clear Filters */}
+								{activeFiltersCount > 0 && (
+									<div className="flex justify-end">
+										<Button variant="ghost" size="sm" onClick={clearFilters} className="flex items-center gap-1">
+											<X className="w-4 h-4" />
+											Limpiar filtros
+										</Button>
+									</div>
+								)}
+								{/* Period selector */}
+								<div className="border-t pt-4">
+									<Label className="mb-3 block">Período</Label>
+									<PeriodSelector selected={selectedDateFilter} onSelect={setSelectedDateFilter} />
 								</div>
-
 							</div>
 
-							{/* Clear Filters */}
-							{activeFiltersCount > 0 && (
-								<div className="flex justify-end">
-									<Button variant="ghost" size="sm" onClick={clearFilters} className="flex items-center gap-1">
-										<X className="w-4 h-4" />
-										Limpiar filtros
-									</Button>
-								</div>
-							)}
-							{/* Period selector */}
-							<div className="border-t pt-4">
-								<Label className="mb-3 block">Período</Label>
-								<PeriodSelector selected={selectedDateFilter} onSelect={setSelectedDateFilter} />
-							</div>
-						</div>
+						)}
+					</CardHeader>
 
-					)}
-				</CardHeader>
-
-				{/*
+					{/*
 				* Card content with list of movements
 				*/}
-				<CardContent>
-					{loadingMovements ? (
-						<Loading></Loading>
-					) : filteredMovements.length === 0 ? (
-						<div className="text-center py-8 text-gray-500">
-							<p>No se encontraron transacciones con los filtros aplicados</p>
-						</div>
-					) : (
-						<div className="space-y-2">
-							{filteredMovements.map((movement) => {
-								// const categoryInfo = getCategoryInfo(movement.categoryId)
-								const Icon = iconComponents[movement.category.icon as keyof typeof iconComponents]
+					<CardContent>
+						{loadingMovements ? (
+							<Loading></Loading>
+						) : filteredMovements.length === 0 ? (
+							<div className="text-center py-8 text-gray-500">
+								<p>No se encontraron transacciones con los filtros aplicados</p>
+							</div>
+						) : (
+							<div className="space-y-2">
+								{filteredMovements.map((movement) => {
+									// const categoryInfo = getCategoryInfo(movement.categoryId)
+									const Icon = iconComponents[movement.category.icon as keyof typeof iconComponents]
 
-								// return (
-								// 	<Card key={movement.id} className="p-1 hover:shadow-sm transition-all">
-								// 		<div className="flex items-center justify-between">
+									// return (
+									// 	<Card key={movement.id} className="p-1 hover:shadow-sm transition-all">
+									// 		<div className="flex items-center justify-between">
 
-								// 			{/* Left side: Icon and details */}
-								// 			<div className="flex items-center space-x-3">
-								// 				<div
-								// 					className={cn(
-								// 						"w-12 h-12 rounded-xl flex items-center justify-center shadow-sm",
-								// 						movement.category.color,
-								// 					)}
-								// 				>
-								// 					<Icon className="w-6 h-6 text-white" />
-								// 				</div>
+									// 			{/* Left side: Icon and details */}
+									// 			<div className="flex items-center space-x-3">
+									// 				<div
+									// 					className={cn(
+									// 						"w-12 h-12 rounded-xl flex items-center justify-center shadow-sm",
+									// 						movement.category.color,
+									// 					)}
+									// 				>
+									// 					<Icon className="w-6 h-6 text-white" />
+									// 				</div>
 
-								// 				<div>
+									// 				<div>
 
-								// 					<p className="font-semibold text-sm text-gray-900">
-								// 						{movement.tag.name}
-								// 					</p>
+									// 					<p className="font-semibold text-sm text-gray-900">
+									// 						{movement.tag.name}
+									// 					</p>
 
-								// 					{/* Row: badge + ingreso/gasto */}
-								// 					<div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
-								// 						<span className="bg-gray-100 px-2 py-1 rounded-full">
-								// 							{movement.category.name}
-								// 						</span>
+									// 					{/* Row: badge + ingreso/gasto */}
+									// 					<div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+									// 						<span className="bg-gray-100 px-2 py-1 rounded-full">
+									// 							{movement.category.name}
+									// 						</span>
 
-								// 						{/* <p className="capitalize">
-								// 							{movement.type === TxType.INCOME ? "Ingreso" : "Gasto"}
-								// 						</p> */}
-								// 					</div>
+									// 						{/* <p className="capitalize">
+									// 							{movement.type === TxType.INCOME ? "Ingreso" : "Gasto"}
+									// 						</p> */}
+									// 					</div>
 
-								// 					{/* Date BELOW the row */}
-								// 					<p className="text-xs text-gray-500 mt-1">
-								// 						{formatDateNoYear(movement.createdAt)}
-								// 					</p>
+									// 					{/* Date BELOW the row */}
+									// 					<p className="text-xs text-gray-500 mt-1">
+									// 						{formatDateNoYear(movement.createdAt)}
+									// 					</p>
 
 
-								// 				</div>
-								// 			</div>
+									// 				</div>
+									// 			</div>
 
-								// 			{/* Right side: Amount */}
-								// 			<div className="flex flex-col items-end gap-2">
-								// 				{/* Menu on top */}
-								// 				<DropdownMenu>
-								// 					<DropdownMenuTrigger asChild>
-								// 						<button className="p-1 hover:bg-gray-100 rounded">
-								// 							<MoreHorizontal className="w-4 h-4 text-gray-500" />
-								// 						</button>
-								// 					</DropdownMenuTrigger>
+									// 			{/* Right side: Amount */}
+									// 			<div className="flex flex-col items-end gap-2">
+									// 				{/* Menu on top */}
+									// 				<DropdownMenu>
+									// 					<DropdownMenuTrigger asChild>
+									// 						<button className="p-1 hover:bg-gray-100 rounded">
+									// 							<MoreHorizontal className="w-4 h-4 text-gray-500" />
+									// 						</button>
+									// 					</DropdownMenuTrigger>
 
-								// 					<DropdownMenuContent align="end">
-								// 						<DropdownMenuItem className="text-red-600" onClick={() => deleteSelectedMovement(movement)}>
-								// 							<Trash className="w-4 h-4 mr-2" />
-								// 							Borrar
-								// 						</DropdownMenuItem>
-								// 					</DropdownMenuContent>
-								// 				</DropdownMenu>
+									// 					<DropdownMenuContent align="end">
+									// 						<DropdownMenuItem className="text-red-600" onClick={() => deleteSelectedMovement(movement)}>
+									// 							<Trash className="w-4 h-4 mr-2" />
+									// 							Borrar
+									// 						</DropdownMenuItem>
+									// 					</DropdownMenuContent>
+									// 				</DropdownMenu>
 
-								// 				{/* Amount below */}
-								// 				<span
-								// 					className={
-								// 						movement.type === TxType.INCOME ? "font-bold text-lg text-green-600" : "font-bold text-lg text-gray-900"
-								// 					}
-								// 				>
-								// 					{movement.type === TxType.INCOME ? "+" : "-"}
-								// 					{formatToBalance(movement.amount)}
-								// 				</span>
-								// 			</div>
-								// 		</div>
-								// 	</Card>
-								// )
+									// 				{/* Amount below */}
+									// 				<span
+									// 					className={
+									// 						movement.type === TxType.INCOME ? "font-bold text-lg text-green-600" : "font-bold text-lg text-gray-900"
+									// 					}
+									// 				>
+									// 					{movement.type === TxType.INCOME ? "+" : "-"}
+									// 					{formatToBalance(movement.amount)}
+									// 				</span>
+									// 			</div>
+									// 		</div>
+									// 	</Card>
+									// )
 
-								return (
-									<Card key={movement.id} className="p-3 hover:shadow-sm transition-all md:p-4">
-										<div className="flex flex-col space-y-3">
-											{/* Top row: Badge (left) + Dropdown Menu (right) */}
-											<div className="flex items-center justify-between">
-												<span className="bg-gray-100 px-2.5 py-1 rounded-full text-xs font-medium text-gray-700">
-													{movement.category.name}
-												</span>
-												{/* Menu on top */}
-												<DropdownMenu>
-													<DropdownMenuTrigger asChild>
-														<button className="p-1 hover:bg-gray-100 rounded">
-															<MoreHorizontal className="w-4 h-4 text-gray-500" />
-														</button>
-													</DropdownMenuTrigger>
-													<DropdownMenuContent align="end">
-														<DropdownMenuItem className="text-red-600" onClick={() => deleteSelectedMovement(movement)}>
-															<Trash className="w-4 h-4 mr-2" />
-															Borrar
-														</DropdownMenuItem>
-													</DropdownMenuContent>
-												</DropdownMenu>
-											</div>
-
-											{/* Middle: Icon + Title */}
-											<div className="flex items-center space-x-3">
-												<div
-													className={cn(
-														"w-10 h-10 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0",
-														movement.category.color,
-													)}
-												>
-													<Icon className="w-5 h-5 text-white" />
+									return (
+										<Card key={movement.id} className="p-3 hover:shadow-sm transition-all md:p-4">
+											<div className="flex flex-col space-y-3">
+												{/* Top row: Badge (left) + Dropdown Menu (right) */}
+												<div className="flex items-center justify-between">
+													<span className="bg-gray-100 px-2.5 py-1 rounded-full text-xs font-medium text-gray-700">
+														{movement.category.name}
+													</span>
+													{/* Menu on top */}
+													<DropdownMenu>
+														<DropdownMenuTrigger asChild>
+															<button className="p-1 hover:bg-gray-100 rounded">
+																<MoreHorizontal className="w-4 h-4 text-gray-500" />
+															</button>
+														</DropdownMenuTrigger>
+														<DropdownMenuContent align="end">
+															<DropdownMenuItem className="text-red-600" onClick={() => deleteSelectedMovement(movement)}>
+																<Trash className="w-4 h-4 mr-2" />
+																Borrar
+															</DropdownMenuItem>
+														</DropdownMenuContent>
+													</DropdownMenu>
 												</div>
-												<p className="font-semibold text-sm text-gray-900 line-clamp-2 flex-1">{movement.tag.name}</p>
-											</div>
 
-											{/* Bottom row: Date (left) + Amount (right) */}
-											<div className="flex items-center justify-between">
-												<span className="text-xs text-gray-500">
-													{formatDateNoYear(movement.createdAt)}
-												</span>
-												<span
-													className={
-														movement.type === TxType.INCOME ? "font-bold text-lg text-green-600" : "font-bold text-lg text-gray-900"
-													}
-												>
-													{movement.type === TxType.INCOME ? "+" : "-"}
-													{formatToBalance(movement.amount)}
-												</span>
+												{/* Middle: Icon + Title */}
+												<div className="flex items-center space-x-3">
+													<div
+														className={cn(
+															"w-10 h-10 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0",
+															movement.category.color,
+														)}
+													>
+														<Icon className="w-5 h-5 text-white" />
+													</div>
+													<p className="font-semibold text-sm text-gray-900 line-clamp-2 flex-1">{movement.tag.name}</p>
+												</div>
+
+												{/* Bottom row: Date (left) + Amount (right) */}
+												<div className="flex items-center justify-between">
+													<span className="text-xs text-gray-500">
+														{formatDateNoYear(movement.createdAt)}
+													</span>
+													<span
+														className={
+															movement.type === TxType.INCOME ? "font-bold text-lg text-green-600" : "font-bold text-lg text-gray-900"
+														}
+													>
+														{movement.type === TxType.INCOME ? "+" : "-"}
+														{formatToBalance(movement.amount)}
+													</span>
+												</div>
 											</div>
-										</div>
-									</Card>
-								)
-							})}
-						</div>
-					)}
-				</CardContent>
-			</Card>
+										</Card>
+									)
+								})}
+							</div>
+						)}
+					</CardContent>
+				</Card>
+			</div>
 		</div>
+
 	)
 }

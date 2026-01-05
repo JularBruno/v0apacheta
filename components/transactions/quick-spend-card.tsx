@@ -26,10 +26,14 @@ import { deleteCategoryById } from "@/lib/actions/categories";
 import { postMovement } from "@/lib/actions/movements";
 
 import { QuickSpendCategoryDialogs } from "./quick-spend-category-dialogs"
-import { CategoryHeaderDesktop, CategoryHeaderMobile, CategoryGrid, TagRow } from "./quick-spend-ui-pieces"
+import { CategoryHeaderDesktop, CategoryHeaderMobile, CategoryGrid, TagRow, DateTimeRow } from "./quick-spend-ui-pieces"
+import { nowInfo } from "@/lib/quick-spend-constants"
+
 import QuickSpendSkeleton from "./quick-spend-skeleton";
 import { Loading } from "@/components/ui/loading"
 import { BalanceInput } from "./balance-input";
+
+
 
 /**
  * @title Quick Spend Card used in home and asset
@@ -40,7 +44,7 @@ import { BalanceInput } from "./balance-input";
  */
 export default function QuickSpendCard({
 	onAdd,
-	initialType,
+	// initialType,
 	onCancel,
 	cats,
 	setCats,
@@ -49,7 +53,7 @@ export default function QuickSpendCard({
 	loading
 }: {
 	onAdd: (data: Movement) => void
-	initialType?: TxType
+	// initialType?: TxType
 	onCancel?: () => void
 	cats: Category[]
 	setCats: React.Dispatch<React.SetStateAction<Category[]>>
@@ -76,7 +80,8 @@ export default function QuickSpendCard({
 	 * 
 	 */
 	// type selection and useful for when opening modal with an already selected option
-	const [type, setType] = useState<TxType>(initialType || TxType.EXPENSE)
+	// const [type, setType] = useState<TxType>(initialType || TxType.EXPENSE)
+	const [type, setType] = useState<TxType>(TxType.EXPENSE)
 
 	// Switch between "gasto" (expense) and "ingreso" (income) types
 	// and make sure a valid category is selected for the new type
@@ -113,19 +118,6 @@ export default function QuickSpendCard({
 	const [selectedExpenseCat, setSelectedExpenseCat] = useState<string | null>(null);
 	const [selectedIncomeCat, setSelectedIncomeCat] = useState<string | null>(null);
 
-	// Initialize selected categories when cats are fetched
-	// useEffect(() => {
-	// 	if (expenseCats.length && !selectedExpenseCat)
-	// 		setSelectedExpenseCat(expenseCats[0].id);
-	// 	if (incomeCats.length && !selectedIncomeCat)
-	// 		setSelectedIncomeCat(incomeCats[0].id);
-	// }, [expenseCats, incomeCats]);
-
-	// Selected category
-	// const categoryId = type === TxType.EXPENSE
-	// 	? selectedExpenseCat || expenseCats[0]?.id || ''
-	// 	: selectedIncomeCat || incomeCats[0]?.id || '';
-	// Selected category
 	const categoryId =
 		type === TxType.EXPENSE
 			? selectedExpenseCat || ''
@@ -146,6 +138,20 @@ export default function QuickSpendCard({
 			if (type !== TxType.INCOME) setType(TxType.INCOME)
 		}
 		setValue('categoryId', id); // Update form category id, just in case, but it should be verified before submit with zod i think
+
+		// If there was a tag id and you selected a new category reset form, just for ux
+		if (tagId) {
+			setTagId(""); // Clear this FIRST
+			setTagInput("");
+
+			reset({
+				type: type,
+				tagId: undefined,
+				tagName: '',
+				amount: 0,
+				description: ''
+			});
+		}
 
 		announce(`Categoría ${c.name} seleccionada`)
 	}
@@ -175,7 +181,7 @@ export default function QuickSpendCard({
 	// Manage Categories dialog state and handlers
 	const [showManageCategories, setShowManageCategories] = useState(false)
 
-	/* deletion */
+	/* deletion of a category */
 	const deleteCategory = async (catId: string) => {
 		const cat = cats.find((c) => c.id === catId)
 		if (!cat) return
@@ -242,6 +248,13 @@ export default function QuickSpendCard({
 	 * 
 	 */
 
+	/**
+	 * showDateTime component variables required to chose specific time on movement
+	 */
+	const [showDateTime, setShowDateTime] = useState(false);
+	const [customDate, setCustomDate] = useState(nowInfo().dateInput);
+	const [customTime, setCustomTime] = useState(nowInfo().timeInput);
+
 	/** Form zod validator, values, handlers, errors and loading */
 	const {
 		control,
@@ -257,7 +270,7 @@ export default function QuickSpendCard({
 		defaultValues: {
 			type: type,
 			categoryId: '',
-			tagId: '',
+			// tagId: '',
 			tagName: '',
 			amount: undefined,
 			description: ''
@@ -266,8 +279,9 @@ export default function QuickSpendCard({
 
 	const [movementLoading, setMovementLoading] = useState<boolean>(false);
 
+
+	// Helps to clear specific error when typing again
 	function handleTagKeyDown() {
-		// clear specific error when typing again
 		clearErrors("tagName");
 	}
 
@@ -275,9 +289,9 @@ export default function QuickSpendCard({
 	const selectTag = (id?: string) => { // when removing the optional id, TS yells at calling without param, IT SHOULD be okey since makes sense when creating new tag after submit
 		const t = allTags.find((tg) => tg.id === id)
 		if (!t) return
+
 		setTagId(t.id)
 		setValue('amount', t.amount || 0); // Update form amount too
-
 		setValue('tagName', t.name); // Update form amount too
 
 		// match category and type to tag
@@ -291,11 +305,22 @@ export default function QuickSpendCard({
 	}
 
 	/**
+	 * Movement submit on invalid, used for debugging eact-hook-form + zod dead submit.
+	 */
+	const onInvalid = (errors: any) => {
+		console.log('FORM INVALID', errors);
+	};
+
+	/**
 	 * Movement submit
 	 * @param data movementform data from schema, to be submited
 	 */
 	const onSubmitHandler = async (data: MovementFormData) => {
 		setMovementLoading(true);
+
+		// Format the datetime to ISO string
+		const dateObj = new Date(`${customDate}T${customTime}`);
+		const isoString = dateObj.toISOString(); // "2026-01-05T13:36:50.121Z"
 
 		try {
 			if (!categoryId) { setMovementLoading(false); return alert("Seleccioná una categoría."); };
@@ -307,13 +332,14 @@ export default function QuickSpendCard({
 				type: type,
 				tagId: tagId ? tagId : undefined,
 				description: data.tagName,
+				createdAt: showDateTime ? isoString : undefined, // Only include if custom date selected
 			};
 
 			const movement = await postMovement(movementData);
 
 			let currentTag = allTags.find((t) => t.id === tagId)
 
-			// Always update tag default amount to last used
+			// Always update tag default amount to last used as done in api
 			if (currentTag) {
 				const updated = { ...currentTag, amount: data.amount }
 				setAllTags((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
@@ -340,6 +366,7 @@ export default function QuickSpendCard({
 		}
 	};
 
+
 	/**
 	 * 
 	 * ADD TRANSACTION
@@ -362,7 +389,7 @@ export default function QuickSpendCard({
 				</div>
 			</CardHeader>
 			<CardContent className="space-y-4 p-4">
-				<form onSubmit={handleSubmit(onSubmitHandler)}>
+				<form onSubmit={handleSubmit(onSubmitHandler, onInvalid)}>
 
 					{/* A11y live region */}
 					<div ref={liveRegionRef} className="sr-only" aria-live="polite" aria-atomic="true"></div>
@@ -438,17 +465,28 @@ export default function QuickSpendCard({
 
 					{/* Amount */}
 					<div className="space-y-2 pb-4">
-						<Label className="text-sm text-gray-600">Monto</Label>
+						<Label htmlFor="amount" className="text-sm text-gray-600">Monto</Label>
 						<div className="relative gap-2 ">
-							<span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
 							<BalanceInput
 								errors={errors}
 								clearErrors={clearErrors}
+
 								control={control}
 							/>
 						</div>
 					</div>
 
+					{/* DateTimeRow */}
+					<DateTimeRow
+						showDateTime={showDateTime}
+						setShowDateTime={setShowDateTime}
+						customDate={customDate}
+						customTime={customTime}
+						setCustomDate={setCustomDate}
+						setCustomTime={setCustomTime}
+					/>
+
+					{/* submit button */}
 					<Button type="submit" className="w-full h-12 text-base font-semibold"
 						disabled={movementLoading}
 					>

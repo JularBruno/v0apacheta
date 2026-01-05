@@ -25,6 +25,7 @@ import {
 	Edit,
 	Trash2,
 	X,
+	Tag,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -107,6 +108,7 @@ export const iconComponents = {
 	Edit,
 	Trash2,
 	X,
+	Tag
 };
 
 export const quickFilters = [
@@ -163,4 +165,15 @@ export function formatNumberToInput(num: number): string {
 
 	// Return with comma as decimal separator
 	return `${formattedInteger},${decimal}`;
+}
+
+// required for date time input on quickspendcard when attempting to modify createdAt
+export function nowInfo() {
+	const d = new Date()
+	return {
+		date: d.toLocaleDateString("es-AR"),
+		time: d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" }),
+		dateInput: d.toISOString().split("T")[0],
+		timeInput: d.toTimeString().slice(0, 5),
+	}
 }

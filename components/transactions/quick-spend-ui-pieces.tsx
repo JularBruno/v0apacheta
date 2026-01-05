@@ -13,10 +13,13 @@ import {
 	Settings,
 	Plus,
 	X,
+	Calendar,
+	ChevronUp,
+	ChevronDown,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-import { formatToBalance, iconComponents } from "@/lib/quick-spend-constants"
+import { formatToBalance, iconComponents, nowInfo } from "@/lib/quick-spend-constants"
 import { Movement, movementSchema, MovementFormData } from "@/lib/schemas/movement";
 
 
@@ -274,5 +277,65 @@ export function TagRow({
 				</div>
 			</div>
 		</>
+	)
+}
+
+
+type DateTimeRowProps = {
+	showDateTime: boolean,
+	setShowDateTime: (showDateTime: boolean) => void,
+	customDate: string,
+	customTime: string
+	setCustomDate: (customDate: string) => void,
+	setCustomTime: (customTime: string) => void,
+}
+
+/* 
+* Date time row for choosing specific createdAt time on movement
+*/
+export function DateTimeRow({
+	showDateTime,
+	setShowDateTime,
+	customDate,
+	customTime,
+	setCustomDate,
+	setCustomTime
+}: DateTimeRowProps
+) {
+	return (
+		<div className="space-y-2 pb-4" >
+			<button
+				type="button"
+				onClick={() => { setShowDateTime(!showDateTime); setCustomDate(nowInfo().dateInput); setCustomTime(nowInfo().timeInput); }}
+				className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+			>
+				<Calendar className="w-4 h-4" />
+				<span>Fecha y hora</span>
+				{showDateTime ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+				{(customDate !== nowInfo().dateInput || customTime !== nowInfo().timeInput) && (
+					<span className="text-xs text-blue-600 ml-1">
+						({new Date(`${customDate}T${customTime}`).toLocaleDateString("es-AR")})
+					</span>
+				)}
+			</button>
+			{showDateTime && (
+				<div className="flex gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+					<Input type="date" value={customDate} onChange={(e) => setCustomDate(e.target.value)} className="flex-1" />
+					<Input type="time" value={customTime} onChange={(e) => setCustomTime(e.target.value)} className="w-28" />
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						onClick={() => {
+							setCustomDate(nowInfo().dateInput)
+							setCustomTime(nowInfo().timeInput)
+						}}
+						className="text-xs"
+					>
+						Ahora
+					</Button>
+				</div>
+			)}
+		</div>
 	)
 }

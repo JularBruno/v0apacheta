@@ -37,21 +37,15 @@ export async function deleteMovement(id: string) {
 	await deleteMethod<Movement>(url, id);
 }
 
-export async function postMovement(data: {
-	// userId: string
-	type: TxType;
-	categoryId: string;
-	tagId?: string;
-	tagName: string;
-	amount: number;
-	description: string;
-}): Promise<Movement> {
+export async function postMovement(data: Movement): Promise<Movement> {
 	const session = await getSession();
 
 	const result = await postMethod<Movement>(url, {
 		...data,
 		userId: session!.user.id,
 	});
+
+	console.log('restult ', result);
 
 	return result;
 }

@@ -17,6 +17,7 @@ export type Movement = {
 	tagName: string;
 	amount: number;
 	description: string;
+	createdAt?: string; // Optional, defaults to now if not provided
 };
 
 

@@ -12,4 +12,5 @@ export type Tag = {
 // ✅ For retrieved data (server → client)
 export type Tags = Tag & {
 	createdAt: string;
+	updatedAt: string;
 };
