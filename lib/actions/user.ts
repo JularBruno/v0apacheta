@@ -104,7 +104,6 @@ export async function register(prevState: UserState, formData: FormData) {
 	// Only redirect if everything succeeded
 	revalidatePath('/dashboard/mapa');
 	redirect('/dashboard/mapa');
-
 }
 
 /**

@@ -6,14 +6,14 @@ import FAQ from "@/components/home/faq"
 import Footer from "@/components/home/footer"
 
 export default function Home() {
-  return (
-    <main className="font-manrope">
-      <Header />
-      <Hero />
-      <About />
-      <Features />
-      <FAQ />
-      <Footer />
-    </main>
-  )
+	return (
+		<main className="font-manrope">
+			<Header />
+			<Hero />
+			<About />
+			{/* <Features /> */}
+			<FAQ />
+			{/* <Footer /> */}
+		</main>
+	)
 }

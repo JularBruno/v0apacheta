@@ -25,15 +25,26 @@ export default function About() {
 
 					<div className="text-center">
 						<div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-							<Target className="w-8 h-8 text-green-600" />
+							<Heart className="w-8 h-8 text-green-600" />
 						</div>
-						<h3 className="text-xl font-semibold text-gray-900 mb-4">Objetivos Claros</h3>
+						<h3 className="text-xl font-semibold text-gray-900 mb-4">Trabajas demasiado como para sentirte tan quebrado</h3>
 						<p className="text-gray-600">
-							Sigue <b>el mapa</b> para aprender a gestionar mejor tu dinero, elaborando presupuestos para cada gasto.
+							{/* Cambia tu relación con el dinero,  */}
+							Planifica como gestionar cada centavo, para a largo plazo, ahorrar e invertir mejor.
 						</p>
 					</div>
 
 					<div className="text-center">
+						<div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+							<Target className="w-8 h-8 text-green-600" />
+						</div>
+						<h3 className="text-xl font-semibold text-gray-900 mb-4">Objetivos Claros</h3>
+						<p className="text-gray-600">
+							Sigue <b>el mapa</b> para cumplir metas, elaborando presupuestos para cada gasto y objetivo.
+						</p>
+					</div>
+
+					{/* <div className="text-center">
 						<div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
 							<Heart className="w-8 h-8 text-green-600" />
 						</div>
@@ -41,7 +52,7 @@ export default function About() {
 						<p className="text-gray-600">
 							Aprende a ahorrar para estar más seguro, y a planificar como gestionar tu dinero para a largo plazo ahorrar e invertir mejor.
 						</p>
-					</div>
+					</div> */}
 				</div>
 			</div>
 		</section>

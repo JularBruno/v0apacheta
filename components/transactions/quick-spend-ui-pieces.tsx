@@ -19,7 +19,8 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-import { formatToBalance, iconComponents, nowInfo } from "@/lib/quick-spend-constants"
+import { formatToBalance, iconComponents } from "@/lib/quick-spend-constants"
+import { getCurrentDateTimeInfo } from "@/lib/dateUtils"
 import { Movement, movementSchema, MovementFormData } from "@/lib/schemas/movement";
 
 
@@ -306,15 +307,18 @@ export function DateTimeRow({
 		<div className="space-y-2 pb-4" >
 			<button
 				type="button"
-				onClick={() => { setShowDateTime(!showDateTime); setCustomDate(nowInfo().dateInput); setCustomTime(nowInfo().timeInput); }}
+				onClick={() => { setShowDateTime(!showDateTime); setCustomDate(customDate); setCustomTime(customTime); }}
 				className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
 			>
 				<Calendar className="w-4 h-4" />
 				<span>Fecha y hora</span>
 				{showDateTime ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-				{(customDate !== nowInfo().dateInput || customTime !== nowInfo().timeInput) && (
+
+				{(customDate !== getCurrentDateTimeInfo().dateInput || customTime !== getCurrentDateTimeInfo().timeInput) && (
 					<span className="text-xs text-blue-600 ml-1">
+
 						({new Date(`${customDate}T${customTime}`).toLocaleDateString("es-AR")})
+
 					</span>
 				)}
 			</button>
@@ -327,8 +331,8 @@ export function DateTimeRow({
 						variant="ghost"
 						size="sm"
 						onClick={() => {
-							setCustomDate(nowInfo().dateInput)
-							setCustomTime(nowInfo().timeInput)
+							setCustomDate(getCurrentDateTimeInfo().dateInput)
+							setCustomTime(getCurrentDateTimeInfo().timeInput)
 						}}
 						className="text-xs"
 					>

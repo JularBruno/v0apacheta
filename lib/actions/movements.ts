@@ -49,3 +49,30 @@ export async function postMovement(data: Movement): Promise<Movement> {
 
 	return result;
 }
+
+// export async function migrateMovementsFromExcelFile(file: File): Promise<any> {
+// 	const session = await getSession();
+// 	const url = 'movement/upload'
+
+// 	// Create FormData to send file as binary
+// 	const formData = new FormData();
+// 	formData.append('file', file);
+// 	formData.append('userId', session!.user.id);
+
+// 	const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/${url}`, {
+// 		method: 'POST',
+// 		headers: {
+// 			'Authorization': `Bearer ${session?.user.token}`, // if you use auth
+// 		},
+// 		body: formData, // Send FormData, not JSON
+// 	});
+
+// 	if (!response.ok) {
+// 		throw new Error('Failed to upload file');
+// 	}
+
+// 	const result = await response.json();
+// 	console.log('result ', result);
+
+// 	return result;
+// }

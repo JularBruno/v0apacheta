@@ -8,25 +8,26 @@ import { NextResponse } from 'next/server';
 export const authConfig = {
 	pages: {
 		signIn: '/login',
-		newUser: '/register',
+		newUser: '/onboarding',
 	},
 	callbacks: {
 		authorized({ auth, request: { nextUrl } }) {
 			const isLoggedIn = !!auth?.user;
 			const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
-			const publicPaths = ['/login', '/register'];
+			const publicPaths = ['/login', '/onboarding'];
 			const isPublic = publicPaths.includes(nextUrl.pathname);
 
 			// If on dashboard and not logged in, redirect to login
 			if (isOnDashboard && !isLoggedIn) {
+				console.log('BUG');
 				const loginUrl = new URL('/login', nextUrl.origin);
 				loginUrl.searchParams.set('callbackUrl', nextUrl.pathname);
-				return Response.redirect(loginUrl);
+				return NextResponse.redirect(loginUrl);
 			}
 
 			// If logged in and on login page, redirect to dashboard
 			if (isPublic && isLoggedIn) {
-				return Response.redirect(new URL('/dashboard/inicio', nextUrl));
+				return NextResponse.redirect(new URL('/dashboard/inicio', nextUrl));
 			}
 
 			// Allow everything else
@@ -63,5 +64,5 @@ export default auth((req) => {
  * Middleware that protects all routes except API, static files, and images.
  */
 export const config = {
-	matcher: ['/dashboard/:path*'],
+	matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)',], // this has changed a few times, it is working properly but on previous github versions there was a clearer execution of this regex
 };

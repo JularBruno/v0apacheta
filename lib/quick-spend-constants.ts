@@ -114,32 +114,11 @@ export const iconComponents = {
 export const quickFilters = [
 	{ id: "today", label: "Hoy" },
 	{ id: "week", label: "Última semana" },
-	{ id: "month", label: "Último mes" },
+	{ id: "month", label: "Últimos 30 días" },
 	{ id: "3months", label: "Últimos 3 meses" },
+	{ id: "6months", label: "Últimos 6 meses" },
+	{ id: "ever", label: "TEST: Ever" },
 ]
-
-/* this should be in another file  TODO **/
-export function formatDate(isoString: string) {
-	const date = new Date(isoString);
-	return date.toLocaleDateString('es-AR', {
-		year: 'numeric',
-		month: 'short',
-		day: 'numeric',
-		hour: '2-digit',
-		minute: '2-digit',
-	});
-}
-
-export function formatDateNoYear(isoString: string) {
-	const date = new Date(isoString);
-	return date.toLocaleDateString('es-AR', {
-		month: 'short',
-		day: 'numeric',
-		hour: '2-digit',
-		minute: '2-digit',
-		hour12: false,
-	});
-}
 
 // Cool af formated number
 export function formatToBalance(balance: number) {
@@ -165,15 +144,4 @@ export function formatNumberToInput(num: number): string {
 
 	// Return with comma as decimal separator
 	return `${formattedInteger},${decimal}`;
-}
-
-// required for date time input on quickspendcard when attempting to modify createdAt
-export function nowInfo() {
-	const d = new Date()
-	return {
-		date: d.toLocaleDateString("es-AR"),
-		time: d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" }),
-		dateInput: d.toISOString().split("T")[0],
-		timeInput: d.toTimeString().slice(0, 5),
-	}
 }

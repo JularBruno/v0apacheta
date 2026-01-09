@@ -24,7 +24,8 @@ import { TxType } from "@/lib/schemas/definitions";
 import { Category } from "@/lib/schemas/category";
 import { getCategoriesByUser, deleteCategoryById } from "@/lib/actions/categories";
 import { deleteMovement, getMovementsByUserAndFilter, postMovement } from "@/lib/actions/movements";
-import { iconComponents, formatDate, quickFilters, formatNumberToInput, formatToBalance, formatDateNoYear } from "@/lib/quick-spend-constants";
+import { iconComponents, quickFilters, formatNumberToInput, formatToBalance } from "@/lib/quick-spend-constants";
+import { formatDate, getDateStringsForFilter, formatDateNoYear, getLastNDays, getLastNMonths, getMonthRange, getMonthName } from "@/lib/dateUtils";
 import { PeriodSelector } from "@/components/transactions/period-selector"
 import { toast } from "@/hooks/use-toast"
 
@@ -56,11 +57,8 @@ export default function HistorialPage() {
 	 * DATE 
 	 * 
 	 */
+	const monthName = getMonthName(); // Uses current date
 
-	const now = new Date();
-	const monthName = now.toLocaleString('es-ES', { month: 'long' });
-	const oneMonthAgo = now; // One month ago used in basic fetch
-	oneMonthAgo.setMonth(now.getMonth() - 1);
 
 	/**
 	 * 
@@ -69,6 +67,7 @@ export default function HistorialPage() {
 	 */
 
 	const [cats, setCats] = useState<Category[]>([])
+	const [catsEmpty, setEmptyCats] = useState<Category[]>([])
 	const [loadingCats, setLoadingCats] = useState<boolean>(true)
 
 	/**
@@ -102,6 +101,7 @@ export default function HistorialPage() {
 		setSelectedType("all")
 		setSelectedDateFilter("month")
 	}
+
 	// counting active filters for badge
 	const activeFiltersCount = [
 		searchTerm,
@@ -110,7 +110,10 @@ export default function HistorialPage() {
 	].filter(Boolean).length
 
 	// ALl movements from api. Filtered by default one month ago 
-	const [movements, setMovements] = useState<Movements[]>([])
+	const [movements, setMovements] = useState<Movements[]>([]);
+	// random data thats cool set on MovementsFetch
+	const [movementsTotal, setMovementsTotal] = useState<number>(0);
+	const [movementsAverage, setMovementsAverage] = useState<number>(0);
 	// All movements filtered in UI for selectedCategory, selectedType, and searchTerm
 	const [filteredMovements, setFilteredMovements] = useState<Movements[]>([])
 	// refresh trigger for fetching movements on deletion on when refresh required
@@ -148,29 +151,60 @@ export default function HistorialPage() {
 			try {
 				// Make pagination based on time periods
 				let filters: any = {
-					startDate: oneMonthAgo
 				};
 
 				// Bring based on filter, since is the best option for pagination
+				switch (selectedDateFilter) { // default one is "month"
+					case quickFilters[0].id: { // last 24 hours (yesterday to now)
 
-				switch (selectedDateFilter) {
-					case quickFilters[0].id: // last 24 hours (yesterday to now)
-						filters.startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-						filters.endDate = now;
+						// For last 24 hours
+						const { start, end } = getLastNDays(1);
+						const result = getDateStringsForFilter(start, end);
+						filters.startDate = result.startDate;
+						filters.endDate = result.endDate;
 						break;
+					}
 
-					case quickFilters[1].id: // last week (7 days ago to now)
-						filters.startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-						filters.endDate = now;
+					case quickFilters[1].id: { // last week (7 days ago to now)
+						const { start, end } = getLastNDays(7);
+						const result = getDateStringsForFilter(start, end);
+						filters.startDate = result.startDate;
+						filters.endDate = result.endDate;
 						break;
+					}
 
-					case quickFilters[2].id: // last month (30 days ago to now)
-						filters.startDate = now.getMonth() - 1;
-						// filters.endDate = now;
+					case quickFilters[2].id: {// last month (30 days ago to now)
+						const { start, end } = getLastNMonths(1);
+						const result = getDateStringsForFilter(start, end);
+						filters.startDate = result.startDate;
+						filters.endDate = result.endDate;
 						break;
+					}
 
-					case quickFilters[3].id: // last 3 months (90 days ago to now)
-						filters.startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+					case quickFilters[3].id: {// last 3 months (90 days ago to now)
+
+						const { start, end } = getLastNMonths(6);
+						const result = getDateStringsForFilter(start, end);
+						filters.startDate = result.startDate;
+						filters.endDate = result.endDate;
+
+						break;
+					}
+
+					case quickFilters[3].id: {// last 6 months TEST
+
+						const { start, end } = getLastNMonths(3);
+						const result = getDateStringsForFilter(start, end);
+						filters.startDate = result.startDate;
+						filters.endDate = result.endDate;
+
+						break;
+					}
+
+					case quickFilters[4].id: // TEST: EVERY DATES
+						// filters.startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+						filters.startDate = null;
+						filters.endDate = null;
 
 						break;
 
@@ -178,29 +212,47 @@ export default function HistorialPage() {
 						// Handle specific month selection: "month-9-2024"
 						if (selectedDateFilter.startsWith("month-")) {
 							const [_, monthStr, yearStr] = selectedDateFilter.split("-");
+
 							const month = parseInt(monthStr, 10); // 9 = October (0-indexed)
 							const year = parseInt(yearStr, 10);
 
-							filters.startDate = new Date(year, month, 1, 0, 0, 0, 0); // First day of month
-							filters.endDate = new Date(year, month + 1, 0, 23, 59, 59, 999); // Last day of month
-						} else {
-							// Default: this month
-							filters.startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-							filters.endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+							// filters.startDate = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0)); // First day of month
+							// console.log('filters.startDate ', filters.startDate);
+
+							// filters.endDate = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999)); // Last day of month
+							// console.log('filters.endDate ', filters.endDate);
+
+							const { start, end } = getMonthRange(month, year);
+							const result = getDateStringsForFilter(start, end);
+							filters.startDate = result.startDate;
+							filters.endDate = result.endDate;
 						}
+						// else {
+						// 	// Default: this month
+						// 	const { start, end } = getMonthRange(month, year);
+						// 	const result = getDateStringsForFilter(start, end);
+						// 	filters.startDate = result.startDate;
+						// 	filters.endDate = result.endDate;
+						// }
 						break;
 				}
+				console.log('-------- filters: ', filters);
 
 				// get movement with filters for API
 				const movements = await getMovementsByUserAndFilter(filters)
+				console.log('movements ', movements);
 
 				// sort by date because these come unsorted from the backend
 				let sortedMovements = movements.sort(
 					(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
 				);
 
+				let calculateMovementsTotal = movements.reduce((sum, item) => sum + item.amount, 0);
+
 				setMovements(sortedMovements);
 				setFilteredMovements(sortedMovements);
+				setMovementsTotal(calculateMovementsTotal);
+				setMovementsAverage(calculateMovementsTotal / movements.length);
 			} catch (error) {
 				console.error('Failed to fetch movements:', error);
 			}
@@ -234,6 +286,11 @@ export default function HistorialPage() {
 			filtered = filtered.filter((transaction) => transaction.tag.name.toLowerCase().includes(searchTerm.toLowerCase()))
 		}
 
+		let calculateMovementsTotal = filtered.reduce((sum, item) => sum + item.amount, 0);
+
+		setMovementsTotal(calculateMovementsTotal);
+		setMovementsAverage(calculateMovementsTotal / filtered.length);
+
 		setFilteredMovements(filtered);
 		setLoadingMovements(false);
 	}, [movements, selectedCategory, selectedType, searchTerm]);
@@ -262,7 +319,7 @@ export default function HistorialPage() {
 				{/* Category breakdown 
 				* collapsible on mobile, always visible on desktop 
 				*/}
-				<div className="xl:col-span-1">
+				<div className="xl:col-span-1 hidden">
 
 					{/* Mobile: Collapsible header */}
 					<div className="lg:hidden">
@@ -283,7 +340,8 @@ export default function HistorialPage() {
 								showCategoryBreakdown && (
 									<CardContent className="pt-0">
 										<div className="grid gap-4">
-											{cats
+											{/* {cats */}
+											{catsEmpty
 												.filter((cat) => cat.type == TxType.EXPENSE)
 												.map((category) => {
 													const Icon = iconComponents[category.icon as keyof typeof iconComponents]
@@ -356,94 +414,91 @@ export default function HistorialPage() {
 								<div className="grid gap-4">
 									{loadingCats ? (
 										<Loading></Loading>
-									) : cats
-										// .filter((cat) => cat.budget > 0)
-										.map((category) => {
-											const Icon = iconComponents[category.icon as keyof typeof iconComponents]
-											const amountUsedThisMonth = filteredMovements.filter(m => m.categoryId === category.id).reduce((sum, m) => sum + m.amount, 0);
+									) :
+										// cats
+										catsEmpty
+											// .filter((cat) => cat.budget > 0)
+											.map((category) => {
+												const Icon = iconComponents[category.icon as keyof typeof iconComponents]
+												const amountUsedThisMonth = filteredMovements.filter(m => m.categoryId === category.id).reduce((sum, m) => sum + m.amount, 0);
 
-											// const spent = filteredTransactions
-											//   .filter((t) => t.type === "gasto" && t.category === category.id)
-											//   .reduce((sum, t) => sum + t.amount, 0)
-											// const remaining = category.budget - spent
-											// const percentage = (spent / category.budget) * 100
+												// const spent = filteredTransactions
+												//   .filter((t) => t.type === "gasto" && t.category === category.id)
+												//   .reduce((sum, t) => sum + t.amount, 0)
+												// const remaining = category.budget - spent
+												// const percentage = (spent / category.budget) * 100
 
-											return (
-												<Card key={category.id} className="p-4">
-													<div className="flex items-center justify-between mb-2">
-														<div className="flex items-center gap-3">
-															<div
-																className={cn("w-8 h-8 rounded-lg flex items-center justify-center", category.color)}
-															>
-																{/* <category.icon className="w-4 h-4 text-white" /> */}
-																<Icon className="w-4 h-4 text-white" />
+												return (
+													<Card key={category.id} className="p-4">
+														<div className="flex items-center justify-between mb-2">
+															<div className="flex items-center gap-3">
+																<div
+																	className={cn("w-8 h-8 rounded-lg flex items-center justify-center", category.color)}
+																>
+																	{/* <category.icon className="w-4 h-4 text-white" /> */}
+																	<Icon className="w-4 h-4 text-white" />
+																</div>
+																<div>
+																	<p className="font-medium text-sm">{category.name}</p>
+																	<p className="text-xs text-gray-500">
+																		{/* ${spent.toFixed(0)} de ${category.budget} */}
+																	</p>
+																</div>
 															</div>
-															<div>
-																<p className="font-medium text-sm">{category.name}</p>
-																<p className="text-xs text-gray-500">
-																	{/* ${spent.toFixed(0)} de ${category.budget} */}
+															<div className="text-right">
+																<p
+																	// className={cn(
+																	//   "font-semibold text-sm",
+																	//   spent > category.budget ? "text-red-600" : "text-gray-900",
+																	// )}
+																	className={"font-semibold text-sm text-gray-900"}
+																>
+																	{/* ${remaining.toFixed(0)} restante */}
+																	${100} restante
 																</p>
+																{/* <p className="text-xs text-gray-500">{percentage.toFixed(0)}% usado</p> */}
+																<p className="text-xs text-gray-500">{0}% usado. Total gastado: ${amountUsedThisMonth}</p>
 															</div>
 														</div>
-														<div className="text-right">
-															<p
-																// className={cn(
-																//   "font-semibold text-sm",
-																//   spent > category.budget ? "text-red-600" : "text-gray-900",
-																// )}
-																className={"font-semibold text-sm text-gray-900"}
-															>
-																{/* ${remaining.toFixed(0)} restante */}
-																${100} restante
-															</p>
-															{/* <p className="text-xs text-gray-500">{percentage.toFixed(0)}% usado</p> */}
-															<p className="text-xs text-gray-500">{0}% usado. Total gastado: ${amountUsedThisMonth}</p>
-														</div>
-													</div>
-													<Progress
-														// value={Math.min(100, percentage)}
-														// className={cn(
-														// 	"h-2",
-														// 	spent > category.budget ? "[&>div]:bg-red-500" : "[&>div]:bg-primary-500",
-														// )
-														value={50}
-														className={
-															"h-2 [&>div]:bg-primary-500"}
-													/>
-												</Card>
-											)
-										})}
+														<Progress
+															// value={Math.min(100, percentage)}
+															// className={cn(
+															// 	"h-2",
+															// 	spent > category.budget ? "[&>div]:bg-red-500" : "[&>div]:bg-primary-500",
+															// )
+															value={50}
+															className={
+																"h-2 [&>div]:bg-primary-500"}
+														/>
+													</Card>
+												)
+											})}
 								</div>
 							</CardContent>
 						</Card>
 					</div>
 				</div>
 
-
 				{/* </div> */}
 
 				{/* 
-			* Movements List 
-			* with integrated search and filters 
-			*/}
-				<Card className="lg:col-span-1">
+				* Movements List 
+				* with integrated search and filters 
+				*/}
+				<Card
+					className="lg:col-span-2"
+				// className="lg:col-span-1"
+				>
 
 					{/*
-				* Card header includes not only basic filters
-				* but also the Period selector
-				*/}
+					* Card header includes not only basic filters
+					* but also the Period selector
+					*/}
 					<CardHeader className="pb-4">
 						<div className="flex flex-col space-y-4">
 							<div className="flex items-center justify-between">
 								<CardTitle className="text-lg">Transacciones ({movements.length})</CardTitle>
-								{/* <Button
-								variant="destructive"
-								size="sm"
-								onClick={() => console.log("Undo Last Clicked")}
-								className="hidden sm:flex"
-							>
-								Deshacer Último
-							</Button> */}
+
 							</div>
 
 							{/* Search and Filter Controls - Mobile optimized */}
@@ -473,14 +528,6 @@ export default function HistorialPage() {
 										)}
 									</Button>
 
-									{/* <Button
-									variant="destructive"
-									size="sm"
-									onClick={() => console.log("Undo Last Clicked")}
-									className="sm:hidden"
-								>
-									Deshacer último
-								</Button> */}
 								</div>
 							</div>
 						</div>
@@ -556,9 +603,32 @@ export default function HistorialPage() {
 					</CardHeader>
 
 					{/*
-				* Card content with list of movements
-				*/}
+					* Card content with list of movements
+					*/}
 					<CardContent>
+
+						{filteredMovements.length > 0 && (
+							<div className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+								<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+									<div className="flex items-center gap-6">
+										<div>
+											<p className="text-xs text-gray-500 mb-1">Total</p>
+											<p className="text-lg font-semibold text-gray-900">{formatToBalance(movementsTotal)}</p>
+										</div>
+										<div className="h-8 w-px bg-gray-300" />
+										{(selectedCategory != "all" || selectedType != "all" || searchTerm) && (
+											<div>
+												<p className="text-xs text-gray-500 mb-1">Promedio</p>
+												<p className="text-lg font-semibold text-gray-900">{formatToBalance(movementsAverage)}</p>
+											</div>
+										)}
+									</div>
+									<div className="text-xs text-gray-500">
+										{filteredMovements.length} {filteredMovements.length === 1 ? "movimiento" : "movimientos"}
+									</div>
+								</div>
+							</div>
+						)}
 						{loadingMovements ? (
 							<Loading></Loading>
 						) : filteredMovements.length === 0 ? (
@@ -570,79 +640,6 @@ export default function HistorialPage() {
 								{filteredMovements.map((movement) => {
 									// const categoryInfo = getCategoryInfo(movement.categoryId)
 									const Icon = iconComponents[movement.category.icon as keyof typeof iconComponents]
-
-									// return (
-									// 	<Card key={movement.id} className="p-1 hover:shadow-sm transition-all">
-									// 		<div className="flex items-center justify-between">
-
-									// 			{/* Left side: Icon and details */}
-									// 			<div className="flex items-center space-x-3">
-									// 				<div
-									// 					className={cn(
-									// 						"w-12 h-12 rounded-xl flex items-center justify-center shadow-sm",
-									// 						movement.category.color,
-									// 					)}
-									// 				>
-									// 					<Icon className="w-6 h-6 text-white" />
-									// 				</div>
-
-									// 				<div>
-
-									// 					<p className="font-semibold text-sm text-gray-900">
-									// 						{movement.tag.name}
-									// 					</p>
-
-									// 					{/* Row: badge + ingreso/gasto */}
-									// 					<div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
-									// 						<span className="bg-gray-100 px-2 py-1 rounded-full">
-									// 							{movement.category.name}
-									// 						</span>
-
-									// 						{/* <p className="capitalize">
-									// 							{movement.type === TxType.INCOME ? "Ingreso" : "Gasto"}
-									// 						</p> */}
-									// 					</div>
-
-									// 					{/* Date BELOW the row */}
-									// 					<p className="text-xs text-gray-500 mt-1">
-									// 						{formatDateNoYear(movement.createdAt)}
-									// 					</p>
-
-
-									// 				</div>
-									// 			</div>
-
-									// 			{/* Right side: Amount */}
-									// 			<div className="flex flex-col items-end gap-2">
-									// 				{/* Menu on top */}
-									// 				<DropdownMenu>
-									// 					<DropdownMenuTrigger asChild>
-									// 						<button className="p-1 hover:bg-gray-100 rounded">
-									// 							<MoreHorizontal className="w-4 h-4 text-gray-500" />
-									// 						</button>
-									// 					</DropdownMenuTrigger>
-
-									// 					<DropdownMenuContent align="end">
-									// 						<DropdownMenuItem className="text-red-600" onClick={() => deleteSelectedMovement(movement)}>
-									// 							<Trash className="w-4 h-4 mr-2" />
-									// 							Borrar
-									// 						</DropdownMenuItem>
-									// 					</DropdownMenuContent>
-									// 				</DropdownMenu>
-
-									// 				{/* Amount below */}
-									// 				<span
-									// 					className={
-									// 						movement.type === TxType.INCOME ? "font-bold text-lg text-green-600" : "font-bold text-lg text-gray-900"
-									// 					}
-									// 				>
-									// 					{movement.type === TxType.INCOME ? "+" : "-"}
-									// 					{formatToBalance(movement.amount)}
-									// 				</span>
-									// 			</div>
-									// 		</div>
-									// 	</Card>
-									// )
 
 									return (
 										<Card key={movement.id} className="p-3 hover:shadow-sm transition-all md:p-4">
@@ -684,7 +681,9 @@ export default function HistorialPage() {
 												{/* Bottom row: Date (left) + Amount (right) */}
 												<div className="flex items-center justify-between">
 													<span className="text-xs text-gray-500">
-														{formatDateNoYear(movement.createdAt)}
+														{/* {formatDateNoYear(movement.createdAt)} */}
+
+														{formatDate(movement.createdAt)}
 													</span>
 													<span
 														className={

@@ -27,13 +27,10 @@ import { postMovement } from "@/lib/actions/movements";
 
 import { QuickSpendCategoryDialogs } from "./quick-spend-category-dialogs"
 import { CategoryHeaderDesktop, CategoryHeaderMobile, CategoryGrid, TagRow, DateTimeRow } from "./quick-spend-ui-pieces"
-import { nowInfo } from "@/lib/quick-spend-constants"
-
+import { getCurrentDateTimeInfo } from "@/lib/dateUtils";
 import QuickSpendSkeleton from "./quick-spend-skeleton";
 import { Loading } from "@/components/ui/loading"
 import { BalanceInput } from "./balance-input";
-
-
 
 /**
  * @title Quick Spend Card used in home and asset
@@ -252,8 +249,10 @@ export default function QuickSpendCard({
 	 * showDateTime component variables required to chose specific time on movement
 	 */
 	const [showDateTime, setShowDateTime] = useState(false);
-	const [customDate, setCustomDate] = useState(nowInfo().dateInput);
-	const [customTime, setCustomTime] = useState(nowInfo().timeInput);
+	// const [customDate, setCustomDate] = useState(nowInfo().dateInput);
+	// const [customTime, setCustomTime] = useState(nowInfo().timeInput);
+	const [customDate, setCustomDate] = useState(getCurrentDateTimeInfo().dateInput);
+	const [customTime, setCustomTime] = useState(getCurrentDateTimeInfo().timeInput)
 
 	/** Form zod validator, values, handlers, errors and loading */
 	const {

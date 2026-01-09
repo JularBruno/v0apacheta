@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Movements } from "@/lib/schemas/movement";
 import { Category } from "@/lib/schemas/category";
-import { iconComponents, formatToBalance, formatDate, formatDateNoYear } from "@/lib/quick-spend-constants";
+import { iconComponents, formatToBalance } from "@/lib/quick-spend-constants";
+import { formatDateNoYear } from "@/lib/dateUtils";
 import { Loading } from "../ui/loading";
 import { TxType } from "@/lib/schemas/definitions";
 
@@ -92,7 +93,7 @@ export default function RecentExpenses({
 											<span className={cn(
 												"font-semibold text-gray-900",
 												movement.type === TxType.INCOME ? "text-green-600" : "text-gray-900")}
-											>{movement.type === TxType.EXPENSE ? "-" : "+"} {formatToBalance(movement.tag.amount)}</span>
+											>{movement.type === TxType.EXPENSE ? "-" : "+"} {formatToBalance(movement.amount)}</span>
 										</div>
 									</div>
 								)

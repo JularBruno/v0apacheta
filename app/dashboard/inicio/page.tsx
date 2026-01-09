@@ -24,6 +24,7 @@ import { getMovementsByUserAndFilter, deleteMovement } from "@/lib/actions/movem
 import { getTagsByUser } from "@/lib/actions/tags"
 import { Tag, Tags } from "@/lib/schemas/tag"
 import { Loading } from "@/components/ui/loading"
+import { getDateStringsForFilter, getLastNMonths } from "@/lib/dateUtils"
 
 interface PaymentItem {
 	id: string
@@ -88,14 +89,13 @@ export default function InicioPage() {
 			);
 
 			setAllTags(sortedTags);
-
 			setLoadingQuickSpendCard(false);
 		} catch (error) {
 			console.error('Failed to fetch tags:', error);
 		}
 	};
 
-	// Initial fetch of movements
+	// Initial fetch of tags
 	useEffect(() => {
 		fetchTags();
 	}, []);
@@ -176,10 +176,13 @@ export default function InicioPage() {
 	const fetchMovements = async () => {
 
 		try {
-			const filters: any = {
-				// startDate: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000) // three monts ago
-				startDate: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) // a month ago
-			};
+			const filters: any = {};
+
+			// last month (30 days ago to now)
+			const { start, end } = getLastNMonths(1);
+			const result = getDateStringsForFilter(start, end);
+			filters.startDate = result.startDate;
+			filters.endDate = result.endDate;
 
 			const movements = await getMovementsByUserAndFilter(filters);
 

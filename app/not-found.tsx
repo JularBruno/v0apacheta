@@ -3,8 +3,18 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
+import { getProfile } from "@/lib/actions/user";
+import { useEffect, useState } from "react";
 
 export default function NotFound() {
+	// could use another thing instead of get session here
+	// THis approach is to redirect based on user state of login to different pages
+	const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+	useEffect(() => {
+		getProfile().then(profile => setIsLoggedIn(!!profile));
+	}, []);
+
 	return (
 		<div className="flex items-center justify-center min-h-screen">
 			<div className="text-center">
@@ -15,10 +25,15 @@ export default function NotFound() {
 				</p>
 				<div className="flex gap-3 justify-center">
 					<Button asChild>
-						<Link href="/">
-							<ArrowLeft className="w-4 h-4 mr-2" />
-							Volver al inicio
-						</Link>
+						{isLoggedIn ?
+							<Link href="/dashboard/mapa">
+								<ArrowLeft className="w-4 h-4 mr-2" />
+								Volver al mapa
+							</Link> :
+							<Link href="/">
+								<ArrowLeft className="w-4 h-4 mr-2" />
+								Volver al inicio
+							</Link>}
 					</Button>
 				</div>
 			</div>
