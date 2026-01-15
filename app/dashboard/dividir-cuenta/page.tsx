@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Users, Plus, Trash2, Calculator, ArrowRight, DollarSign } from "lucide-react"
+import { Users, Plus, Trash2, Calculator, ArrowRight, DollarSign, Copy, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useToast } from "@/hooks/use-toast"
 
 interface Person {
 	id: string
@@ -26,6 +27,8 @@ export default function DividirCuentaPage() {
 	const [newPersonName, setNewPersonName] = useState("")
 	const [newPersonAmount, setNewPersonAmount] = useState("")
 	const [showAddForm, setShowAddForm] = useState(false)
+	const [copied, setCopied] = useState(false)
+	const { toast } = useToast()
 
 	// Calculate settlements (who owes whom)
 	const calculateSettlements = (): Settlement[] => {
@@ -72,8 +75,12 @@ export default function DividirCuentaPage() {
 	}
 
 	const handleAddPerson = () => {
-		if (!newPersonName.trim() || !newPersonAmount || Number.parseFloat(newPersonAmount) <= 0) {
-			alert("Por favor, ingresa un nombre y un monto válido.")
+		if (!newPersonName.trim() || newPersonAmount === "") {
+			toast({
+				title: "Error",
+				description: "Por favor, ingresa un nombre y un monto válido.",
+				variant: "destructive",
+			})
 			return
 		}
 
@@ -91,6 +98,36 @@ export default function DividirCuentaPage() {
 
 	const handleRemovePerson = (id: string) => {
 		setPeople(people.filter((p) => p.id !== id))
+	}
+
+	const handleCopyToClipboard = () => {
+		const message = generateSettlementMessage()
+		navigator.clipboard.writeText(message).then(() => {
+			setCopied(true)
+			toast({
+				title: "Copiado",
+				description: "Resumen de liquidación copiado al portapapeles",
+			})
+			setTimeout(() => setCopied(false), 2000)
+		})
+	}
+
+	const generateSettlementMessage = (): string => {
+		let message = "💰 DIVISIÓN DE CUENTA\n\n"
+		message += `📊 Total gastado: $${totalBill.toFixed(2)}\n`
+		message += `👥 ${people.length} personas\n`
+		message += `💵 Promedio: $${averagePerPerson.toFixed(2)} por persona\n\n`
+
+		if (settlements.length > 0) {
+			message += "💸 QUIÉN LE DEBE A QUIÉN:\n\n"
+			settlements.forEach((settlement, index) => {
+				message += `${index + 1}. ${settlement.from} → ${settlement.to}: $${settlement.amount.toFixed(2)}\n`
+			})
+		}
+
+		message += "\n✨ Hecho con Apacheta"
+
+		return message
 	}
 
 	const totalBill = people.reduce((sum, person) => sum + person.amount, 0)
@@ -176,11 +213,13 @@ export default function DividirCuentaPage() {
 								</div>
 								<div>
 									<Label htmlFor="personAmount">Monto Gastado</Label>
+									<p className="text-xs text-gray-500 mb-2">Usa números negativos para quien debe desde el inicio</p>
 									<div className="relative">
 										<span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
 										<Input
 											id="personAmount"
 											type="number"
+											step="0.01"
 											placeholder="0.00"
 											value={newPersonAmount}
 											onChange={(e) => setNewPersonAmount(e.target.value)}
@@ -213,9 +252,9 @@ export default function DividirCuentaPage() {
 								{people.map((person) => (
 									<div
 										key={person.id}
-										className="flex items-center justify-between p-4 rounded-lg bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors"
+										className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-lg bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors"
 									>
-										<div className="flex items-center gap-3 flex-1 min-w-0">
+										<div className="flex items-center gap-3 flex-1 min-w-0 w-full sm:w-auto">
 											<div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
 												<span className="text-primary font-semibold text-sm">
 													{person.name.charAt(0).toUpperCase()}
@@ -226,10 +265,11 @@ export default function DividirCuentaPage() {
 												<p className="text-sm text-gray-500">Gastó: ${person.amount.toFixed(2)}</p>
 											</div>
 										</div>
-										<div className="flex items-center gap-3">
+										<div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
 											<Badge
 												variant="outline"
 												className={cn(
+													"whitespace-nowrap",
 													person.amount > averagePerPerson
 														? "bg-green-50 text-green-700 border-green-200"
 														: person.amount < averagePerPerson
@@ -247,7 +287,7 @@ export default function DividirCuentaPage() {
 												variant="ghost"
 												size="icon"
 												onClick={() => handleRemovePerson(person.id)}
-												className="text-red-500 hover:text-red-700 hover:bg-red-50"
+												className="text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
 											>
 												<Trash2 className="w-4 h-4" />
 											</Button>
@@ -268,10 +308,18 @@ export default function DividirCuentaPage() {
 				{/* Right Column: Settlement Calculations */}
 				<Card>
 					<CardHeader>
-						<CardTitle className="flex items-center gap-2">
-							<DollarSign className="w-5 h-5" />
-							Liquidación de Pagos
-						</CardTitle>
+						<div className="flex items-center justify-between gap-2">
+							<CardTitle className="flex items-center gap-2">
+								<DollarSign className="w-5 h-5" />
+								Liquidación de Pagos
+							</CardTitle>
+							{settlements.length > 0 && (
+								<Button variant="outline" size="sm" onClick={handleCopyToClipboard} className="gap-2 bg-transparent">
+									{copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+									<span className="hidden sm:inline">{copied ? "Copiado" : "Copiar"}</span>
+								</Button>
+							)}
+						</div>
 					</CardHeader>
 					<CardContent className="space-y-4">
 						{settlements.length > 0 ? (

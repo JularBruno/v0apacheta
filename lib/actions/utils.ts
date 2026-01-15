@@ -1,7 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { auth } from '@/auth';
+import { auth, signOut } from '@/auth';
 import type { Session } from 'next-auth';
 
 /**
@@ -14,6 +14,23 @@ const urlDev = process.env.API_URL;
 export async function getSession(): Promise<Session | null> {
 	return await auth();
 }
+
+
+/**
+ * Error: Cookies can only be modified in a Server Action or Route Handler.
+ * Meaning that I attempted to a function for logout but it doesnt work
+ * redirecting only in function doesnt work either
+ * the current solution was the only working one
+ */
+/*
+async function handleAuthError() {
+	// Sign out to clear the session
+	await signOut({ redirect: false });
+	// Now redirect - this is safe because signOut cleared everything
+	redirect('/login');
+}
+*/
+
 
 /**
  * @title Default getMethod
@@ -29,6 +46,7 @@ export async function getMethod<T>(
 	const session = await getSession();
 
 	if (!session?.user?.id || !session.accessToken) {
+		await signOut({ redirect: false });
 		redirect('/login');
 	}
 
@@ -42,8 +60,10 @@ export async function getMethod<T>(
 		},
 	});
 
+
 	if (response.status === 401) {
-		redirect('/login'); // ← Also redirect on 401 from API
+		await signOut({ redirect: false });
+		redirect('/login');
 	}
 
 	if (!response.ok) {
@@ -71,6 +91,7 @@ export async function postMethod<T>(
 		const session = await getSession();
 
 		if (!session?.user?.id || !session?.accessToken) {
+			await signOut({ redirect: false });
 			redirect('/login');
 		}
 	}
@@ -91,6 +112,12 @@ export async function postMethod<T>(
 			headers,
 			body: JSON.stringify(body),
 		});
+
+		// response 401 redirect to login when session expired
+		if (response.status === 401) {
+			await signOut({ redirect: false });
+			redirect('/login');
+		}
 
 		if (!response.ok) {
 			const errorData = await response.json();
@@ -127,6 +154,7 @@ export async function putMethod<T>(
 		// Only check session for authenticated endpoints
 		const session = await getSession();
 		if (!session?.user?.id || !session?.accessToken) {
+			await signOut({ redirect: false });
 			redirect('/login');
 		}
 
@@ -138,6 +166,11 @@ export async function putMethod<T>(
 			},
 			body: JSON.stringify(body),
 		});
+
+		if (response.status === 401) {
+			await signOut({ redirect: false });
+			redirect('/login');
+		}
 
 		if (!response.ok) {
 			const errorData = await response.json();
@@ -168,6 +201,7 @@ export async function deleteMethod<T>(url: string, id: string): Promise<T> {
 	const session = await getSession();
 
 	if (!session?.user?.id || !session?.accessToken) {
+		await signOut({ redirect: false });
 		redirect('/login');
 	}
 
@@ -179,6 +213,11 @@ export async function deleteMethod<T>(url: string, id: string): Promise<T> {
 				'Content-Type': 'application/json',
 			},
 		});
+
+		if (response.status === 401) {
+			await signOut({ redirect: false });
+			redirect('/login');
+		}
 
 		const data = await response.json();
 		console.log(data);
