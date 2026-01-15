@@ -1,5 +1,6 @@
 import type { NextAuthConfig } from 'next-auth';
 import { NextResponse } from 'next/server';
+import NextAuth from 'next-auth';
 
 /**
  * @title Auth config to extend with basic setting
@@ -19,7 +20,6 @@ export const authConfig = {
 
 			// If on dashboard and not logged in, redirect to login
 			if (isOnDashboard && !isLoggedIn) {
-				console.log('BUG');
 				const loginUrl = new URL('/login', nextUrl.origin);
 				loginUrl.searchParams.set('callbackUrl', nextUrl.pathname);
 				return NextResponse.redirect(loginUrl);
@@ -36,8 +36,6 @@ export const authConfig = {
 	},
 	providers: [],
 } satisfies NextAuthConfig;
-
-import NextAuth from 'next-auth';
 
 const { auth } = NextAuth(authConfig);
 

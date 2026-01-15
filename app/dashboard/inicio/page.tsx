@@ -58,7 +58,7 @@ export default function InicioPage() {
 				setCats(cats);
 			}
 			catch (err: any) {
-				console.error('Failed to fetch categories:', err);
+				console.error('Failed to fetch categories: ', err);
 				setCats([]);
 			}
 		};

@@ -43,7 +43,7 @@ export let lastAuthError: string | null = null;
  */
 export const { auth, signIn, signOut } = NextAuth({
 	...authConfig,
-	trustHost: true, // ADD THIS LINE
+	trustHost: true,
 	providers: [
 		Credentials({
 			credentials: {
@@ -121,10 +121,12 @@ export const { auth, signIn, signOut } = NextAuth({
 	callbacks: {
 		// access the token in your application
 		async jwt({ token, user }) {
+			// Persist the OAuth access_token and or the user id to the token right after signin
 			if (user) {
 				token.id = user.id;
 				token.accessToken = user.accessToken;
 			}
+
 			return token;
 		},
 		async session({ session, token }) {
