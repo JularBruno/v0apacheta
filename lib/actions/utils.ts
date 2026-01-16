@@ -60,7 +60,6 @@ export async function getMethod<T>(
 		},
 	});
 
-
 	if (response.status === 401) {
 		await signOut({ redirect: false });
 		redirect('/login');

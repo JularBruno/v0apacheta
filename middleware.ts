@@ -1,5 +1,6 @@
 import type { NextAuthConfig } from 'next-auth';
 import { NextResponse } from 'next/server';
+import NextAuth from 'next-auth';
 
 /**
  * @title Auth config to extend with basic setting
@@ -37,8 +38,10 @@ export const authConfig = {
 	providers: [],
 } satisfies NextAuthConfig;
 
-import NextAuth from 'next-auth';
 
+/**
+ * @title Adding headers on auth config. This originated from ccip errores
+ */
 const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
