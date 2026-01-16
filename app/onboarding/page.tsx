@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import AuthHeader from "@/components/auth-header"
 
 /**
  * @title required to follow form state
@@ -147,7 +148,9 @@ export default function OnboardingPage() {
 	 * ONBOARDING
 	 */
 	return (
+
 		<div className="min-h-screen flex flex-col lg:flex-row items-center justify-center bg-gradient-to-br from-green-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+			<AuthHeader />
 
 			{/* IMAGE CARD Section */}
 			<div

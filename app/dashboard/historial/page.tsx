@@ -59,7 +59,6 @@ export default function HistorialPage() {
 	 */
 	const monthName = getMonthName(); // Uses current date
 
-
 	/**
 	 * 
 	 * CATEGORY 
@@ -113,6 +112,7 @@ export default function HistorialPage() {
 	const [movements, setMovements] = useState<Movements[]>([]);
 	// random data thats cool set on MovementsFetch
 	const [movementsTotal, setMovementsTotal] = useState<number>(0);
+	const [movementsTotalIncome, setMovementsTotalIncome] = useState<number>(0);
 	const [movementsAverage, setMovementsAverage] = useState<number>(0);
 	// All movements filtered in UI for selectedCategory, selectedType, and searchTerm
 	const [filteredMovements, setFilteredMovements] = useState<Movements[]>([])
@@ -216,42 +216,40 @@ export default function HistorialPage() {
 							const month = parseInt(monthStr, 10); // 9 = October (0-indexed)
 							const year = parseInt(yearStr, 10);
 
-							// filters.startDate = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0)); // First day of month
-							// console.log('filters.startDate ', filters.startDate);
-
-							// filters.endDate = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999)); // Last day of month
-							// console.log('filters.endDate ', filters.endDate);
-
 							const { start, end } = getMonthRange(month, year);
 							const result = getDateStringsForFilter(start, end);
 							filters.startDate = result.startDate;
 							filters.endDate = result.endDate;
 						}
-						// else {
-						// 	// Default: this month
-						// 	const { start, end } = getMonthRange(month, year);
-						// 	const result = getDateStringsForFilter(start, end);
-						// 	filters.startDate = result.startDate;
-						// 	filters.endDate = result.endDate;
-						// }
 						break;
 				}
-				console.log('-------- filters: ', filters);
 
 				// get movement with filters for API
 				const movements = await getMovementsByUserAndFilter(filters)
-				console.log('movements ', movements);
 
 				// sort by date because these come unsorted from the backend
 				let sortedMovements = movements.sort(
 					(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
 				);
 
-				let calculateMovementsTotal = movements.reduce((sum, item) => sum + item.amount, 0);
+				let calculateMovementsTotal = movements.reduce((sum, item) => {
+					if (item.type === TxType.EXPENSE) {
+						return sum + item.amount;
+					}
+					return sum;
+				}, 0);
+
+				let calculateMovementsTotalIncome = movements.reduce((sum, item) => {
+					if (item.type === TxType.INCOME) {
+						return sum + item.amount;
+					}
+					return sum;
+				}, 0);
 
 				setMovements(sortedMovements);
 				setFilteredMovements(sortedMovements);
 				setMovementsTotal(calculateMovementsTotal);
+				setMovementsTotalIncome(calculateMovementsTotalIncome);
 				setMovementsAverage(calculateMovementsTotal / movements.length);
 			} catch (error) {
 				console.error('Failed to fetch movements:', error);
@@ -286,9 +284,22 @@ export default function HistorialPage() {
 			filtered = filtered.filter((transaction) => transaction.tag.name.toLowerCase().includes(searchTerm.toLowerCase()))
 		}
 
-		let calculateMovementsTotal = filtered.reduce((sum, item) => sum + item.amount, 0);
+		let calculateMovementsTotal = filtered.reduce((sum, item) => {
+			if (item.type === TxType.EXPENSE) {
+				return sum + item.amount;
+			}
+			return sum;
+		}, 0);
+
+		let calculateMovementsTotalIncome = filtered.reduce((sum, item) => {
+			if (item.type === TxType.INCOME) {
+				return sum + item.amount;
+			}
+			return sum;
+		}, 0);
 
 		setMovementsTotal(calculateMovementsTotal);
+		setMovementsTotalIncome(calculateMovementsTotalIncome);
 		setMovementsAverage(calculateMovementsTotal / filtered.length);
 
 		setFilteredMovements(filtered);
@@ -610,12 +621,20 @@ export default function HistorialPage() {
 						{filteredMovements.length > 0 && (
 							<div className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
 								<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+
 									<div className="flex items-center gap-6">
+										{/* <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] items-center gap-6"> */}
 										<div>
-											<p className="text-xs text-gray-500 mb-1">Total</p>
+											<p className="text-xs text-gray-500 mb-1">Total gastos</p>
 											<p className="text-lg font-semibold text-gray-900">{formatToBalance(movementsTotal)}</p>
 										</div>
-										<div className="h-8 w-px bg-gray-300" />
+										{/* <div className="h-8 w-px bg-gray-300" /> */}
+
+										{/* <div>
+											<p className="text-xs text-gray-500 mb-1">Total Ingresos</p>
+											<p className="text-lg font-semibold text-gray-900">{formatToBalance(movementsTotalIncome)}</p>
+										</div> */}
+										{/* <div className="h-8 w-px bg-gray-300" /> */}
 										{(selectedCategory != "all" || selectedType != "all" || searchTerm) && (
 											<div>
 												<p className="text-xs text-gray-500 mb-1">Promedio</p>
@@ -623,6 +642,7 @@ export default function HistorialPage() {
 											</div>
 										)}
 									</div>
+
 									<div className="text-xs text-gray-500">
 										{filteredMovements.length} {filteredMovements.length === 1 ? "movimiento" : "movimientos"}
 									</div>

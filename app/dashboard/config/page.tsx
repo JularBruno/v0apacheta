@@ -13,6 +13,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Terminal } from "lucide-react"
 import { getProfile } from "@/lib/actions/user"
 import { User } from "@/lib/schemas/user"
+import { useDashboard } from '@/app/dashboard/dashboardContext';
 
 export default function SettingsPage() {
 	// const [userName, setUserName] = useState("Usuario Apacheta")
@@ -23,29 +24,8 @@ export default function SettingsPage() {
 	 * User
 	 * 
 	 */
-	const [userProfile, setUserProfile] = useState<User | null>(null);
-	const [loadingUser, setLoadingUser] = useState(true);
 
-	useEffect(() => {
-		const fetchProfile = async () => {
-			try {
-				setLoadingUser(true);
-				const profile = await getProfile();
-				console.log('profile ', profile);
-				setUserProfile(profile);
-			}
-			catch (error: any) {
-				if (error.digest?.includes('NEXT_REDIRECT')) {
-					// Redirect is happening, ignore
-					return;
-				}
-			} finally {
-				setLoadingUser(false);
-			}
-		}
-
-		fetchProfile();
-	}, []);
+	const { user, userBalance, loadingUser } = useDashboard();
 
 	const [notifications, setNotifications] = useState({
 		budgetAlerts: true,
@@ -82,11 +62,12 @@ export default function SettingsPage() {
 					<div>
 						<Label htmlFor="name">Nombre</Label>
 						{/* <Input id="name" value={userName} onChange={(e) => setUserName(e.target.value)} /> */}
-						<Input id="name" value={userProfile?.name} readOnly />
+						<Input id="name" value={user?.name ?? '...'} disabled />
 					</div>
 					<div>
 						<Label htmlFor="email">Email</Label>
-						<Input id="email" type="email" value={userProfile?.email} readOnly className="bg-gray-100 cursor-not-allowed" />
+						<Input id="email" type="email" value={user?.email ?? '...'} disabled className="bg-gray-100 cursor-not-allowed" />
+						{/* <Input id="email" type="email" value={user?.email} readOnly className="bg-gray-100 cursor-not-allowed" /> */}
 						<p className="text-sm text-gray-500 mt-1">El email no puede ser cambiado aquí.</p>
 					</div>
 					<Button onClick={handleSaveProfile}>Guardar Cambios</Button>

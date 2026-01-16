@@ -1,7 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import React, { createContext, useContext, useEffect, useState, ReactNode, Dispatch, SetStateAction } from 'react';
 import { getProfile } from '@/lib/actions/user';
 import { User } from '@/lib/schemas/user';
 
@@ -11,19 +10,29 @@ export interface DashboardUserContextType {
 	loadingUser: boolean;
 	error: string | null;
 	// refetchUser: () => Promise<void>;
+	setUserBalance: Dispatch<SetStateAction<number>>;
 }
-
+/**
+ * Context to be called with the type returned by the provider
+ */
 const DashboardUserContext = createContext<DashboardUserContextType | undefined>(undefined);
 
+/**
+ * Actual information provider
+ */
 export function DashboardProvider({ children }: { children: ReactNode }) {
 
+	/**
+	 * User data that used to be in componennts
+	 */
 	const [user, setUser] = useState<User | null>(null);
-
 	const [userBalance, setUserBalance] = useState<number>(0);
 	const [loadingUser, setLoadingUser] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
-
+	/**
+	 * Just fetch profile, might want to do function outside useEffect to call it
+	 */
 	useEffect(() => {
 		const fetchProfile = async () => {
 			try {
@@ -55,6 +64,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 		loadingUser,
 		error,
 		// refetchUser: fetchUserData,
+		setUserBalance
 	};
 
 	return (

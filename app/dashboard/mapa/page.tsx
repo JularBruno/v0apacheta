@@ -228,11 +228,8 @@ export default function MapaPage() {
 	const [currentStepIndex, setCurrentStepIndex] = useState(0)
 
 	const { user, userBalance, loadingUser } = useDashboard();
-
-	console.log('user ', user);
-	console.log('userBalance ', userBalance);
-	console.log('loadingUser ', loadingUser);
-
+	// Just about to be used to get user information and display map step
+	// console.log('user ', user);
 
 	const displayedImage = useMemo(() => {
 		return isMobile ? mapSteps[currentStepIndex]?.mobileImage : mapSteps[currentStepIndex]?.image || mapSteps[0].image

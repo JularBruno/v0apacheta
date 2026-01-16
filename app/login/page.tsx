@@ -12,6 +12,7 @@ import { useSearchParams } from 'next/navigation';
 import { Loading } from "@/components/ui/loading"
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from "@/components/ui/toaster"
+import AuthHeader from "@/components/auth-header"
 
 function LoginForm() {
 
@@ -25,14 +26,11 @@ function LoginForm() {
 	const callbackUrl = searchParams.get('callbackUrl') || '/dashboard/mapa';
 
 	/**
-	 * Does user come to login from a 401?
+	 * Does user come to login from a 401? Just searchParams contains expired true display toast of sesion expired
 	 */
 	const isExpired = searchParams.get('expired') === 'true';
 	useEffect(() => {
-		console.log('IS EXPIRED?');
 		if (isExpired) {
-			console.log('IS EXPIRED');
-
 			toast({
 				title: "Se venció tu sesión",
 				description: "Por favor ingresa nuevamente",
@@ -70,6 +68,7 @@ function LoginForm() {
 	return (
 		<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-white py-12 px-4 sm:px-6 lg:px-8">
 			<Toaster />
+			<AuthHeader />
 
 			<div className="w-full max-w-md space-y-8 bg-white p-8 md:p-10 rounded-xl shadow-lg">
 
