@@ -37,6 +37,10 @@ export const authConfig = {
 	providers: [],
 } satisfies NextAuthConfig;
 
+
+/**
+ * @title Adding headers on auth config. This originated from ccip errores
+ */
 const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {

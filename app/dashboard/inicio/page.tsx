@@ -1,30 +1,27 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-	CalendarDays,
-} from "lucide-react"
-import SpendingChart from "@/components/dashboard/spending-chart"
-import RecentExpenses from "@/components/dashboard/recent-expenses"
-import { cn } from "@/lib/utils"
-import { Separator } from "@/components/ui/separator"
-import { toast } from "@/hooks/use-toast"
-import { Progress } from "@/components/ui/progress" // Import Progress component
-import QuickSpendCard from "@/components/transactions/quick-spend-card"
-import { formatToBalance } from "@/lib/quick-spend-constants"
-//
-import { getProfile } from "@/lib/actions/user";
 import { useEffect, useState } from 'react';
-import { User } from "@/lib/schemas/user"
-import { Movement, Movements } from "@/lib/schemas/movement"
-import { TxType } from "@/lib/schemas/definitions";
-import { Category } from "@/lib/schemas/category";
+
 import { getCategoriesByUser } from "@/lib/actions/categories";
 import { getMovementsByUserAndFilter, deleteMovement } from "@/lib/actions/movements"
 import { getTagsByUser } from "@/lib/actions/tags"
-import { Tag, Tags } from "@/lib/schemas/tag"
-import { Loading } from "@/components/ui/loading"
+
+import { Tags } from "@/lib/schemas/tag"
+import { Movement, Movements } from "@/lib/schemas/movement"
+import { TxType } from "@/lib/schemas/definitions";
+import { Category } from "@/lib/schemas/category";
+
+import { formatToBalance } from "@/lib/quick-spend-constants"
 import { getDateStringsForFilter, getLastNMonths } from "@/lib/dateUtils"
+import { useDashboard } from '@/app/dashboard/dashboardContext';
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Loading } from "@/components/ui/loading"
+import { toast } from "@/hooks/use-toast"
+import { Progress } from "@/components/ui/progress" // Import Progress component
+import SpendingChart from "@/components/dashboard/spending-chart"
+import RecentExpenses from "@/components/dashboard/recent-expenses"
+import QuickSpendCard from "@/components/transactions/quick-spend-card"
 
 interface PaymentItem {
 	id: string
@@ -58,7 +55,8 @@ export default function InicioPage() {
 				setCats(cats);
 			}
 			catch (err: any) {
-				console.error('Failed to fetch categories: ', err);
+				// console.error('Failed to fetch categories:', err);
+				return err;
 				setCats([]);
 			}
 		};
@@ -91,7 +89,8 @@ export default function InicioPage() {
 			setAllTags(sortedTags);
 			setLoadingQuickSpendCard(false);
 		} catch (error) {
-			console.error('Failed to fetch tags:', error);
+			// console.error('Failed to fetch tags:', error);
+			return error;
 		}
 	};
 
@@ -130,29 +129,10 @@ export default function InicioPage() {
 	 * 
 	 */
 	// const [userProfile, setUserProfile] = useState<User | null>(null);
-	const [userBalance, setUserBalance] = useState<number>(0);
-	const [loadingUser, setLoadingUser] = useState(true);
+	// const [userBalance, setUserBalance] = useState<number>(0);
+	// const [loadingUser, setLoadingUser] = useState(true);
 
-	useEffect(() => {
-		const fetchProfile = async () => {
-			try {
-				setLoadingUser(true);
-				const profile = await getProfile();
-				// setUserProfile(profile);
-				setUserBalance(profile.balance);
-			}
-			catch (error: any) {
-				if (error.digest?.includes('NEXT_REDIRECT')) {
-					// Redirect is happening, ignore
-					return;
-				}
-			} finally {
-				setLoadingUser(false);
-			}
-		}
-
-		fetchProfile();
-	}, []);
+	const { user, userBalance, loadingUser, setUserBalance } = useDashboard();
 
 	/**
 	 * 
@@ -194,6 +174,7 @@ export default function InicioPage() {
 
 			const lastFive = sortedMovements.slice(0, 5); // First 5 (most recent)
 			const lastFiveAmount = lastFive.reduce((sum, item) => {
+
 				if (item.type === TxType.EXPENSE) {
 					return sum + item.amount;
 				}
@@ -205,7 +186,8 @@ export default function InicioPage() {
 
 			setLoadingMovements(false);
 		} catch (error) {
-			console.error('Failed to fetch movements:', error);
+			// console.error('Failed to fetch movements:', error);
+			return error;
 		}
 	};
 
@@ -256,6 +238,8 @@ export default function InicioPage() {
 	 * Delete latest movement based on array last item id
 	 */
 	const deleteLatestMovement = async () => {
+		setLoadingMovements(true);
+
 		const last = movements[0];
 		if (last) {
 			deleteMovement(last.id);
@@ -270,6 +254,7 @@ export default function InicioPage() {
 			title: "Movimiento borrado!",
 			description: `Se eliminó tu último movimiento`,
 		});
+		setLoadingMovements(false);
 	};
 
 	return (
