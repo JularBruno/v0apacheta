@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import React, { Suspense } from "react"
+import React, { Suspense, useEffect } from "react"
 import { useState, useTransition } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,8 +10,12 @@ import { authenticate } from '@/lib/actions/auth';
 import { useActionState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Loading } from "@/components/ui/loading"
+import { useToast } from '@/hooks/use-toast';
+import { Toaster } from "@/components/ui/toaster"
 
 function LoginForm() {
+
+	const { toast } = useToast();
 
 	/**
 	 * @description callbackUrl because form POST requires an input with name="redirectTo" value={callbackUrl}
@@ -19,6 +23,23 @@ function LoginForm() {
 	 */
 	const searchParams = useSearchParams();
 	const callbackUrl = searchParams.get('callbackUrl') || '/dashboard/mapa';
+
+	/**
+	 * Does user come to login from a 401?
+	 */
+	const isExpired = searchParams.get('expired') === 'true';
+	useEffect(() => {
+		console.log('IS EXPIRED?');
+		if (isExpired) {
+			console.log('IS EXPIRED');
+
+			toast({
+				title: "Se venció tu sesión",
+				description: "Por favor ingresa nuevamente",
+				variant: "destructive",
+			});
+		}
+	}, [isExpired, toast]);
 
 	/**
 	 * useState required to follow form state
@@ -48,6 +69,8 @@ function LoginForm() {
 
 	return (
 		<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+			<Toaster />
+
 			<div className="w-full max-w-md space-y-8 bg-white p-8 md:p-10 rounded-xl shadow-lg">
 
 				<div>

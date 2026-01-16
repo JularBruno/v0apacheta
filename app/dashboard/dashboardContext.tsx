@@ -23,7 +23,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 	const [loadingUser, setLoadingUser] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
-	const { toast } = useToast();
 
 	useEffect(() => {
 		const fetchProfile = async () => {
@@ -31,26 +30,19 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 				setLoadingUser(true);
 				setError(null); /// ??????	
 
+				// Guess this should be the first get that will catch 401
 				const profile = await getProfile();
 				setUser(profile);
 				setUserBalance(profile.balance);
 			}
 			catch (error: any) {
 
-				// Guess this should be the first get that will catch 401
 				// I guess any error would be related to api call, and instead of just catching redirect, I will show toast
 				setError(error);
 				return;
 			} finally {
 				setLoadingUser(false);
 
-				// if (error) {
-				// 	toast({
-				// 		title: "Se venció tu sesión",
-				// 		description: "Por favor ingresa nuevamente",
-				// 		variant: "destructive",
-				// 	})
-				// }
 			}
 		}
 

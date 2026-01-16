@@ -27,7 +27,7 @@ async function handleAuthError() {
 	// Sign out to clear the session
 	await signOut({ redirect: false });
 	// Now redirect - this is safe because signOut cleared everything
-	redirect('/login');
+	redirect('/login?expired=true');
 }
 */
 
@@ -47,7 +47,7 @@ export async function getMethod<T>(
 
 	if (!session?.user?.id || !session.accessToken) {
 		await signOut({ redirect: false });
-		redirect('/login');
+		redirect('/login?expired=true');
 	}
 
 	const endpoint = id ? `${urlDev}/${url}/${id}` : `${urlDev}/${url}`;
@@ -62,7 +62,7 @@ export async function getMethod<T>(
 
 	if (response.status === 401) {
 		await signOut({ redirect: false });
-		redirect('/login');
+		redirect('/login?expired=true');
 	}
 
 	if (!response.ok) {
@@ -91,7 +91,7 @@ export async function postMethod<T>(
 
 		if (!session?.user?.id || !session?.accessToken) {
 			await signOut({ redirect: false });
-			redirect('/login');
+			redirect('/login?expired=true');
 		}
 	}
 
@@ -115,7 +115,7 @@ export async function postMethod<T>(
 		// response 401 redirect to login when session expired
 		if (response.status === 401) {
 			await signOut({ redirect: false });
-			redirect('/login');
+			redirect('/login?expired=true');
 		}
 
 		if (!response.ok) {
@@ -154,7 +154,7 @@ export async function putMethod<T>(
 		const session = await getSession();
 		if (!session?.user?.id || !session?.accessToken) {
 			await signOut({ redirect: false });
-			redirect('/login');
+			redirect('/login?expired=true');
 		}
 
 		const response = await fetch(`${urlDev}/${url}/${id}`, {
@@ -168,7 +168,7 @@ export async function putMethod<T>(
 
 		if (response.status === 401) {
 			await signOut({ redirect: false });
-			redirect('/login');
+			redirect('/login?expired=true');
 		}
 
 		if (!response.ok) {
@@ -201,7 +201,7 @@ export async function deleteMethod<T>(url: string, id: string): Promise<T> {
 
 	if (!session?.user?.id || !session?.accessToken) {
 		await signOut({ redirect: false });
-		redirect('/login');
+		redirect('/login?expired=true');
 	}
 
 	try {
@@ -215,7 +215,7 @@ export async function deleteMethod<T>(url: string, id: string): Promise<T> {
 
 		if (response.status === 401) {
 			await signOut({ redirect: false });
-			redirect('/login');
+			redirect('/login?expired=true');
 		}
 
 		const data = await response.json();
