@@ -10,8 +10,10 @@ import { DashboardProvider } from '@/app/dashboard/dashboardContext';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
 	const pathname = usePathname()
+
 	const getTitle = (path: string) => {
 		switch (path) {
+			// mainMenuItems
 			case "/dashboard/mapa":
 				return "Mapa"
 			case "/dashboard/inicio":
@@ -22,10 +24,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 				return "Historial"
 			case "/dashboard/patrimonio":
 				return "Patrimonio"
+			// toolsMenuItems
+
+			case "/dashboard/ayuda":
+				return "Ayuda"
+			case "/dashboard/importar":
+				return "Importar desde Excel"
+			case "/dashboard/balance":
+				return "Acomodar Balance"
+			case "/dashboard/dividir-cuenta":
+				return "Dividir Cuenta"
+			case "/dashboard/seguidor-ahorro":
+				return "Seguidor de ahorro"
+
+			// secondaryMenuItems
 			case "/dashboard/config":
 				return "Configuración"
-			case "/dashboard/help":
-				return "Ayuda"
+			case "/dashboard/donaciones":
+				return "Donaciones"
+
 			default:
 				return "Dashboard"
 		}

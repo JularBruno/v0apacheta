@@ -10,10 +10,13 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Terminal } from "lucide-react"
+import { Terminal, Bell } from "lucide-react"
 import { getProfile } from "@/lib/actions/user"
 import { User } from "@/lib/schemas/user"
 import { useDashboard } from '@/app/dashboard/dashboardContext';
+import { toast } from "@/hooks/use-toast"
+import { getSubscriptionNotifications, postSubscriptionNotifications } from '@/lib/actions/notifications'
+import SubscriptionButtonNotification from '@/components/notifications/subscription-notification-button'
 
 export default function SettingsPage() {
 	// const [userName, setUserName] = useState("Usuario Apacheta")
@@ -31,7 +34,7 @@ export default function SettingsPage() {
 		budgetAlerts: true,
 		paymentReminders: true,
 		mapUpdates: false,
-		newsletters: true,
+		newsletters: false,
 	})
 
 	const handleSaveProfile = () => {
@@ -50,6 +53,7 @@ export default function SettingsPage() {
 			// In a real app, this would trigger a server action to delete the account
 		}
 	}
+
 
 	return (
 		<div className="space-y-6">
@@ -86,12 +90,20 @@ export default function SettingsPage() {
 					<CardTitle>Configuración de Notificaciones</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-4">
+					{/* Action buttons for PWA/Notifications */}
+					<div className="m-4 p-4 border-t border-gray-200">
+						<SubscriptionButtonNotification>
+							{/** SUPER COMPONENT FOR activating notifications and suscribing user to them */}
+						</SubscriptionButtonNotification>
+					</div>
+
 					<div className="flex items-center justify-between">
 						<Label htmlFor="budget-alerts">Alertas de Presupuesto</Label>
 						<Switch
 							id="budget-alerts"
 							checked={notifications.budgetAlerts}
 							onCheckedChange={(checked) => setNotifications({ ...notifications, budgetAlerts: checked })}
+							disabled
 						/>
 					</div>
 					<div className="flex items-center justify-between">
@@ -100,6 +112,7 @@ export default function SettingsPage() {
 							id="payment-reminders"
 							checked={notifications.paymentReminders}
 							onCheckedChange={(checked) => setNotifications({ ...notifications, paymentReminders: checked })}
+							disabled
 						/>
 					</div>
 					<div className="flex items-center justify-between">
@@ -108,6 +121,7 @@ export default function SettingsPage() {
 							id="map-updates"
 							checked={notifications.mapUpdates}
 							onCheckedChange={(checked) => setNotifications({ ...notifications, mapUpdates: checked })}
+							disabled
 						/>
 					</div>
 					<div className="flex items-center justify-between">
@@ -116,6 +130,7 @@ export default function SettingsPage() {
 							id="newsletters"
 							checked={notifications.newsletters}
 							onCheckedChange={(checked) => setNotifications({ ...notifications, newsletters: checked })}
+							disabled
 						/>
 					</div>
 				</CardContent>
