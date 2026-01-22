@@ -45,8 +45,6 @@ export async function postMovement(data: Movement): Promise<Movement> {
 		userId: session!.user.id,
 	});
 
-	console.log('restult ', result);
-
 	return result;
 }
 

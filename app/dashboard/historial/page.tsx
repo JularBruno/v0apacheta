@@ -266,7 +266,7 @@ export default function HistorialPage() {
 	 */
 	useEffect(() => {
 		// remmember this is called when movements update
-		setLoadingMovements(true);
+		// setLoadingMovements(true);
 
 		let filtered = movements;
 
@@ -301,6 +301,9 @@ export default function HistorialPage() {
 		setMovementsTotal(calculateMovementsTotal);
 		setMovementsTotalIncome(calculateMovementsTotalIncome);
 		setMovementsAverage(calculateMovementsTotal / filtered.length);
+
+		console.log("setFilteredMovements ", filtered);
+		console.log("setFilteredMovements ", filtered.find(a => a.category === null));
 
 		setFilteredMovements(filtered);
 		setLoadingMovements(false);
@@ -615,6 +618,7 @@ export default function HistorialPage() {
 
 					{/*
 					* Card content with list of movements
+					* also the total and average
 					*/}
 					<CardContent>
 
@@ -649,77 +653,99 @@ export default function HistorialPage() {
 								</div>
 							</div>
 						)}
-						{loadingMovements ? (
-							<Loading></Loading>
-						) : filteredMovements.length === 0 ? (
-							<div className="text-center py-8 text-gray-500">
-								<p>No se encontraron transacciones con los filtros aplicados</p>
-							</div>
-						) : (
-							<div className="space-y-2">
-								{filteredMovements.map((movement) => {
-									// const categoryInfo = getCategoryInfo(movement.categoryId)
-									const Icon = iconComponents[movement.category.icon as keyof typeof iconComponents]
 
-									return (
-										<Card key={movement.id} className="p-3 hover:shadow-sm transition-all md:p-4">
-											<div className="flex flex-col space-y-3">
-												{/* Top row: Badge (left) + Dropdown Menu (right) */}
-												<div className="flex items-center justify-between">
-													<span className="bg-gray-100 px-2.5 py-1 rounded-full text-xs font-medium text-gray-700">
-														{movement.category.name}
-													</span>
-													{/* Menu on top */}
-													<DropdownMenu>
-														<DropdownMenuTrigger asChild>
-															<button className="p-1 hover:bg-gray-100 rounded">
-																<MoreHorizontal className="w-4 h-4 text-gray-500" />
-															</button>
-														</DropdownMenuTrigger>
-														<DropdownMenuContent align="end">
-															<DropdownMenuItem className="text-red-600" onClick={() => deleteSelectedMovement(movement)}>
-																<Trash className="w-4 h-4 mr-2" />
-																Borrar
-															</DropdownMenuItem>
-														</DropdownMenuContent>
-													</DropdownMenu>
+						{
+							loadingMovements ? (
+								<Loading></Loading>
+							)
+								// : filteredMovements.length === 0 ? (
+								// 	<div className="text-center py-8 text-gray-500">
+								// 		<p>No se encontraron transacciones con los filtros aplicados</p>
+								// 	</div>
+								// ) 
+								: (
+									<div className="space-y-2">
+
+										{
+											filteredMovements.length === 0 ?
+												<div className="text-center py-8 text-gray-500">
+													<p>No se encontraron transacciones con los filtros aplicados</p>
 												</div>
+												:
+												filteredMovements.map((movement) => {
 
-												{/* Middle: Icon + Title */}
-												<div className="flex items-center space-x-3">
-													<div
-														className={cn(
-															"w-10 h-10 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0",
-															movement.category.color,
-														)}
-													>
-														<Icon className="w-5 h-5 text-white" />
-													</div>
-													<p className="font-semibold text-sm text-gray-900 line-clamp-2 flex-1">{movement.tag.name}</p>
-												</div>
+													// const categoryInfo = getCategoryInfo(movement.categoryId)
+													// const Icon = iconComponents[movement.category.icon as keyof typeof iconComponents]
+													const Icon =
+														iconComponents[
+														(movement.category?.icon as keyof typeof iconComponents) ?? "Tag"
+														] || iconComponents["Tag"];
 
-												{/* Bottom row: Date (left) + Amount (right) */}
-												<div className="flex items-center justify-between">
-													<span className="text-xs text-gray-500">
-														{/* {formatDateNoYear(movement.createdAt)} */}
+													/** FILTERED REMOVED CATEGORIES TEMPORARY SOLUTION */
+													if (!movement.category) {
+														console.log("null category");
+														return;
+													}
 
-														{formatDate(movement.createdAt)}
-													</span>
-													<span
-														className={
-															movement.type === TxType.INCOME ? "font-bold text-lg text-green-600" : "font-bold text-lg text-gray-900"
-														}
-													>
-														{movement.type === TxType.INCOME ? "+" : "-"}
-														{formatToBalance(movement.amount)}
-													</span>
-												</div>
-											</div>
-										</Card>
-									)
-								})}
-							</div>
-						)}
+													return (
+														<Card key={movement.id} className="p-3 hover:shadow-sm transition-all md:p-4">
+															<div className="flex flex-col space-y-3">
+																{/* Top row: Badge (left) + Dropdown Menu (right) */}
+																<div className="flex items-center justify-between">
+																	<span className="bg-gray-100 px-2.5 py-1 rounded-full text-xs font-medium text-gray-700">
+																		{movement.category?.name}
+																	</span>
+																	{/* Menu on top */}
+																	<DropdownMenu>
+																		<DropdownMenuTrigger asChild>
+																			<button className="p-1 hover:bg-gray-100 rounded">
+																				<MoreHorizontal className="w-4 h-4 text-gray-500" />
+																			</button>
+																		</DropdownMenuTrigger>
+																		<DropdownMenuContent align="end">
+																			<DropdownMenuItem className="text-red-600" onClick={() => deleteSelectedMovement(movement)}>
+																				<Trash className="w-4 h-4 mr-2" />
+																				Borrar
+																			</DropdownMenuItem>
+																		</DropdownMenuContent>
+																	</DropdownMenu>
+																</div>
+
+																{/* Middle: Icon + Title */}
+																<div className="flex items-center space-x-3">
+																	<div
+																		className={cn(
+																			"w-10 h-10 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0",
+																			movement.category.color,
+																		)}
+																	>
+																		<Icon className="w-5 h-5 text-white" />
+																	</div>
+																	<p className="font-semibold text-sm text-gray-900 line-clamp-2 flex-1">{movement.tag.name}</p>
+																</div>
+
+																{/* Bottom row: Date (left) + Amount (right) */}
+																<div className="flex items-center justify-between">
+																	<span className="text-xs text-gray-500">
+																		{/* {formatDateNoYear(movement.createdAt)} */}
+
+																		{formatDate(movement.createdAt)}
+																	</span>
+																	<span
+																		className={
+																			movement.type === TxType.INCOME ? "font-bold text-lg text-green-600" : "font-bold text-lg text-gray-900"
+																		}
+																	>
+																		{movement.type === TxType.INCOME ? "+" : "-"}
+																		{formatToBalance(movement.amount)}
+																	</span>
+																</div>
+															</div>
+														</Card>
+													)
+												})}
+									</div>
+								)}
 					</CardContent>
 				</Card>
 			</div>

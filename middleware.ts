@@ -20,7 +20,6 @@ export const authConfig = {
 
 			// If on dashboard and not logged in, redirect to login
 			if (isOnDashboard && !isLoggedIn) {
-				console.log('BUG');
 				const loginUrl = new URL('/login', nextUrl.origin);
 				loginUrl.searchParams.set('callbackUrl', nextUrl.pathname);
 				return NextResponse.redirect(loginUrl);
