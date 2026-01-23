@@ -9,7 +9,11 @@ import { getSubscriptionNotifications, postSubscriptionNotifications, deleteSubs
 import { Subscription, Subscriptions } from '@/lib/schemas/subscriptionNotification'
 import { Loading } from "../ui/loading"
 
-{/** SUPER COMPONENT FOR activating notifications and suscribing user to them */ }
+{/** 
+* SUPER COMPONENT FOR activating notifications and suscribing user to them 
+* might be required to be differently on implementation, but an actual button to show on map and settings now work
+* 
+*/ }
 export default function SubscriptionButtonNotification() {
 
 	/**
@@ -48,54 +52,67 @@ export default function SubscriptionButtonNotification() {
 	}
 
 	/**
+	 * This is the only comment that should be writen READ THIS
+	 * Get browser subscription and user subscriptions
+	 * compare subscriptions for checking if enpoints match, then user is already suscribed
+	 * mounted is because useffect runs twice or something
+	 */
+	async function initializeNotifications(mounted: boolean) {
+		try {
+			// Run both in parallel
+			const [userSubscriptions, sub] = await Promise.all([
+				getSubscriptionNotifications(), // get user subscriptions
+				registerServiceWorker() // get browser subscription
+			])
+
+			// if first time useffect is used sinnce it runs 2
+			if (mounted) {
+				setUserSubscriptions(userSubscriptions) // set geted user already suscribed devices
+				setSubscription(sub) // set the device information from registering service worker, with like endpoint and required things to save on db and use to send nots
+				if (!userSubscriptions.length) {
+					setIsRegistered(false);
+				}
+
+				const subJSON = sub?.toJSON()
+				// COMPARE SUBSCRIPTIONS TO GET IF USER SUBSCRIBED
+				for (let index = 0; index < userSubscriptions.length; index++) {
+					const element = userSubscriptions[index];
+					if (element.endpoint === subJSON?.endpoint) {
+						setIsRegistered(true);
+					}
+				}
+			}
+		} catch (error) {
+			console.error('Failed:', error)
+		} finally {
+			if (mounted) setIsNotificationsLoading(false)
+			//
+		}
+	}
+
+	/**
 	 * First useEffect
 	 */
 	useEffect(() => {
 		let mounted = true
 
-		const initializeNotifications = async () => {
-			try {
-				// Run both in parallel
-				const [userSubscriptions, sub] = await Promise.all([
-					getSubscriptionNotifications(),
-					registerServiceWorker()
-				])
-
-				if (mounted) {
-					setUserSubscriptions(userSubscriptions) // set geted user already suscribed devices
-					setSubscription(sub) // set the device information from registering service worker, with like endpoint and required things to save on db and use to send nots
-					if (!userSubscriptions.length) {
-						setIsRegistered(false);
-					}
-
-					const subJSON = sub?.toJSON()
-					for (let index = 0; index < userSubscriptions.length; index++) {
-						const element = userSubscriptions[index];
-						if (element.endpoint === subJSON?.endpoint) {
-							setIsRegistered(true);
-						}
-					}
-				}
-			} catch (error) {
-				console.error('Failed:', error)
-			} finally {
-				if (mounted) setIsNotificationsLoading(false)
-				//
+		const init = async () => {
+			if ('serviceWorker' in navigator && 'PushManager' in window) {
+				setIsSupported(true)
+				await initializeNotifications(mounted)
+			} else {
+				setIsSupported(false)
+				setIsNotificationsLoading(false)
 			}
 		}
 
-		if ('serviceWorker' in navigator && 'PushManager' in window) {
-			setIsSupported(true)
-			initializeNotifications()
-		} else {
-			setIsNotificationsLoading(false)
-			setIsSupported(false)
-		}
+		init()
 
 		return () => {
 			mounted = false
 		}
 	}, [])
+
 
 	/**
 	 * Just the service worker being registered
@@ -150,13 +167,17 @@ export default function SubscriptionButtonNotification() {
 	async function unsubscribeFromPush() {
 
 		try {
+			// check here quickly
 			if (isRegistered) {
+
+				// find id for db
 				const subscriptionOfThisDevice = userSubscriptions ? userSubscriptions.find(sub => sub.endpoint === subscription?.endpoint) : null;
 				if (subscriptionOfThisDevice) {
-					await deleteSubscriptionNotifications(subscriptionOfThisDevice.id);
-					setUserSubscriptions(prev => prev ? prev.filter(item => item.id === subscriptionOfThisDevice.id) : [])
-					console.log('userSubscriptions ', userSubscriptions);
 
+					// delete
+					await deleteSubscriptionNotifications(subscriptionOfThisDevice.id);
+					// remove from state array
+					setUserSubscriptions(prev => prev ? prev.filter(item => item.id === subscriptionOfThisDevice.id) : [])
 				}
 
 				setIsRegistered(false);

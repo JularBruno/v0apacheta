@@ -21,3 +21,7 @@ Also any setup requires an .env of project Neptuno(API).
 
 `AUTH_TRUST_HOST`
 - Remmember to add api as trust host
+
+# FOR PROD
+
+remmember to run pnpm install
