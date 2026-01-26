@@ -22,6 +22,11 @@ Also any setup requires an .env of project Neptuno(API).
 `AUTH_TRUST_HOST`
 - Remmember to add api as trust host
 
+`NEXT_PUBLIC_VAPID_PUBLIC_KEY`
+`VAPID_PRIVATE_KEY`
+`VAPID_CONTACT`
+- this is all for push notifications on browser, can be hardcoded
+
 # FOR PROD
 
-remmember to run pnpm install
+Remmember to run `pnpm install` for proper deploy on Railway
