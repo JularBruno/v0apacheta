@@ -89,10 +89,10 @@ export async function postMethod<T>(
 	if (requiresAuth) {
 		const session = await getSession();
 
-		if (!session?.user?.id || !session?.accessToken) {
-			await signOut({ redirect: false });
-			redirect('/login?expired=true');
-		}
+		// if (!session?.user?.id || !session?.accessToken) {
+		// 	await signOut({ redirect: false });
+		// 	redirect('/login?expired=true');
+		// }
 	}
 
 	try {

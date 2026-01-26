@@ -17,7 +17,7 @@ export default function NotFound() {
 					<Button asChild>
 						<Link href="/dashboard/mapa">
 							<ArrowLeft className="w-4 h-4 mr-2" />
-							Volver al inicio
+							Volver al mapa
 						</Link>
 					</Button>
 				</div>

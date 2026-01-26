@@ -30,6 +30,7 @@ export const authConfig = {
 				return NextResponse.redirect(new URL('/dashboard/inicio', nextUrl));
 			}
 
+
 			// Allow everything else
 			return true;
 		},
@@ -64,7 +65,15 @@ export default auth((req) => {
 
 /**
  * Middleware that protects all routes except API, static files, and images.
+ * 
+ * NOT DOING this anymore, it just checks paths that must be protected
  */
 export const config = {
-	matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)',], // this has changed a few times, it is working properly but on previous github versions there was a clearer execution of this regex
+	// matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)',], // this has changed a few times, it is working properly but on previous github versions there was a clearer execution of this regex
+
+	matcher: [
+		'/dashboard/:path*',
+		'/login',
+		'/onboarding',
+	],
 };

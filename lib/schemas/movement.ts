@@ -26,7 +26,8 @@ export type Movements = Movement & {
 	id: string;
 	lastBalance: number;
 	createdAt: string; // comes as ISO string from API (e.g., "2025-10-28T19:53:28.725Z")
-	updatedAt: string;
+	updatedAt?: string;
+	deletedAt?: string;
 	user: User;
 	tag: Tags;
 	category: Category;

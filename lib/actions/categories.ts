@@ -21,7 +21,7 @@ export async function getCategoriesByUser(): Promise<Array<Category>> {
 }
 
 export async function deleteCategoryById(id: string) {
-	return await deleteMethod<Category>(url, id);
+	return await deleteMethod<Category>(url, id); // REMEMBER THIS IS SOFT DELETE ON API
 }
 
 export async function postCategory(data: {
@@ -60,3 +60,4 @@ export async function putCategory(
 
 	return result;
 }
+

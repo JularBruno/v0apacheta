@@ -693,7 +693,7 @@ export default function HistorialPage() {
 																{/* Top row: Badge (left) + Dropdown Menu (right) */}
 																<div className="flex items-center justify-between">
 																	<span className="bg-gray-100 px-2.5 py-1 rounded-full text-xs font-medium text-gray-700">
-																		{movement.category?.name}
+																		{movement.category?.name} {movement.category?.deletedAt ? ' (Categoría borrada en ' + formatDateNoYear(movement.category?.deletedAt) + ')' : ''}
 																	</span>
 																	{/* Menu on top */}
 																	<DropdownMenu>
