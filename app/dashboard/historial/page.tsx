@@ -24,7 +24,7 @@ import { TxType } from "@/lib/schemas/definitions";
 import { Category } from "@/lib/schemas/category";
 import { getCategoriesByUser, deleteCategoryById } from "@/lib/actions/categories";
 import { deleteMovement, getMovementsByUserAndFilter, postMovement } from "@/lib/actions/movements";
-import { iconComponents, quickFilters, formatNumberToInput, formatToBalance } from "@/lib/quick-spend-constants";
+import { quickFilters, formatNumberToInput, formatToBalance } from "@/lib/quick-spend-constants";
 import { formatDate, getDateStringsForFilter, formatDateNoYear, getLastNDays, getLastNMonths, getMonthRange, getMonthName } from "@/lib/dateUtils";
 import { PeriodSelector } from "@/components/transactions/period-selector"
 import { toast } from "@/hooks/use-toast"
@@ -36,6 +36,7 @@ import {
 	DropdownMenuItem
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
+import IconComponent from "@/components/transactions/icon-component"
 
 export default function HistorialPage() {
 
@@ -139,7 +140,6 @@ export default function HistorialPage() {
 
 		setRefreshTrigger(prev => prev + 1);
 	};
-
 
 	/**
 	 * API Fetch and api filters
@@ -358,7 +358,6 @@ export default function HistorialPage() {
 											{catsEmpty
 												.filter((cat) => cat.type == TxType.EXPENSE)
 												.map((category) => {
-													const Icon = iconComponents[category.icon as keyof typeof iconComponents]
 													const amountUsedThisMonth = filteredMovements.filter(m => m.categoryId === category.id).reduce((sum, m) => sum + m.amount, 0);
 
 													// const spent = filteredTransactions
@@ -377,7 +376,7 @@ export default function HistorialPage() {
 																			category.color,
 																		)}
 																	>
-																		<Icon className="w-5 h-5 text-white" />
+																		<IconComponent icon={category?.icon} />
 																	</div>
 																	<div>
 																		<p className="font-medium text-sm">{category.name}</p>
@@ -433,7 +432,6 @@ export default function HistorialPage() {
 										catsEmpty
 											// .filter((cat) => cat.budget > 0)
 											.map((category) => {
-												const Icon = iconComponents[category.icon as keyof typeof iconComponents]
 												const amountUsedThisMonth = filteredMovements.filter(m => m.categoryId === category.id).reduce((sum, m) => sum + m.amount, 0);
 
 												// const spent = filteredTransactions
@@ -449,8 +447,7 @@ export default function HistorialPage() {
 																<div
 																	className={cn("w-8 h-8 rounded-lg flex items-center justify-center", category.color)}
 																>
-																	{/* <category.icon className="w-4 h-4 text-white" /> */}
-																	<Icon className="w-4 h-4 text-white" />
+																	<IconComponent icon={category?.icon} className="w-4 h-4 text-white" />
 																</div>
 																<div>
 																	<p className="font-medium text-sm">{category.name}</p>
@@ -674,19 +671,6 @@ export default function HistorialPage() {
 												:
 												filteredMovements.map((movement) => {
 
-													// const categoryInfo = getCategoryInfo(movement.categoryId)
-													// const Icon = iconComponents[movement.category.icon as keyof typeof iconComponents]
-													const Icon =
-														iconComponents[
-														(movement.category?.icon as keyof typeof iconComponents) ?? "Tag"
-														] || iconComponents["Tag"];
-
-													/** FILTERED REMOVED CATEGORIES TEMPORARY SOLUTION */
-													if (!movement.category) {
-														console.log("null category");
-														return;
-													}
-
 													return (
 														<Card key={movement.id} className="p-3 hover:shadow-sm transition-all md:p-4">
 															<div className="flex flex-col space-y-3">
@@ -719,7 +703,7 @@ export default function HistorialPage() {
 																			movement.category.color,
 																		)}
 																	>
-																		<Icon className="w-5 h-5 text-white" />
+																		<IconComponent icon={movement.category?.icon} className="w-5 h-5 text-white" />
 																	</div>
 																	<p className="font-semibold text-sm text-gray-900 line-clamp-2 flex-1">{movement.tag.name}</p>
 																</div>

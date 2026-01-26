@@ -78,39 +78,6 @@ export const availableColors = [
 	{ id: 'bg-violet-500', class: 'bg-violet-500', name: 'Violeta' },
 ];
 
-/**
- * REFERENCE FOR easy use in app of icons saved in API
- */
-export const iconComponents = {
-	Utensils,
-	ShoppingCart,
-	Car,
-	Home,
-	Gamepad2,
-	Zap,
-	Gift,
-	Sparkles,
-	Briefcase,
-	Plane,
-	DollarSign,
-	Coffee,
-	Heart,
-	Music,
-	Camera,
-	Book,
-	Dumbbell,
-	Palette,
-	Wrench,
-	Smartphone,
-	Laptop,
-	Settings,
-	Plus,
-	Edit,
-	Trash2,
-	X,
-	Tag
-};
-
 export const quickFilters = [
 	{ id: "today", label: "Hoy" },
 	{ id: "week", label: "Última semana" },

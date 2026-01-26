@@ -284,6 +284,8 @@ export default function QuickSpendCard({
 		clearErrors("tagName");
 	}
 
+	// reference to amount input! to be focused when required
+	const inputAmountRef = useRef<HTMLInputElement>(null)
 	// Selecting tag and its actions
 	const selectTag = (id?: string) => { // when removing the optional id, TS yells at calling without param, IT SHOULD be okey since makes sense when creating new tag after submit
 		const t = allTags.find((tg) => tg.id === id)
@@ -292,6 +294,7 @@ export default function QuickSpendCard({
 		setTagId(t.id)
 		setValue('amount', t.amount || 0); // Update form amount too
 		setValue('tagName', t.name); // Update form amount too
+		inputAmountRef.current?.focus()
 
 		// match category and type to tag
 		const cat = cats.find((c) => c.id === t.categoryId)
@@ -442,6 +445,7 @@ export default function QuickSpendCard({
 						items={shownCategories}
 						categoryId={categoryId}
 						setCategory={setCategory}
+						loading={movementLoading} // set diabled on loading movement submit
 					/>
 
 					{/* Tags */}
@@ -460,6 +464,8 @@ export default function QuickSpendCard({
 						onInputKeyDown={handleTagKeyDown}
 
 						register={register}
+
+						loading={movementLoading} // set diabled on loading movement submit
 					/>
 
 					{/* Amount */}
@@ -469,7 +475,7 @@ export default function QuickSpendCard({
 							<BalanceInput
 								errors={errors}
 								clearErrors={clearErrors}
-
+								inputAmountRef={inputAmountRef}
 								control={control}
 							/>
 						</div>

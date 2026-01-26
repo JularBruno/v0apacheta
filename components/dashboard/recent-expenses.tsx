@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Movements } from "@/lib/schemas/movement";
 import { Category } from "@/lib/schemas/category";
-import { iconComponents, formatToBalance } from "@/lib/quick-spend-constants";
+import { formatToBalance } from "@/lib/quick-spend-constants";
 import { formatDateNoYear } from "@/lib/dateUtils";
 import { Loading } from "../ui/loading";
 import { TxType } from "@/lib/schemas/definitions";
 import { Badge } from "@/components/ui/badge"
 import { Utensils, ShoppingCart, Car, Gamepad2, TrendingUp } from "lucide-react"
+import IconComponent from "../transactions/icon-component";
 
 /**
  * 
@@ -75,8 +76,6 @@ export default function RecentExpenses({
 						<div className="space-y-4">
 
 							{movements.map((movement) => {
-								// const categoryInfo = getCategoryInfo(movement.categoryId)
-								const Icon = iconComponents[movement.category.icon as keyof typeof iconComponents]
 
 								return (
 
@@ -108,12 +107,13 @@ export default function RecentExpenses({
 											<div
 												className={cn("w-9 h-9 rounded-lg flex items-center justify-center shrink-0", movement.category.color)}
 											>
-												<Icon className="w-4 h-4 text-white" />
+												<IconComponent icon={movement.category?.icon} className="w-4 h-4 text-white" />
 											</div>
 											<div className="min-w-0 flex-1">
 												<p className="font-medium text-gray-900 text-sm truncate">{movement.description}</p>
 												<p className="text-xs text-gray-500">
-													{movement.category.name} • {formatDateNoYear(movement.createdAt)}
+													{/* {movement.category.name} • {formatDateNoYear(movement.createdAt)} */}
+													{movement.category?.name} {movement.category?.deletedAt ? ' (Categoría eliminada)' : ''} • {formatDateNoYear(movement.createdAt)}
 												</p>
 											</div>
 										</div>

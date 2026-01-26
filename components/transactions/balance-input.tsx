@@ -7,9 +7,10 @@ interface BalanceInputProps {
 	errors: FieldErrors;
 	clearErrors: UseFormClearErrors<any>;
 	control: Control<any>; // useController gives you more control. Instead of spreading props, you get an object with field that contains the current value and methods to update it.
+	inputAmountRef: React.RefObject<HTMLInputElement | null>
 }
 
-export function BalanceInput({ errors, clearErrors, control }: BalanceInputProps) {
+export function BalanceInput({ errors, clearErrors, control, inputAmountRef }: BalanceInputProps) {
 
 	const { field } = useController({
 		name: 'amount', // here we setting up input just like using register
@@ -96,6 +97,7 @@ export function BalanceInput({ errors, clearErrors, control }: BalanceInputProps
 					className="pl-8 h-12 text-xl font-semibold md:text-2xl"
 					placeholder="1.000,00"
 					onKeyDown={() => clearErrors('amount')}
+					ref={inputAmountRef}
 				/>
 			</div>
 			{errors?.amount && (

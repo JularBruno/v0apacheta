@@ -23,7 +23,8 @@ import { postCategory, putCategory } from "@/lib/actions/categories";
 import { Tag } from "@/lib/schemas/tag";
 import { TxType } from "@/lib/schemas/definitions";
 
-import { availableColors, availableIcons, iconComponents } from "../../lib/quick-spend-constants"
+import { availableColors, availableIcons } from "../../lib/quick-spend-constants"
+import IconComponent from "./icon-component";
 
 type CategoryFormData = z.infer<typeof categorySchema>;
 
@@ -282,9 +283,6 @@ export function QuickSpendCategoryDialogs({
 					</DialogHeader>
 					<div className="space-y-4 py-2 max-h-96 overflow-y-auto">
 						{cats.map((cat) => {
-							// const Icon = cat.icon
-							const Icon = iconComponents[cat.icon as keyof typeof iconComponents] // MAPPING icon to category string
-
 							const isEditing = editingCategory?.id === cat.id
 							const relatedTagsCount = allTags.filter((t) => t.categoryId === cat.id).length
 
@@ -294,7 +292,7 @@ export function QuickSpendCategoryDialogs({
 										<span
 											className={cn("w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0", cat.color)}
 										>
-											<Icon className="w-4 h-4 text-white" />
+											<IconComponent icon={cat?.icon} className="w-4 h-4 text-white" />
 										</span>
 										<div className="min-w-0 flex-1">
 											<p className="font-medium truncate">{cat.name}</p>
