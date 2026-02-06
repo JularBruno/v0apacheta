@@ -4,6 +4,7 @@ import Credentials from 'next-auth/providers/credentials';
 import { z } from 'zod';
 import 'next-auth/jwt';
 import { Router } from 'next/router';
+import { revalidateTag } from 'next/cache'
 
 /**
  * @title url for dynamic env, based on how npm run was executed
@@ -101,6 +102,10 @@ export const { auth, signIn, signOut } = NextAuth({
 					}
 
 					const data = await response.json();
+
+					console.log('about to revalidate user on auth');
+
+					revalidateTag('user'); // get user from api!
 
 					// Return a user object that NextAuth can use
 					return {

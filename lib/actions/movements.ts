@@ -1,8 +1,9 @@
 'use server';
 
-import { getSession, getMethod, postMethod, deleteMethod } from './utils';
+import { getSession, getMethod, postMethod, deleteMethod, getMethodWithoutSession } from './utils';
 import { Movement, Movements } from '../schemas/movement';
 import { TxType } from '../schemas/definitions';
+import { revalidateTag, unstable_cache } from 'next/cache';
 
 const url = 'movement';
 
@@ -12,6 +13,38 @@ type MovementFilters = {
 	startDate?: string; // ISO date string
 	endDate?: string;
 };
+
+export async function getMovementsByUserAndFilterCache(
+	filters?: MovementFilters,
+): Promise<Array<Movements>> {
+	const session = await getSession();
+
+	// Build query params
+	const params = new URLSearchParams({
+		userId: session!.user.id,
+	});
+
+	if (filters?.categoryId) params.append('categoryId', filters.categoryId);
+	if (filters?.tagId) params.append('tagId', filters.tagId);
+	if (filters?.startDate) params.append('startDate', filters.startDate);
+	if (filters?.endDate) params.append('endDate', filters.endDate);
+
+	const url = `movement?${params.toString()}`;
+
+	// return await getMethodWithoutSession<Array<Movements>>(url, session);
+	console.log('isoncache');
+
+	const getMovementsCache = unstable_cache(async () => {
+		console.log('isoncache');
+
+		return await getMethodWithoutSession<Array<Movements>>(url, session);
+	},
+		['movements-api'],
+		{ revalidate: 3600, tags: ['movements'] }
+	);
+
+	return await getMovementsCache();
+}
 
 export async function getMovementsByUserAndFilter(
 	filters?: MovementFilters,
@@ -44,6 +77,9 @@ export async function postMovement(data: Movement): Promise<Movement> {
 		...data,
 		userId: session!.user.id,
 	});
+
+	// i didnt want to di because it might be expensive, /dashobard/inicio updates balance
+	// revalidateTag('user'); // get user from api! to acutally update context balance
 
 	return result;
 }

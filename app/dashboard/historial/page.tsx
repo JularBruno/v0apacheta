@@ -19,10 +19,10 @@ import {
 import { cn } from "@/lib/utils"
 import TransactionDonutChart from "@/components/dashboard/transaction-donut-chart"
 import { useEffect, useState } from "react";
-import { Movement, movementSchema, MovementFormData, Movements } from "@/lib/schemas/movement";
+import { Movements } from "@/lib/schemas/movement";
 import { TxType } from "@/lib/schemas/definitions";
 import { Category } from "@/lib/schemas/category";
-import { getCategoriesByUser, deleteCategoryById } from "@/lib/actions/categories";
+import { getCategoriesByUser } from "@/lib/actions/categories";
 import { deleteMovement, getMovementsByUserAndFilter, postMovement } from "@/lib/actions/movements";
 import { quickFilters, formatNumberToInput, formatToBalance } from "@/lib/quick-spend-constants";
 import { formatDate, getDateStringsForFilter, formatDateNoYear, getLastNDays, getLastNMonths, getMonthRange, getMonthName } from "@/lib/dateUtils";
@@ -37,6 +37,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 import IconComponent from "@/components/transactions/icon-component"
+import { unstable_cache } from "next/cache"
+import { getSession } from "@/lib/actions/utils"
 
 export default function HistorialPage() {
 
@@ -45,11 +47,9 @@ export default function HistorialPage() {
 	const [searchTerm, setSearchTerm] = useState("")
 	const [selectedCategory, setSelectedCategory] = useState("all")
 	const [selectedType, setSelectedType] = useState("all")
-
 	const [selectedDateFilter, setSelectedDateFilter] = useState("month")
 
 	const [showFilters, setShowFilters] = useState(false)
-
 	// Hide or show category on mobile
 	const [showCategoryBreakdown, setShowCategoryBreakdown] = useState(false)
 
@@ -111,12 +111,14 @@ export default function HistorialPage() {
 
 	// ALl movements from api. Filtered by default one month ago 
 	const [movements, setMovements] = useState<Movements[]>([]);
+	// All movements filtered in UI for selectedCategory, selectedType, and searchTerm
+	const [filteredMovements, setFilteredMovements] = useState<Movements[]>([])
+
 	// random data thats cool set on MovementsFetch
 	const [movementsTotal, setMovementsTotal] = useState<number>(0);
 	const [movementsTotalIncome, setMovementsTotalIncome] = useState<number>(0);
 	const [movementsAverage, setMovementsAverage] = useState<number>(0);
-	// All movements filtered in UI for selectedCategory, selectedType, and searchTerm
-	const [filteredMovements, setFilteredMovements] = useState<Movements[]>([])
+
 	// refresh trigger for fetching movements on deletion on when refresh required
 	const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -141,128 +143,144 @@ export default function HistorialPage() {
 		setRefreshTrigger(prev => prev + 1);
 	};
 
+
+
 	/**
 	 * API Fetch and api filters
 	 */
-	useEffect(() => {
-		setLoadingMovements(true);
 
-		const fetchData = async () => {
-			try {
-				// Make pagination based on time periods
-				let filters: any = {
-				};
+	const fetchData = async () => {
+		try {
+			// Make pagination based on time periods
+			let filters: any = {
+			};
 
-				// Bring based on filter, since is the best option for pagination
-				switch (selectedDateFilter) { // default one is "month"
-					case quickFilters[0].id: { // last 24 hours (yesterday to now)
+			// Bring based on filter, since is the best option for pagination
+			switch (selectedDateFilter) { // default one is "month"
+				case quickFilters[0].id: { // last 24 hours (yesterday to now)
 
-						// For last 24 hours
-						const { start, end } = getLastNDays(1);
-						const result = getDateStringsForFilter(start, end);
-						filters.startDate = result.startDate;
-						filters.endDate = result.endDate;
-						break;
-					}
-
-					case quickFilters[1].id: { // last week (7 days ago to now)
-						const { start, end } = getLastNDays(7);
-						const result = getDateStringsForFilter(start, end);
-						filters.startDate = result.startDate;
-						filters.endDate = result.endDate;
-						break;
-					}
-
-					case quickFilters[2].id: {// last month (30 days ago to now)
-						const { start, end } = getLastNMonths(1);
-						const result = getDateStringsForFilter(start, end);
-						filters.startDate = result.startDate;
-						filters.endDate = result.endDate;
-						break;
-					}
-
-					case quickFilters[3].id: {// last 3 months (90 days ago to now)
-
-						const { start, end } = getLastNMonths(6);
-						const result = getDateStringsForFilter(start, end);
-						filters.startDate = result.startDate;
-						filters.endDate = result.endDate;
-
-						break;
-					}
-
-					case quickFilters[3].id: {// last 6 months TEST
-
-						const { start, end } = getLastNMonths(3);
-						const result = getDateStringsForFilter(start, end);
-						filters.startDate = result.startDate;
-						filters.endDate = result.endDate;
-
-						break;
-					}
-
-					case quickFilters[4].id: // TEST: EVERY DATES
-						// filters.startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-						filters.startDate = null;
-						filters.endDate = null;
-
-						break;
-
-					default:
-						// Handle specific month selection: "month-9-2024"
-						if (selectedDateFilter.startsWith("month-")) {
-							const [_, monthStr, yearStr] = selectedDateFilter.split("-");
-
-							const month = parseInt(monthStr, 10); // 9 = October (0-indexed)
-							const year = parseInt(yearStr, 10);
-
-							const { start, end } = getMonthRange(month, year);
-							const result = getDateStringsForFilter(start, end);
-							filters.startDate = result.startDate;
-							filters.endDate = result.endDate;
-						}
-						break;
+					// For last 24 hours
+					const { start, end } = getLastNDays(1);
+					const result = getDateStringsForFilter(start, end);
+					filters.startDate = result.startDate;
+					filters.endDate = result.endDate;
+					break;
 				}
 
-				// get movement with filters for API
-				const movements = await getMovementsByUserAndFilter(filters)
+				case quickFilters[1].id: { // last week (7 days ago to now)
+					const { start, end } = getLastNDays(7);
+					const result = getDateStringsForFilter(start, end);
+					filters.startDate = result.startDate;
+					filters.endDate = result.endDate;
+					break;
+				}
 
-				// sort by date because these come unsorted from the backend
-				let sortedMovements = movements.sort(
-					(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-				);
+				case quickFilters[2].id: {// last month (30 days ago to now)
+					const { start, end } = getLastNMonths(1);
+					const result = getDateStringsForFilter(start, end);
+					filters.startDate = result.startDate;
+					filters.endDate = result.endDate;
+					break;
+				}
 
-				let calculateMovementsTotal = movements.reduce((sum, item) => {
-					if (item.type === TxType.EXPENSE) {
-						return sum + item.amount;
+				case quickFilters[3].id: {// last 3 months (90 days ago to now)
+
+					const { start, end } = getLastNMonths(6);
+					const result = getDateStringsForFilter(start, end);
+					filters.startDate = result.startDate;
+					filters.endDate = result.endDate;
+
+					break;
+				}
+
+				case quickFilters[3].id: {// last 6 months TEST
+
+					const { start, end } = getLastNMonths(3);
+					const result = getDateStringsForFilter(start, end);
+					filters.startDate = result.startDate;
+					filters.endDate = result.endDate;
+
+					break;
+				}
+
+				case quickFilters[4].id: // TEST: EVERY DATES
+					// filters.startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+					filters.startDate = null;
+					filters.endDate = null;
+
+					break;
+
+				default:
+					// Handle specific month selection: "month-9-2024"
+					if (selectedDateFilter.startsWith("month-")) {
+						const [_, monthStr, yearStr] = selectedDateFilter.split("-");
+
+						const month = parseInt(monthStr, 10); // 9 = October (0-indexed)
+						const year = parseInt(yearStr, 10);
+
+						const { start, end } = getMonthRange(month, year);
+						const result = getDateStringsForFilter(start, end);
+						filters.startDate = result.startDate;
+						filters.endDate = result.endDate;
 					}
-					return sum;
-				}, 0);
-
-				let calculateMovementsTotalIncome = movements.reduce((sum, item) => {
-					if (item.type === TxType.INCOME) {
-						return sum + item.amount;
-					}
-					return sum;
-				}, 0);
-
-				setMovements(sortedMovements);
-				setFilteredMovements(sortedMovements);
-				setMovementsTotal(calculateMovementsTotal);
-				setMovementsTotalIncome(calculateMovementsTotalIncome);
-				setMovementsAverage(calculateMovementsTotal / movements.length);
-			} catch (error) {
-				console.error('Failed to fetch movements:', error);
+					break;
 			}
-		};
 
-		fetchData();
-	}, [selectedDateFilter, refreshTrigger]);
+			// get movement with filters for API
+			const movements = await getMovementsByUserAndFilter(filters)
+			// const session = await getSession();
+
+			// const getMovementsCache = unstable_cache(async () => {
+			// 	return await getMovementsByUserAndFilter(filters)
+			// },
+			// 	['movements-api'],
+			// 	{ revalidate: 3600, tags: ['movements'] }
+			// );
+
+			// const movements = await getMovementsCache();
+
+			// sort by date because these come unsorted from the backend
+			let sortedMovements = movements.sort(
+				(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+			);
+
+			let calculateMovementsTotal = movements.reduce((sum, item) => {
+				if (item.type === TxType.EXPENSE) {
+					return sum + item.amount;
+				}
+				return sum;
+			}, 0);
+
+			let calculateMovementsTotalIncome = movements.reduce((sum, item) => {
+				if (item.type === TxType.INCOME) {
+					return sum + item.amount;
+				}
+				return sum;
+			}, 0);
+
+			// setMovements(sortedMovements);
+			// setFilteredMovements(sortedMovements);
+			setMovementsTotal(calculateMovementsTotal);
+			setMovementsTotalIncome(calculateMovementsTotalIncome);
+			setMovementsAverage(calculateMovementsTotal / movements.length);
+
+			return sortedMovements;
+		} catch (error) {
+			console.error('Failed to fetch movements:', error);
+		}
+	};
+
+	useEffect(() => {
+		const load = async () => {
+			const movements: any = await fetchData()
+			setMovements(movements)
+		}
+		load();
+	}, [selectedDateFilter, refreshTrigger])
+
 
 	/**
-	 * 
 	 * UI FILTERS for getting movements called by useeffect when filtering 
-	 * 
 	 */
 	useEffect(() => {
 		// remmember this is called when movements update
@@ -302,10 +320,11 @@ export default function HistorialPage() {
 		setMovementsTotalIncome(calculateMovementsTotalIncome);
 		setMovementsAverage(calculateMovementsTotal / filtered.length);
 
-		console.log("setFilteredMovements ", filtered);
-		console.log("setFilteredMovements ", filtered.find(a => a.category === null));
+		// console.log("setFilteredMovements ", filtered);
+		// console.log("setFilteredMovements ", filtered.find(a => a.category === null));
 
 		setFilteredMovements(filtered);
+
 		setLoadingMovements(false);
 	}, [movements, selectedCategory, selectedType, searchTerm]);
 

@@ -36,12 +36,12 @@ export async function postSubscriptionNotifications(data: {
 //
 export async function getSubscriptionNotifications(): Promise<Array<Subscriptions>> {
 	const session = await getSession();
-	console.log(session);
+	// console.log(session);
 
 	const url = 'notifications/user';
 
 	// make in api the get method
-	console.log('await session?.user.id ', await session?.user.id);
+	// console.log('await session?.user.id ', await session?.user.id);
 
 	return await getMethod<Array<Subscriptions>>(url, session?.user.id);
 }

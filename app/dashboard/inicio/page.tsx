@@ -22,6 +22,8 @@ import { Progress } from "@/components/ui/progress" // Import Progress component
 import SpendingChart from "@/components/dashboard/spending-chart"
 import RecentExpenses from "@/components/dashboard/recent-expenses"
 import QuickSpendCard from "@/components/transactions/quick-spend-card"
+import { revalidateTag } from 'next/cache';
+import { revalidateUser } from '@/lib/actions/user';
 
 interface PaymentItem {
 	id: string
@@ -133,6 +135,13 @@ export default function InicioPage() {
 	// const [loadingUser, setLoadingUser] = useState(true);
 
 	const { user, userBalance, loadingUser, setUserBalance } = useDashboard();
+
+	// REVALIDATE on mount because of changes applied of other pages
+	useEffect(() => {
+		// Rule: Revalidate immediately after mutations that change the data, not "when you need it later."
+		// so this might be wrong
+		revalidateUser()
+	}, []);
 
 	/**
 	 * 

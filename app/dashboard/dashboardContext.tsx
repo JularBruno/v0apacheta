@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode, Dispatch, SetStateAction } from 'react';
 import { getProfile } from '@/lib/actions/user';
 import { User } from '@/lib/schemas/user';
+import { revalidateTag } from 'next/cache'
 
 export interface DashboardUserContextType {
 	user: User | null;
@@ -40,8 +41,10 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 				setError(null); /// ??????	
 
 				// Guess this should be the first get that will catch 401
+
 				const profile = await getProfile();
 				setUser(profile);
+
 				setUserBalance(profile.balance);
 			}
 			catch (error: any) {

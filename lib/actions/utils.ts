@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { auth, signOut } from '@/auth';
 import type { Session } from 'next-auth';
+import { headers } from 'next/headers'
 
 /**
  * @title url for dynamic env, based on how npm run was executed
@@ -33,6 +34,44 @@ async function handleAuthError() {
 
 
 /**
+ * @title getMethod without session required for unstable_cache 
+ * @param url - url to get from
+ * @param session - SESSION called from getSession since when use cache cant call await
+ * @param id - id to add to url if required
+ * @returns response or error
+ * removed trycatch wrapping because of next redirect error
+ */
+export async function getMethodWithoutSession<T>(
+	url: string,
+	session: Session | null,
+	id?: string | number,
+): Promise<T> {
+
+	const endpoint = id ? `${urlDev}/${url}/${id}` : `${urlDev}/${url}`;
+	console.log('is not cache');
+	const response = await fetch(endpoint, {
+		method: 'GET',
+		headers: {
+			Authorization: `Bearer ${session?.accessToken}`,
+			'Content-Type': 'application/json',
+		},
+	});
+
+	// if (response.status === 401) {
+	// 	await signOut({ redirect: false });
+	// 	redirect('/login?expired=true');
+	// }
+
+	if (!response.ok) {
+		throw new Error(`HTTP error! status: ${response.status}`);
+	}
+
+	const data = await response.json();
+	return data;
+}
+
+
+/**
  * @title Default getMethod
  * @param url - url to get from
  * @param id - id to add to url if required
@@ -44,11 +83,6 @@ export async function getMethod<T>(
 	id?: string | number,
 ): Promise<T> {
 	const session = await getSession();
-
-	if (!session?.user?.id || !session.accessToken) {
-		await signOut({ redirect: false });
-		redirect('/login?expired=true');
-	}
 
 	const endpoint = id ? `${urlDev}/${url}/${id}` : `${urlDev}/${url}`;
 
@@ -219,7 +253,7 @@ export async function deleteMethod<T>(url: string, id: string): Promise<T> {
 		}
 
 		const data = await response.json();
-		console.log(data);
+		// console.log(data);
 
 		return data;
 	} catch (error) {
