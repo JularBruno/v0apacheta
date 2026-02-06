@@ -280,12 +280,24 @@ export default function QuickSpendCard({
 
 
 	// Helps to clear specific error when typing again
-	function handleTagKeyDown() {
-		clearErrors("tagName");
+	function handleTagKeyDown(e: any) {
+		if (e.key === 'Enter') {
+			e.preventDefault();
+			setTimeout(() => {
+				inputAmountRef.current?.scrollIntoView({
+					behavior: 'smooth',
+					block: 'center'
+				});
+				inputAmountRef.current?.focus();
+			}, 100);
+		} else {
+			clearErrors("tagName");
+		}
 	}
 
 	// reference to amount input! to be focused when required
 	const inputAmountRef = useRef<HTMLInputElement>(null)
+
 	// Selecting tag and its actions
 	const selectTag = (id?: string) => { // when removing the optional id, TS yells at calling without param, IT SHOULD be okey since makes sense when creating new tag after submit
 		const t = allTags.find((tg) => tg.id === id)
@@ -294,7 +306,16 @@ export default function QuickSpendCard({
 		setTagId(t.id)
 		setValue('amount', t.amount || 0); // Update form amount too
 		setValue('tagName', t.name); // Update form amount too
-		inputAmountRef.current?.focus()
+
+		// inputAmountRef.current?.focus()
+		// Mobile-friendly focus with scroll
+		setTimeout(() => {
+			inputAmountRef.current?.scrollIntoView({
+				behavior: 'smooth',
+				block: 'center'
+			});
+			inputAmountRef.current?.focus();
+		}, 100);
 
 		// match category and type to tag
 		const cat = cats.find((c) => c.id === t.categoryId)
@@ -392,6 +413,12 @@ export default function QuickSpendCard({
 			</CardHeader>
 			<CardContent className="space-y-4 p-4">
 				<form onSubmit={handleSubmit(onSubmitHandler, onInvalid)}>
+					{/* <form
+					onSubmit={(e) => {
+						e.preventDefault(); // block form submit
+						handleSubmit(onSubmitHandler, onInvalid)
+					}}
+				> */}
 
 					{/* A11y live region */}
 					<div ref={liveRegionRef} className="sr-only" aria-live="polite" aria-atomic="true"></div>
@@ -452,6 +479,8 @@ export default function QuickSpendCard({
 					<TagRow
 						tagInput={tagInput}
 						setTagInput={setTagInput}
+
+						categoryType={type}
 
 						tagId={tagId}
 						setTagId={setTagId}

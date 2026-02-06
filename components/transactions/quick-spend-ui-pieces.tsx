@@ -23,6 +23,7 @@ import { formatToBalance } from "@/lib/quick-spend-constants"
 import { getCurrentDateTimeInfo } from "@/lib/dateUtils"
 import { Movement, movementSchema, MovementFormData } from "@/lib/schemas/movement";
 import IconComponent from "./icon-component";
+import { TxType } from "@/lib/schemas/definitions";
 
 
 type CategoryHeaderProps = {
@@ -151,11 +152,12 @@ type TagRowProps = {
 	setTagInput: (name: string) => void,
 	tagId: string | undefined,
 	setTagId: (id: string) => void,
+	categoryType: TxType, // this was just for hiding the tag amount on income pills
 	matchingSuggestions: Tag[],
 	matchingSuggestionsMobile: Tag[],
 	selectTag: (id?: string) => void,
 	tagNameError?: string,
-	onInputKeyDown?: () => void,
+	onInputKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void,
 	register: UseFormRegister<MovementFormData>,
 	loading: boolean
 }
@@ -164,6 +166,7 @@ export function TagRow({
 	setTagInput,
 	tagId,
 	setTagId,
+	categoryType,
 	matchingSuggestions,
 	matchingSuggestionsMobile,
 	selectTag,
@@ -186,7 +189,7 @@ export function TagRow({
 				<div className=" gap-2">
 					<Input
 						role="combobox"
-						aria-autocomplete="list"
+						// aria-autocomplete="list"
 						aria-controls={listId}
 						aria-describedby="tag-hint"
 						placeholder="Escribe una descripción, o selecciona un movimiento previo"
@@ -196,12 +199,13 @@ export function TagRow({
 								setTagId("");
 							}
 						})}
-						onKeyDown={onInputKeyDown}
-						autoCapitalize="none"
-						autoCorrect="off"
-						autoComplete="off"
-						enterKeyHint="done"
+						onKeyDown={(e) => onInputKeyDown(e)}
+						// autoCapitalize="none"
+						// autoCorrect="off"
+						// autoComplete="off"
+						enterKeyHint="next"
 						className="flex-1"
+
 					/>
 					{tagNameError && (
 						<p className="text-red-500 text-sm mt-1">{tagNameError}</p>
@@ -237,7 +241,7 @@ export function TagRow({
 							disabled={loading}
 						>
 							{t.name}
-							<span className="text-xs text-gray-500 ml-1">{formatToBalance(t.amount)}</span>
+							<span className="text-xs text-gray-500 ml-1" hidden={categoryType == TxType.INCOME}>{formatToBalance(t.amount)}</span>
 							{/* {t.category.type === "whatever" && (
 							<span className="text-xs text-gray-500 ml-1">
 								{formatToBalance(t.amount)}
@@ -278,7 +282,7 @@ export function TagRow({
 										: "border-gray-200 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm",
 								)}
 							>
-								{t.name} <span className="text-xs text-gray-500 ml-1">${t.amount}</span>
+								{t.name} <span className="text-xs text-gray-500 ml-1" hidden={categoryType == TxType.INCOME}>{formatToBalance(t.amount)}</span>
 							</button>
 						))}
 					</div>
