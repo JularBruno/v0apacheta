@@ -345,14 +345,14 @@ export default function HistorialPage() {
 			*/}
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 				{/* Chart - always visible */}
-				{/* <div className="lg:col-span-2 xl:col-span-1">
+				<div className="lg:col-span-1 xl:col-span-1">
 					<TransactionDonutChart movements={movements} categories={cats} />
-				</div> */}
+				</div>
 
 				{/* Category breakdown 
 				* collapsible on mobile, always visible on desktop 
 				*/}
-				<div className="xl:col-span-1 hidden">
+				<div className="xl:col-span-1 ">
 
 					{/* Mobile: Collapsible header */}
 					<div className="lg:hidden">
@@ -437,7 +437,7 @@ export default function HistorialPage() {
 					</div>
 
 					{/* Desktop: Always visible */}
-					<div className="hidden lg:col-span-1 xl:block">
+					<div className=" lg:col-span-1 xl:block">
 						<Card>
 							<CardHeader>
 								<CardTitle >Desglose de gastos por categoría {monthName}</CardTitle>
@@ -448,7 +448,7 @@ export default function HistorialPage() {
 										<Loading></Loading>
 									) :
 										// cats
-										catsEmpty
+										cats
 											// .filter((cat) => cat.budget > 0)
 											.map((category) => {
 												const amountUsedThisMonth = filteredMovements.filter(m => m.categoryId === category.id).reduce((sum, m) => sum + m.amount, 0);

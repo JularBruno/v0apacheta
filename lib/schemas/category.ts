@@ -15,6 +15,13 @@ export type Category = {
 	deletedAt?: string;
 };
 
+// ✅ For retrieved data (server → client)
+export type CategoryBudget = Category & {
+	createdAt: string;
+	budget: number,
+	totalExpenses: number
+};
+
 /**
  * Category schema to post and update, also validate with zod
  * ACTION already adds userId
