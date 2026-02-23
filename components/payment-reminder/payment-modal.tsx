@@ -22,6 +22,7 @@ interface PaymentModalProps {
 }
 
 export function PaymentModal({ open, onOpenChange, payment }: PaymentModalProps) {
+
 	const handleAdd = () => {
 		onOpenChange(false)
 	}

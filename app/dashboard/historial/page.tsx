@@ -78,6 +78,8 @@ export default function HistorialPage() {
 			try {
 				const cats = await getCategoriesByUser();
 				setCats(cats);
+				console.log('cats ', cats);
+
 				setLoadingCats(false);
 			} catch (error) {
 				console.error('Failed to fetch categories:', error);
@@ -274,6 +276,8 @@ export default function HistorialPage() {
 		const load = async () => {
 			const movements: any = await fetchData()
 			setMovements(movements)
+			console.log('movements ', movements);
+
 		}
 		load();
 	}, [selectedDateFilter, refreshTrigger])

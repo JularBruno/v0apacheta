@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
-import { CreatePaymentModal } from "@/components/budget/create-payment-modal"
 import QuickSpendCard from "@/components/transactions/quick-spend-card"
 import {
 	Utensils,
@@ -32,12 +31,12 @@ import { getBudgetByUserAndPeriod, putCategory } from "@/lib/actions/categories"
 import { Category, CategoryBudget } from "@/lib/schemas/category"
 import IconComponent from "@/components/transactions/icon-component"
 import { formatToBalance } from "@/lib/quick-spend-constants"
-import { BalanceInput } from "@/components/budget/balance-input"
+import { BalanceInput } from "@/components/balance-input/balance-input-mock"
 
 import { FieldErrors, Control, UseFormClearErrors } from "react-hook-form";
 import { useForm } from "react-hook-form";
 import React, { useRef } from "react";
-import PaymentReminder from "@/components/payment-reminder/payment-reminder"
+import PaymentReminder from "@/components/payment-reminder/payment-reminder-card"
 
 export default function PresupuestoPage() {
 
@@ -121,26 +120,65 @@ export default function PresupuestoPage() {
 							category.budget > 0 ? (category.totalExpenses / category.budget) * 100 : 0
 						const isOverBudget = category.totalExpenses > category.budget
 
+						const getProgressColor = (pct: number) => {
+							if (pct > 100) return "[&>div]:bg-red-600"
+							if (pct > 90) return "[&>div]:bg-red-500"
+							if (pct > 75) return "[&>div]:bg-orange-500"
+							if (pct > 50) return "[&>div]:bg-amber-500"
+							if (pct > 25) return "[&>div]:bg-emerald-500"
+							return "[&>div]:bg-green-500"
+						}
+
 						return (
 							<div key={category.id} className="space-y-2">
-								<div className="flex items-center justify-between">
+
+								<div className="flex-col gap-2 md:flex-row md:items-center md:justify-between">
 									<div className="flex items-center gap-3">
 										<div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", category.color)}>
 											<IconComponent icon={category?.icon} className="w-4 h-4 text-white" />
 										</div>
-										<div>
-											<p className="font-medium text-sm">{category.name}</p>
+
+										<div className="min-w-0">
+											<p className="font-medium text-sm truncate">{category.name}</p>
 											<p className="text-xs text-gray-500">
 												{formatToBalance(category.totalExpenses)} de {formatToBalance(category.budget)}
 											</p>
 										</div>
+										<div className="ml-auto">
+											<BalanceInput
+												defaultValue={category.budget}
+												id={category.id}
+												onBlur={(value) => updateCategoryBudget(category.id, value)}
+											/>
+										</div>
 									</div>
-									<div className="flex items-center gap-2">
-										<BalanceInput
-											defaultValue={category.budget}
-											id={category.id}
-											onBlur={(value) => updateCategoryBudget(category.id, value)}
-										/>
+
+									{/* Row 2: Percentage */}
+									<div className="flex items-center justify-between px-1">
+										<span className={cn(
+											"text-xs font-semibold",
+											percentageUsed > 100 ? "text-red-600" :
+												percentageUsed > 75 ? "text-orange-600" :
+													percentageUsed > 50 ? "text-amber-600" :
+														"text-emerald-600"
+										)}>
+											{percentageUsed.toFixed(0)}% usado
+										</span>
+										<span className="text-xs text-gray-400">
+											{isOverBudget
+												? `-$${(category.totalExpenses - category.budget).toFixed(2)} excedido`
+												: `$${(category.budget - category.totalExpenses).toFixed(2)} restante`
+											}
+										</span>
+									</div>
+
+									{/* Row 3: Progress bar */}
+									<Progress
+										value={Math.min(100, percentageUsed)}
+										className={cn("h-2.5 rounded-full", getProgressColor(percentageUsed))}
+									/>
+								</div>
+								{/* <div className="flex items-center gap-2">
 
 										<span className={cn("font-semibold text-sm", isOverBudget ? "text-red-600" : "text-gray-900")}>
 											{percentageUsed.toFixed(0)}%
@@ -150,7 +188,7 @@ export default function PresupuestoPage() {
 								<Progress
 									value={Math.min(100, percentageUsed)}
 									className={cn("h-2", isOverBudget ? "[&>div]:bg-red-500" : "[&>div]:bg-primary-500")}
-								/>
+								/> */}
 							</div>
 						)
 					})}
@@ -158,9 +196,9 @@ export default function PresupuestoPage() {
 			</Card>
 
 			{/* Payment Reminders */}
-			<PaymentReminder>
-
-			</PaymentReminder>
+			<PaymentReminder
+				cats={cats}
+			/>
 
 			{/* Insights & Map Reminder */}
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

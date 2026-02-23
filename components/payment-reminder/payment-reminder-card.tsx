@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
-import { CreatePaymentModal } from "@/components/budget/create-payment-modal"
+import { PaymentReminderModal } from "@/components/payment-reminder/payment-reminder-dialog"
 import QuickSpendCard from "@/components/transactions/quick-spend-card"
 import {
 	Utensils,
@@ -32,12 +32,13 @@ import { getBudgetByUserAndPeriod, putCategory } from "@/lib/actions/categories"
 import { Category, CategoryBudget } from "@/lib/schemas/category"
 import IconComponent from "@/components/transactions/icon-component"
 import { formatToBalance } from "@/lib/quick-spend-constants"
-import { BalanceInput } from "@/components/budget/balance-input"
+import { BalanceInput } from "@/components/balance-input/balance-input-mock"
 
 import { FieldErrors, Control, UseFormClearErrors } from "react-hook-form";
 import { useForm } from "react-hook-form";
 import React, { useRef } from "react";
 import { PaymentModal } from "./payment-modal"
+import { PaymentReminder, PaymentType } from "@/lib/schemas/paymentReminder"
 
 interface PaymentItem {
 	id: string
@@ -48,20 +49,11 @@ interface PaymentItem {
 	categoryId?: string
 }
 
-// Define categories with initial budget values
-const categoriesWithBudget = [
-	{ id: "comida", name: "Comida", icon: Utensils, color: "bg-orange-500", initialBudget: 200 },
-	{ id: "comestibles", name: "Comestibles", icon: ShoppingCart, color: "bg-green-500", initialBudget: 300 },
-	{ id: "transporte", name: "Transporte", icon: Car, color: "bg-blue-500", initialBudget: 150 },
-	{ id: "hogar", name: "Hogar", icon: Home, color: "bg-purple-500", initialBudget: 100 },
-	{ id: "entretenimiento", name: "Entretenimiento", icon: Gamepad2, color: "bg-red-500", initialBudget: 80 },
-	{ id: "servicios", name: "Servicios", icon: Zap, color: "bg-yellow-500", initialBudget: 120 },
-	{ id: "regalos", name: "Regalos", icon: Gift, color: "bg-pink-500", initialBudget: 50 },
-	{ id: "belleza", name: "Belleza", icon: Sparkles, color: "bg-indigo-500", initialBudget: 60 },
-	{ id: "viajes", name: "Viajes", icon: Plane, color: "bg-cyan-500", initialBudget: 200 },
-]
-
-export default function PaymentReminder() {
+export default function PaymentReminderCard({
+	cats
+}: {
+	cats: CategoryBudget[]
+}) {
 
 	const [monthlyPayments, setMonthlyPayments] = useState<PaymentItem[]>([
 		{ id: "1", name: "Alquiler", amount: 500, dueDay: 1 },
@@ -73,72 +65,18 @@ export default function PaymentReminder() {
 		{ id: "5", name: "Reparación Auto", amount: 150 },
 	])
 
-	const [showCreatePaymentModal, setShowCreatePaymentModal] = useState(false)
-	const [paymentTypeForModal, setPaymentTypeForModal] = useState<"monthly" | "random">("monthly")
-	const [showPaymentModal, setShowPaymentModal] = useState(false)
+	const [showPaymentReminder, setShowPaymentReminder] = useState(false);
+	const [paymentReminderType, setPaymentReminderType] = useState<PaymentType.MONTHLY | PaymentType.ONE_TIME>(PaymentType.MONTHLY)
+	const [editingPaymentReminder, setEditingPaymentReminder] = useState<PaymentReminder | undefined>()
+
 	const [selectedPayment, setSelectedPayment] = useState<PaymentItem | null>(null)
-	const [editingPayment, setEditingPayment] = useState<(PaymentItem & { type: "monthly" | "random" }) | null>(null)
 
+	const [showPaymentModal, setShowPaymentModal] = useState(false)
 
+	const handleCreatePayment = (
+	) => {
+		console.log('handle create');
 
-	const handleCreatePayment = (payment: {
-		name: string
-		amount: number
-		dueDay?: number
-		period?: string
-		categoryId?: string
-		type: "monthly" | "random"
-		id?: string
-	}) => {
-		if (payment.id && editingPayment) {
-			// Edit existing payment
-			if (payment.type === "monthly") {
-				setMonthlyPayments((prev) =>
-					prev.map((p) =>
-						p.id === payment.id
-							? {
-								id: payment.id,
-								name: payment.name,
-								amount: payment.amount,
-								dueDay: payment.dueDay,
-								period: payment.period,
-								categoryId: payment.categoryId,
-							}
-							: p,
-					),
-				)
-			} else {
-				setRandomPayments((prev) =>
-					prev.map((p) =>
-						p.id === payment.id
-							? {
-								id: payment.id,
-								name: payment.name,
-								amount: payment.amount,
-								categoryId: payment.categoryId,
-							}
-							: p,
-					),
-				)
-			}
-			setEditingPayment(null)
-		} else {
-			// Create new payment
-			const newPayment: PaymentItem = {
-				id: Date.now().toString(),
-				name: payment.name,
-				amount: payment.amount,
-				dueDay: payment.dueDay,
-				period: payment.period,
-				categoryId: payment.categoryId,
-			}
-
-			if (payment.type === "monthly") {
-				setMonthlyPayments((prev) => [...prev, newPayment])
-			} else {
-				setRandomPayments((prev) => [...prev, newPayment])
-			}
-		}
 	}
 
 	const removePayment = (type: "monthly" | "random", id: string) => {
@@ -154,12 +92,7 @@ export default function PaymentReminder() {
 		setShowPaymentModal(true)
 	}
 
-	const handleEditPayment = (payment: PaymentItem, type: "monthly" | "random") => {
-		setEditingPayment({ ...payment, type })
-		setPaymentTypeForModal(type)
-		setShowCreatePaymentModal(true)
-	}
-
+	const handleEditPayment = () => { }
 
 	return (
 		<>
@@ -169,7 +102,7 @@ export default function PaymentReminder() {
 				<Card>
 					<CardHeader>
 						<CardTitle className="flex items-center gap-2">
-							<CalendarDays className="w-5 h-5 text-blue-600" /> Pagos Mensuales
+							<CalendarDays className="w-5 h-5 text-blue-600" /> Recordar Pagos Mensuales
 						</CardTitle>
 					</CardHeader>
 					<CardContent className="space-y-3">
@@ -200,7 +133,7 @@ export default function PaymentReminder() {
 												</Button>
 											</DropdownMenuTrigger>
 											<DropdownMenuContent align="end">
-												<DropdownMenuItem onClick={() => handleEditPayment(payment, "monthly")}>
+												<DropdownMenuItem onClick={() => handleEditPayment()}>
 													Editar
 												</DropdownMenuItem>
 												<DropdownMenuItem
@@ -217,13 +150,12 @@ export default function PaymentReminder() {
 						)}
 						<Button
 							onClick={() => {
-								setPaymentTypeForModal("monthly")
-								setEditingPayment(null)
-								setShowCreatePaymentModal(true)
+								setPaymentReminderType(PaymentType.MONTHLY)
+								setShowPaymentReminder(true)
 							}}
 							className="w-full mt-4 flex items-center gap-2"
 						>
-							<Plus className="w-4 h-4" /> Agregar Pago Mensual
+							<Plus className="w-4 h-4" /> Agregar Recordatorio Mensual
 						</Button>
 					</CardContent>
 				</Card>
@@ -232,7 +164,7 @@ export default function PaymentReminder() {
 				<Card>
 					<CardHeader>
 						<CardTitle className="flex items-center gap-2">
-							<Lightbulb className="w-5 h-5 text-yellow-600" /> Pagos Aleatorios
+							<Lightbulb className="w-5 h-5 text-yellow-600" /> Recordatorio Pago
 						</CardTitle>
 					</CardHeader>
 					<CardContent className="space-y-3">
@@ -260,7 +192,7 @@ export default function PaymentReminder() {
 												</Button>
 											</DropdownMenuTrigger>
 											<DropdownMenuContent align="end">
-												<DropdownMenuItem onClick={() => handleEditPayment(payment, "random")}>Editar</DropdownMenuItem>
+												<DropdownMenuItem onClick={() => handleEditPayment()}>Editar</DropdownMenuItem>
 												<DropdownMenuItem
 													onClick={() => removePayment("random", payment.id)}
 													className="text-red-600 focus:text-red-600 focus:bg-red-50"
@@ -275,24 +207,26 @@ export default function PaymentReminder() {
 						)}
 						<Button
 							onClick={() => {
-								setPaymentTypeForModal("random")
-								setEditingPayment(null)
-								setShowCreatePaymentModal(true)
+								setPaymentReminderType(PaymentType.ONE_TIME)
+								setShowPaymentReminder(true)
 							}}
 							className="w-full mt-4 flex items-center gap-2"
 						>
-							<Plus className="w-4 h-4" /> Agregar Pago Aleatorio
+							<Plus className="w-4 h-4" /> Agregar Recordatorio de Pago
 						</Button>
 					</CardContent>
 				</Card>
 			</div>
 
-			<CreatePaymentModal
-				open={showCreatePaymentModal}
-				onOpenChange={setShowCreatePaymentModal}
-				onCreatePayment={handleCreatePayment}
-				categories={categoriesWithBudget}
-				editingPayment={editingPayment || undefined}
+			<PaymentReminderModal
+				showPaymentReminder={showPaymentReminder}
+				setShowPaymentReminder={setShowPaymentReminder}
+				cats={cats}
+				onSubmit={handleCreatePayment}
+				paymentReminderType={paymentReminderType}
+				setPaymentType={setPaymentReminderType}
+				editingPaymentReminder={editingPaymentReminder}
+
 			/>
 
 			<PaymentModal open={showPaymentModal} onOpenChange={setShowPaymentModal} payment={selectedPayment || undefined} />

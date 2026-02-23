@@ -30,7 +30,7 @@ import { CategoryHeaderDesktop, CategoryHeaderMobile, CategoryGrid, TagRow, Date
 import { getCurrentDateTimeInfo } from "@/lib/dateUtils";
 import QuickSpendSkeleton from "./quick-spend-skeleton";
 import { Loading } from "@/components/ui/loading"
-import { BalanceInput } from "./balance-input";
+import { BalanceInput } from "../balance-input/balance-input-form";
 
 /**
  * @title Quick Spend Card used in home and asset

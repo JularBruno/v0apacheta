@@ -93,7 +93,7 @@ export function BalanceInput({
 					onChange={handleInput}
 					onWheel={(e) => e.currentTarget.blur()}
 					className="font-semibold md:text-2xl
-					w-24 text-right text-sm"
+					text-right text-sm"
 					placeholder="1.000,00"
 					onBlur={(e) => onBlur(parseValue(e.currentTarget.value))}
 				/>

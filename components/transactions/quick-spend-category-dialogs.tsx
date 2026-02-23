@@ -101,7 +101,7 @@ export function QuickSpendCategoryDialogs({
 			name: cat.name,
 			color: cat.color,
 			icon: cat.icon,
-			type: cat.type, // Assuming 'kind' maps to 'type'
+			type: cat.type,
 		});
 
 		setEditingCategory(cat);
@@ -195,8 +195,6 @@ export function QuickSpendCategoryDialogs({
 									id="name"
 									placeholder="Ej: Mascotas"
 									{...register('name')}
-								// value={newCatName}
-								// onChange={(e) => setNewCatName(e.target.value)}
 								/>
 								{errors.name && ( // ← Show error message
 									<p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
