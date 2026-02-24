@@ -3,69 +3,63 @@
 import { useState, useMemo, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import QuickSpendCard from "@/components/transactions/quick-spend-card"
 import {
-	Utensils,
-	ShoppingCart,
-	Car,
-	Home,
-	Gamepad2,
-	Zap,
-	Gift,
-	Sparkles,
-	Plane,
-	Plus,
 	Wallet,
-	Lightbulb,
 	Map,
 	CalendarDays,
 	MoreHorizontal,
 } from "lucide-react"
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { getDateStringsForFilter, getLastNMonths } from "@/lib/dateUtils"
 import { getBudgetByUserAndPeriod, putCategory } from "@/lib/actions/categories"
-import { Category, CategoryBudget } from "@/lib/schemas/category"
+import { CategoryBudget } from "@/lib/schemas/category"
 import IconComponent from "@/components/transactions/icon-component"
 import { formatToBalance } from "@/lib/quick-spend-constants"
 import { BalanceInput } from "@/components/balance-input/balance-input-mock"
 
-import { FieldErrors, Control, UseFormClearErrors } from "react-hook-form";
-import { useForm } from "react-hook-form";
 import React, { useRef } from "react";
 import PaymentReminder from "@/components/payment-reminder/payment-reminder-card"
+import { useDashboard } from '@/app/dashboard/dashboardContext';
+import { putUser, revalidateUser } from "@/lib/actions/user"
+import { useToast } from '@/hooks/use-toast';
+import Loading from "../patrimonio/[id]/loading"
 
 export default function PresupuestoPage() {
+	const { toast } = useToast();
 
 	const [cats, setCats] = useState<CategoryBudget[]>([])
+	const [userBudgetRemaining, setUserBudgetRemaining] = useState<number>(0)
 	const [loadingCats, setLoadingCats] = useState<boolean>(true)
+
+	const { user, loadingUser, error } = useDashboard();
 
 	useEffect(() => {
 		const getBudget = async () => {
 			const { start, end } = getLastNMonths(1);
 			const result = getDateStringsForFilter(start, end);
 			let budgetedCats = await getBudgetByUserAndPeriod(result.startDate, result.endDate);
+
 			setCats(budgetedCats);
 		}
 
 		getBudget();
 	}, []);
 
-	// 
-	const [monthlyBudget, setMonthlyBudget] = useState(1500)
-
 	const totalSpent = useMemo(() => {
 		return cats.reduce((sum, cat) => sum + cat.totalExpenses, 0)
 	}, [cats])
 
-	const monthlyBudgetRemaining = monthlyBudget - totalSpent;
+	useEffect(() => {
+		console.log('trigger on user');
+		setUserBudgetRemaining((user?.totalBudget || 0) - totalSpent)
+		// TODO this ugly
+	}, [user, totalSpent])
 
 	function updateCategoryBudget(id: any, budget: any) {
 		let cat = cats.find(cat => cat.id === id)
-		// if (cat?.budget === budget) {
 		if (cat?.budget !== budget) {
 			setCats(prev =>
 				prev.map(cat =>
@@ -73,6 +67,24 @@ export default function PresupuestoPage() {
 				)
 			);
 			putCategory(id, { budget: budget });
+		}
+
+	}
+
+	function setUserBudget(number: number) {
+		try {
+			putUser({ totalBudget: number });
+			revalidateUser(); // get user from api!
+
+			setUserBudgetRemaining((number) - totalSpent)
+
+			toast({
+				title: `Presupuesto actualizado`,
+				description: `Se actualizó tu presupuesto personal`,
+				variant: "success",
+			})
+		} catch (error) {
+			console.log(error);
 		}
 
 	}
@@ -89,12 +101,13 @@ export default function PresupuestoPage() {
 				<CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
 					<div className="text-center">
 						<p className="text-sm text-gray-500">Presupuesto Total</p>
-						<Input
-							type="number"
-							value={monthlyBudget}
-							onChange={(e) => setMonthlyBudget(Number.parseFloat(e.target.value) || 0)}
-							className="text-2xl font-bold text-primary-600 border-none text-center focus:ring-0 focus:outline-none"
-						/>
+						{loadingUser ? <Loading></Loading> :
+							<BalanceInput
+								id='user-budget'
+								defaultValue={user?.totalBudget || 0}
+								onBlur={(value) => setUserBudget(value)}
+							/>
+						}
 					</div>
 					<div className="text-center">
 						<p className="text-sm text-gray-500">Gastado</p>
@@ -102,8 +115,8 @@ export default function PresupuestoPage() {
 					</div>
 					<div className="text-center">
 						<p className="text-sm text-gray-500">Restante</p>
-						<p className={`text-2xl font-bold ${monthlyBudgetRemaining >= 0 ? "text-green-600" : "text-red-600"}`}>
-							{formatToBalance(monthlyBudgetRemaining)}
+						<p className={`text-2xl font-bold ${userBudgetRemaining >= 0 ? "text-green-600" : "text-red-600"}`}>
+							{formatToBalance(userBudgetRemaining)}
 						</p>
 					</div>
 				</CardContent>

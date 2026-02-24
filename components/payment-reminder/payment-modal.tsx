@@ -8,6 +8,7 @@ import { Category } from "@/lib/schemas/category"
 import { getCategoriesByUser } from "@/lib/actions/categories"
 import { Tags } from "@/lib/schemas/tag"
 import { getTagsByUser } from "@/lib/actions/tags"
+import { useDashboard } from "@/app/dashboard/dashboardContext"
 
 interface PaymentModalProps {
 	open: boolean
@@ -23,6 +24,8 @@ interface PaymentModalProps {
 
 export function PaymentModal({ open, onOpenChange, payment }: PaymentModalProps) {
 
+	const { cats, setCats, user, loadingUser, error } = useDashboard();
+
 	const handleAdd = () => {
 		onOpenChange(false)
 	}
@@ -35,7 +38,7 @@ export function PaymentModal({ open, onOpenChange, payment }: PaymentModalProps)
 	 */
 
 	// Categories state (allows creation, setsnewone after created)
-	const [cats, setCats] = useState<Category[]>([]);
+	// const [cats, setCats] = useState<Category[]>([]);
 
 	/**
 	 * Fetch Categories
@@ -94,22 +97,20 @@ export function PaymentModal({ open, onOpenChange, payment }: PaymentModalProps)
 	}, []);
 
 	return (
-		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto">
+		<Dialog open={open} onOpenChange={onOpenChange} aria-describedby={undefined}>
+			<DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
 				<DialogHeader>
 					<DialogTitle>Realizar Pago: {payment?.name}</DialogTitle>
 				</DialogHeader>
-				{payment && (
-					<QuickSpendCard
-						onAdd={handleAdd}
-						onCancel={() => onOpenChange(false)}
-						cats={cats}
-						setCats={setCats}
-						allTags={allTags}
-						setAllTags={setAllTags}
-						loading={false}
-					/>
-				)}
+				{/* {payment && ( */}
+				<QuickSpendCard
+					onAdd={handleAdd}
+					onCancel={() => onOpenChange(false)}
+					allTags={allTags}
+					setAllTags={setAllTags}
+					loading={false}
+				/>
+				{/* )} */}
 			</DialogContent>
 		</Dialog>
 	)

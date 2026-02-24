@@ -7,8 +7,11 @@ import {
 	postMethod,
 	putMethod,
 	deleteMethod,
+	getMethodWithoutSession,
 } from './utils';
 import { TxType } from '../schemas/definitions';
+import { unstable_cache } from 'next/cache';
+import { revalidateTag } from "next/cache";
 
 const url = 'category';
 
@@ -17,9 +20,15 @@ export async function getCategoriesByUser(): Promise<Array<Category>> {
 	const session = await getSession();
 	const url = 'category/user';
 
-	return await getMethod<Array<Category>>(url, await session?.user.id);
-}
+	const getCategories = unstable_cache(async () => {
+		return await getMethodWithoutSession<Array<Category>>(url, session, session?.user.id);
+	},
+		['user-categories'],
+		{ revalidate: 3600, tags: ['categories'] }
+	);
 
+	return await getCategories();
+}
 
 export async function getBudgetByUserAndPeriod(
 	startDate: string,
@@ -32,11 +41,7 @@ export async function getBudgetByUserAndPeriod(
 	});
 
 	if (startDate) params.append('startDate ', startDate);
-	console.log('startDate ', startDate);
-
 	if (endDate) params.append('endDate ', endDate);
-	console.log('endDate ', endDate);
-
 
 	const url = `category/user/${session!.user.id}/budget?${params.toString()}`;
 	console.log('url ', url);
@@ -72,7 +77,7 @@ export async function putCategory(
 		color?: string;
 		type?: string;
 		budget?: number;
-	},
+	}
 ): Promise<Category> {
 	const session = await getSession();
 
@@ -86,3 +91,6 @@ export async function putCategory(
 	return result;
 }
 
+export async function revalidateCategories() {
+	revalidateTag('categories'); // get categories from api! revalidate cache
+}

@@ -316,8 +316,6 @@ export default function InicioPage() {
 				/**
 				 * QuickSpendCard onAdd callback! useful for actions after movement
 				 */
-				cats={cats}
-				setCats={setCats}
 				onAdd={onAddMovement}
 				allTags={allTags}
 				setAllTags={setAllTags}

@@ -31,6 +31,8 @@ import { getCurrentDateTimeInfo } from "@/lib/dateUtils";
 import QuickSpendSkeleton from "./quick-spend-skeleton";
 import { Loading } from "@/components/ui/loading"
 import { BalanceInput } from "../balance-input/balance-input-form";
+import { useDashboard } from "@/app/dashboard/dashboardContext";
+import { useToast } from '@/hooks/use-toast';
 
 /**
  * @title Quick Spend Card used in home and asset
@@ -43,8 +45,8 @@ export default function QuickSpendCard({
 	onAdd,
 	// initialType,
 	onCancel,
-	cats,
-	setCats,
+	// cats,
+	// setCats,
 	allTags,
 	setAllTags,
 	loading
@@ -52,12 +54,13 @@ export default function QuickSpendCard({
 	onAdd: (data: Movement) => void
 	// initialType?: TxType
 	onCancel?: () => void
-	cats: Category[]
-	setCats: React.Dispatch<React.SetStateAction<Category[]>>
+	// cats: Category[]
+	// setCats: React.Dispatch<React.SetStateAction<Category[]>>
 	allTags: Tags[],
 	setAllTags: React.Dispatch<React.SetStateAction<Tags[]>>
 	loading: boolean
 }) {
+	const { toast } = useToast();
 
 	/** By using an ARIA live region, you make your app accessible (A11y = accessibility). */
 	// A11y live region
@@ -99,6 +102,8 @@ export default function QuickSpendCard({
 	 * CATEGORY cats and card handlers
 	 * 
 	 */
+
+	const { user, userBalance, loadingUser, error, cats, setCats, loadingCats } = useDashboard();
 
 
 	// fitlered cats
@@ -209,6 +214,11 @@ export default function QuickSpendCard({
 		}
 
 		announce(`Categoría ${cat.name} eliminada`)
+		toast({
+			title: `Categoría eliminada`,
+			description: `Se eliminó la categoría`,
+			variant: "success",
+		})
 	}
 
 	/**
@@ -538,7 +548,6 @@ export default function QuickSpendCard({
 			{/* Category Dialogs */}
 			<QuickSpendCategoryDialogs
 				// objects
-				cats={cats}
 				allTags={allTags}
 				// handlers for popup
 				showCreateCategory={showCreateCategory}

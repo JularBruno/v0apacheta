@@ -39,6 +39,7 @@ import { MoreHorizontal } from "lucide-react";
 import IconComponent from "@/components/transactions/icon-component"
 import { unstable_cache } from "next/cache"
 import { getSession } from "@/lib/actions/utils"
+import { useDashboard } from "../dashboardContext"
 
 export default function HistorialPage() {
 
@@ -66,29 +67,8 @@ export default function HistorialPage() {
 	 * 
 	 */
 
-	const [cats, setCats] = useState<Category[]>([])
 	const [catsEmpty, setEmptyCats] = useState<Category[]>([])
-	const [loadingCats, setLoadingCats] = useState<boolean>(true)
-
-	/**
-	 * Fetch Categories
-	 */
-	useEffect(() => {
-		const fetchData = async () => {
-			try {
-				const cats = await getCategoriesByUser();
-				setCats(cats);
-				console.log('cats ', cats);
-
-				setLoadingCats(false);
-			} catch (error) {
-				console.error('Failed to fetch categories:', error);
-			}
-		};
-
-		fetchData();
-	}, []);
-
+	const { error, cats, setCats, loadingCats } = useDashboard();
 
 	/**
 	 * 
@@ -144,8 +124,6 @@ export default function HistorialPage() {
 
 		setRefreshTrigger(prev => prev + 1);
 	};
-
-
 
 	/**
 	 * API Fetch and api filters
@@ -276,7 +254,6 @@ export default function HistorialPage() {
 		const load = async () => {
 			const movements: any = await fetchData()
 			setMovements(movements)
-			console.log('movements ', movements);
 
 		}
 		load();

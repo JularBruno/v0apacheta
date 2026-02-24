@@ -6,7 +6,7 @@ import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
 import { User, UserState } from '../schemas/user';
 import { z } from 'zod';
-import { getSession, getMethodWithoutSession, getMethod, postMethod } from './utils';
+import { getSession, getMethodWithoutSession, getMethod, postMethod, putMethod } from './utils';
 import { errorMonitor } from 'events';
 import { unstable_cache } from 'next/cache'
 import { revalidateTag } from 'next/cache'
@@ -129,7 +129,26 @@ export async function getProfile(): Promise<User> {
 }
 
 
-// TODO THIS IS WRONG
+export async function putUser(
+	data: {
+		name?: string;
+		totalBudget?: number;
+		balance?: number;
+	},
+): Promise<User> {
+	const session = await getSession();
+	const url = 'user';
+
+	if (!session?.user.id) throw new Error('User ID is missing');
+
+	const result = await putMethod<User>(url, session.user?.id, {
+		...data
+	});
+
+	return result;
+}
+
+
 // Rule: Revalidate immediately after mutations that change the data, not "when you need it later."
 // the user cannot be mutated yet
 export async function revalidateUser() {

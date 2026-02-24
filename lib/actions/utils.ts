@@ -48,7 +48,7 @@ export async function getMethodWithoutSession<T>(
 ): Promise<T> {
 
 	const endpoint = id ? `${urlDev}/${url}/${id}` : `${urlDev}/${url}`;
-	console.log('is not cache');
+
 	const response = await fetch(endpoint, {
 		method: 'GET',
 		headers: {
@@ -190,6 +190,9 @@ export async function putMethod<T>(
 			await signOut({ redirect: false });
 			redirect('/login?expired=true');
 		}
+
+		console.log(`${urlDev}/${url}/${id}`);
+		console.log(body);
 
 		const response = await fetch(`${urlDev}/${url}/${id}`, {
 			method: 'PATCH',
