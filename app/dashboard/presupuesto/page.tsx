@@ -26,6 +26,7 @@ import { useDashboard } from '@/app/dashboard/dashboardContext';
 import { putUser, revalidateUser } from "@/lib/actions/user"
 import { useToast } from '@/hooks/use-toast';
 import Loading from "../patrimonio/[id]/loading"
+import TransactionChart from "@/components/dashboard/transaction-chart"
 
 export default function PresupuestoPage() {
 	const { toast } = useToast();
@@ -121,6 +122,8 @@ export default function PresupuestoPage() {
 					</div>
 				</CardContent>
 			</Card>
+
+			<TransactionChart budgetedCategories={cats} />
 
 			{/* Category Budgeting */}
 			<Card>

@@ -41,7 +41,11 @@ export async function getBudgetByUserAndPeriod(
 	});
 
 	if (startDate) params.append('startDate ', startDate);
+	console.log('startDate ', startDate);;
+
 	if (endDate) params.append('endDate ', endDate);
+	console.log('endDate ', endDate);;
+
 
 	const url = `category/user/${session!.user.id}/budget?${params.toString()}`;
 	console.log('url ', url);

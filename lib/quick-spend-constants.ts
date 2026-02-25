@@ -63,19 +63,20 @@ export const availableIcons: { id: string; name: string; icon: LucideIcon }[] =
 		{ id: 'Laptop', name: 'Tecnología', icon: Laptop },
 	];
 
+
 export const availableColors = [
-	{ id: 'bg-orange-500', class: 'bg-orange-500', name: 'Naranja' },
-	{ id: 'bg-green-500', class: 'bg-green-500', name: 'Verde' },
-	{ id: 'bg-blue-500', class: 'bg-blue-500', name: 'Azul' },
-	{ id: 'bg-purple-500', class: 'bg-purple-500', name: 'Morado' },
-	{ id: 'bg-red-500', class: 'bg-red-500', name: 'Rojo' },
-	{ id: 'bg-yellow-500', class: 'bg-yellow-500', name: 'Amarillo' },
-	{ id: 'bg-pink-500', class: 'bg-pink-500', name: 'Rosa' },
-	{ id: 'bg-indigo-500', class: 'bg-indigo-500', name: 'Índigo' },
-	{ id: 'bg-gray-500', class: 'bg-gray-500', name: 'Gris' },
-	{ id: 'bg-cyan-500', class: 'bg-cyan-500', name: 'Cian' },
-	{ id: 'bg-emerald-500', class: 'bg-emerald-500', name: 'Esmeralda' },
-	{ id: 'bg-violet-500', class: 'bg-violet-500', name: 'Violeta' },
+	{ id: 'bg-orange-500', class: 'bg-orange-500', name: 'Naranja', hex: '#f97316' },
+	{ id: 'bg-green-500', class: 'bg-green-500', name: 'Verde', hex: '#22c55e' },
+	{ id: 'bg-blue-500', class: 'bg-blue-500', name: 'Azul', hex: '#3b82f6' },
+	{ id: 'bg-purple-500', class: 'bg-purple-500', name: 'Morado', hex: '#a855f7' },
+	{ id: 'bg-red-500', class: 'bg-red-500', name: 'Rojo', hex: '#ef4444' },
+	{ id: 'bg-yellow-500', class: 'bg-yellow-500', name: 'Amarillo', hex: '#eab308' },
+	{ id: 'bg-pink-500', class: 'bg-pink-500', name: 'Rosa', hex: '#ec4899' },
+	{ id: 'bg-indigo-500', class: 'bg-indigo-500', name: 'Índigo', hex: '#6366f1' },
+	{ id: 'bg-gray-500', class: 'bg-gray-500', name: 'Gris', hex: '#6b7280' },
+	{ id: 'bg-cyan-500', class: 'bg-cyan-500', name: 'Cian', hex: '#06b6d4' },
+	{ id: 'bg-emerald-500', class: 'bg-emerald-500', name: 'Esmeralda', hex: '#10b981' },
+	{ id: 'bg-violet-500', class: 'bg-violet-500', name: 'Violeta', hex: '#8b5cf6' },
 ];
 
 export const quickFilters = [

@@ -17,12 +17,12 @@ import {
 	Trash
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import TransactionDonutChart from "@/components/dashboard/transaction-donut-chart"
+import TransactionDonutChart from "@/components/dashboard/transaction-chart"
 import { useEffect, useState } from "react";
 import { Movements } from "@/lib/schemas/movement";
 import { TxType } from "@/lib/schemas/definitions";
-import { Category } from "@/lib/schemas/category";
-import { getCategoriesByUser } from "@/lib/actions/categories";
+import { Category, CategoryBudget } from "@/lib/schemas/category";
+import { getBudgetByUserAndPeriod, getCategoriesByUser } from "@/lib/actions/categories";
 import { deleteMovement, getMovementsByUserAndFilter, postMovement } from "@/lib/actions/movements";
 import { quickFilters, formatNumberToInput, formatToBalance } from "@/lib/quick-spend-constants";
 import { formatDate, getDateStringsForFilter, formatDateNoYear, getLastNDays, getLastNMonths, getMonthRange, getMonthName } from "@/lib/dateUtils";
@@ -40,14 +40,123 @@ import IconComponent from "@/components/transactions/icon-component"
 import { unstable_cache } from "next/cache"
 import { getSession } from "@/lib/actions/utils"
 import { useDashboard } from "../dashboardContext"
+import CategoryBudgetList from "@/components/dashboard/category-budget-list"
+import CategoryDonutChart from "@/components/dashboard/category-donut-chart"
+
+// Categories with budget data
+const categories = [
+	{ id: "all", name: "Todas", icon: MoreHorizontal, color: "bg-gray-500", budget: 0 },
+	{ id: "comida", name: "Comida", icon: MoreHorizontal, color: "bg-orange-500", budget: 200 },
+	{ id: "comestibles", name: "Comestibles", icon: MoreHorizontal, color: "bg-green-500", budget: 300 },
+	{ id: "transporte", name: "Transporte", icon: MoreHorizontal, color: "bg-blue-500", budget: 150 },
+	{ id: "hogar", name: "Hogar", icon: MoreHorizontal, color: "bg-purple-500", budget: 100 },
+	{ id: "entretenimiento", name: "Entretenimiento", icon: MoreHorizontal, color: "bg-red-500", budget: 80 },
+	{ id: "servicios", name: "Servicios", icon: MoreHorizontal, color: "bg-yellow-500", budget: 120 },
+	{ id: "regalos", name: "Regalos", icon: MoreHorizontal, color: "bg-pink-500", budget: 50 },
+	{ id: "belleza", name: "Belleza", icon: MoreHorizontal, color: "bg-indigo-500", budget: 60 },
+	{ id: "trabajo", name: "Trabajo", icon: MoreHorizontal, color: "bg-gray-500", budget: 0 },
+	{ id: "viajes", name: "Viajes", icon: MoreHorizontal, color: "bg-cyan-500", budget: 200 },
+	{ id: "ingreso", name: "Ingreso", icon: MoreHorizontal, color: "bg-green-600", budget: 0 },
+]
+
+// Mock transaction data
+const mockTransactions = [
+	{
+		id: "1",
+		title: "Almuerzo en restaurante",
+		amount: 45.5,
+		type: "gasto" as const,
+		category: "comida",
+		date: "2024-07-09",
+		time: "14:30",
+	},
+	{
+		id: "2",
+		title: "Supermercado Coto",
+		amount: 89.2,
+		type: "gasto" as const,
+		category: "comestibles",
+		date: "2024-07-08",
+		time: "18:45",
+	},
+	{
+		id: "3",
+		title: "Uber al centro",
+		amount: 12.75,
+		type: "gasto" as const,
+		category: "transporte",
+		date: "2024-07-08",
+		time: "16:20",
+	},
+	{
+		id: "4",
+		title: "Salario mensual",
+		amount: 2500.0,
+		type: "ingreso" as const,
+		category: "trabajo",
+		date: "2024-07-01",
+		time: "09:00",
+	},
+	{
+		id: "5",
+		title: "Netflix suscripción",
+		amount: 8.99,
+		type: "gasto" as const,
+		category: "entretenimiento",
+		date: "2024-07-02",
+		time: "10:00",
+	},
+	{
+		id: "6",
+		title: "Café con amigos",
+		amount: 15.3,
+		type: "gasto" as const,
+		category: "comida",
+		date: "2024-07-02",
+		time: "16:15",
+	},
+	{
+		id: "7",
+		title: "Gasolina",
+		amount: 35.0,
+		type: "gasto" as const,
+		category: "transporte",
+		date: "2024-07-01",
+		time: "08:30",
+	},
+	{
+		id: "8",
+		title: "Compras en farmacia",
+		amount: 22.5,
+		type: "gasto" as const,
+		category: "belleza",
+		date: "2024-06-30",
+		time: "19:15",
+	},
+]
 
 export default function HistorialPage() {
+
+	const [selectedType, setSelectedType] = useState("all")
+
+
+	const filteredTransactions = mockTransactions.filter((transaction) => {
+		// const categoryMatch = selectedCategory === "all" || transaction.category === selectedCategory
+		const typeMatch = selectedType === "all" || transaction.type === selectedType
+		// const amountMatch =
+		// 	(minAmount === "" || transaction.amount >= Number.parseFloat(minAmount)) &&
+		// 	(maxAmount === "" || transaction.amount <= Number.parseFloat(maxAmount))
+		// const dateMatch = getDateFilterMatch(transaction, selectedDateFilter)
+		// const searchMatch = transaction.title.toLowerCase().includes(searchTerm.toLowerCase())
+
+		return typeMatch
+	})
 
 	const allFilteredId = "all"; // this the id for when selecting all on a picker as a constant
 
 	const [searchTerm, setSearchTerm] = useState("")
 	const [selectedCategory, setSelectedCategory] = useState("all")
-	const [selectedType, setSelectedType] = useState("all")
+	// const [selectedType, setSelectedType] = useState("all")
 	const [selectedDateFilter, setSelectedDateFilter] = useState("month")
 
 	const [showFilters, setShowFilters] = useState(false)
@@ -70,11 +179,20 @@ export default function HistorialPage() {
 	const [catsEmpty, setEmptyCats] = useState<Category[]>([])
 	const { error, cats, setCats, loadingCats } = useDashboard();
 
+
+	const [budgetedCats, setBudgetedCats] = useState<CategoryBudget[]>([])
+
+
+
 	/**
 	 * 
 	 * MOVEMENT
 	 * 
 	 */
+
+	// literal filters for api, these are here bacause of chart requiring this data
+	let filters: any = {
+	};
 
 	// clear filters but date
 	const clearFilters = () => {
@@ -132,8 +250,8 @@ export default function HistorialPage() {
 	const fetchData = async () => {
 		try {
 			// Make pagination based on time periods
-			let filters: any = {
-			};
+			// let filters: any = {
+			// };
 
 			// Bring based on filter, since is the best option for pagination
 			switch (selectedDateFilter) { // default one is "month"
@@ -208,7 +326,6 @@ export default function HistorialPage() {
 
 			// get movement with filters for API
 			const movements = await getMovementsByUserAndFilter(filters)
-			// const session = await getSession();
 
 			// const getMovementsCache = unstable_cache(async () => {
 			// 	return await getMovementsByUserAndFilter(filters)
@@ -216,8 +333,6 @@ export default function HistorialPage() {
 			// 	['movements-api'],
 			// 	{ revalidate: 3600, tags: ['movements'] }
 			// );
-
-			// const movements = await getMovementsCache();
 
 			// sort by date because these come unsorted from the backend
 			let sortedMovements = movements.sort(
@@ -254,7 +369,6 @@ export default function HistorialPage() {
 		const load = async () => {
 			const movements: any = await fetchData()
 			setMovements(movements)
-
 		}
 		load();
 	}, [selectedDateFilter, refreshTrigger])
@@ -319,178 +433,40 @@ export default function HistorialPage() {
 	}, [selectedType]);
 
 
+	useEffect(() => {
+
+		console.log('use efect');
+
+		const getBudget = async () => {
+			// const { start, end } = getLastNMonths(1);
+			// const result = getDateStringsForFilter(start, end);
+			// let budgetedCats = await getBudgetByUserAndPeriod(result.startDate, result.endDate);
+			console.log(filters.startDate);
+			console.log(filters.endDate);
+
+			let budgetedCats = await getBudgetByUserAndPeriod(filters.startDate, filters.endDate);
+			console.log('budgetedCats ', budgetedCats);
+
+			setBudgetedCats(budgetedCats);
+		}
+
+		getBudget();
+	}, [selectedDateFilter]);
+
+
 	return (
 		<div className="space-y-6">
 			{/* 
 			* Donut Chart and categories presupuestos
 			*/}
+
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-				{/* Chart - always visible */}
-				<div className="lg:col-span-1 xl:col-span-1">
-					<TransactionDonutChart movements={movements} categories={cats} />
-				</div>
 
-				{/* Category breakdown 
-				* collapsible on mobile, always visible on desktop 
-				*/}
-				<div className="xl:col-span-1 ">
+				{/* Category Budget Breakdown */}
+				<CategoryBudgetList transactions={filteredTransactions} categories={categories} />
 
-					{/* Mobile: Collapsible header */}
-					<div className="lg:hidden">
-						<Card>
-							<CardHeader className="pb-3">
-								<Button
-									variant="ghost"
-									onClick={() => setShowCategoryBreakdown(!showCategoryBreakdown)}
-									className="flex items-center justify-between w-full p-0 h-auto"
-								>
-									<CardTitle className="text-lg">Gastos por categoría: {monthName}</CardTitle>
-									{showCategoryBreakdown ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-								</Button>
-							</CardHeader>
-							{loadingCats ? (
-								<Loading></Loading>
-							) :
-								showCategoryBreakdown && (
-									<CardContent className="pt-0">
-										<div className="grid gap-4">
-											{/* {cats */}
-											{catsEmpty
-												.filter((cat) => cat.type == TxType.EXPENSE)
-												.map((category) => {
-													const amountUsedThisMonth = filteredMovements.filter(m => m.categoryId === category.id).reduce((sum, m) => sum + m.amount, 0);
-
-													// const spent = filteredTransactions
-													//   .filter((t) => t.type === "gasto" && t.category === category.id)
-													//   .reduce((sum, t) => sum + t.amount, 0)
-													// const remaining = category.budget - spent
-													// const percentage = (spent / category.budget) * 100
-
-													return (
-														<Card key={category.id} className="p-4">
-															<div className="flex items-center justify-between mb-3">
-																<div className="flex items-center gap-3">
-																	<div
-																		className={cn(
-																			"w-10 h-10 rounded-lg flex items-center justify-center",
-																			category.color,
-																		)}
-																	>
-																		<IconComponent icon={category?.icon} />
-																	</div>
-																	<div>
-																		<p className="font-medium text-sm">{category.name}</p>
-																		<p className="text-xs text-gray-500">
-																			{/* ${spent.toFixed(0)} de ${category.budget} */}
-																		</p>
-																	</div>
-																</div>
-																<div className="text-right">
-																	<p
-																		className={cn(
-																			// "font-semibold text-sm",
-																			// spent > category.budget ? "text-red-600" : "text-gray-900",
-																			"font-semibold text-sm text-red-600",
-																		)}
-																	>
-																		{/* ${remaining.toFixed(0)} restante */}
-																		${100} restante
-																	</p>
-																	<p className="text-xs text-gray-500">{0}% usado. Total gastado: ${amountUsedThisMonth}</p>
-																</div>
-															</div>
-															<Progress
-																// value={Math.min(100, percentage)}
-																// className={cn(
-																//   "h-2",
-																//   spent > category.budget ? "[&>div]:bg-red-500" : "[&>div]:bg-primary-500",
-																// )}
-																value={400}
-																className="h-2 bg-red-500"
-															/>
-														</Card>
-													)
-												})}
-										</div>
-									</CardContent>
-								)}
-						</Card>
-					</div>
-
-					{/* Desktop: Always visible */}
-					<div className=" lg:col-span-1 xl:block">
-						<Card>
-							<CardHeader>
-								<CardTitle >Desglose de gastos por categoría {monthName}</CardTitle>
-							</CardHeader>
-							<CardContent>
-								<div className="grid gap-4">
-									{loadingCats ? (
-										<Loading></Loading>
-									) :
-										// cats
-										cats
-											// .filter((cat) => cat.budget > 0)
-											.map((category) => {
-												const amountUsedThisMonth = filteredMovements.filter(m => m.categoryId === category.id).reduce((sum, m) => sum + m.amount, 0);
-
-												// const spent = filteredTransactions
-												//   .filter((t) => t.type === "gasto" && t.category === category.id)
-												//   .reduce((sum, t) => sum + t.amount, 0)
-												// const remaining = category.budget - spent
-												// const percentage = (spent / category.budget) * 100
-
-												return (
-													<Card key={category.id} className="p-4">
-														<div className="flex items-center justify-between mb-2">
-															<div className="flex items-center gap-3">
-																<div
-																	className={cn("w-8 h-8 rounded-lg flex items-center justify-center", category.color)}
-																>
-																	<IconComponent icon={category?.icon} className="w-4 h-4 text-white" />
-																</div>
-																<div>
-																	<p className="font-medium text-sm">{category.name}</p>
-																	<p className="text-xs text-gray-500">
-																		{/* ${spent.toFixed(0)} de ${category.budget} */}
-																	</p>
-																</div>
-															</div>
-															<div className="text-right">
-																<p
-																	// className={cn(
-																	//   "font-semibold text-sm",
-																	//   spent > category.budget ? "text-red-600" : "text-gray-900",
-																	// )}
-																	className={"font-semibold text-sm text-gray-900"}
-																>
-																	{/* ${remaining.toFixed(0)} restante */}
-																	${100} restante
-																</p>
-																{/* <p className="text-xs text-gray-500">{percentage.toFixed(0)}% usado</p> */}
-																<p className="text-xs text-gray-500">{0}% usado. Total gastado: ${amountUsedThisMonth}</p>
-															</div>
-														</div>
-														<Progress
-															// value={Math.min(100, percentage)}
-															// className={cn(
-															// 	"h-2",
-															// 	spent > category.budget ? "[&>div]:bg-red-500" : "[&>div]:bg-primary-500",
-															// )
-															value={50}
-															className={
-																"h-2 [&>div]:bg-primary-500"}
-														/>
-													</Card>
-												)
-											})}
-								</div>
-							</CardContent>
-						</Card>
-					</div>
-				</div>
-
-				{/* </div> */}
+				{/* Donut Chart */}
+				<CategoryDonutChart budgetedCategories={budgetedCats} />
 
 				{/* 
 				* Movements List 
