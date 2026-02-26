@@ -90,3 +90,13 @@ export const getDateStringsForFilter = (start: Date, end: Date) => {
 		endDate: toISOString(end),
 	};
 };
+
+/**
+ * Get days left in current month
+ */
+export const getDaysRemainingInMonth = () => {
+	const now = getNow();
+	const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+	const daysRemaining = lastDayOfMonth.getDate() - now.getDate();
+	return daysRemaining;
+};

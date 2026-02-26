@@ -2,17 +2,17 @@
 
 import { useEffect, useState } from 'react';
 
-import { getCategoriesByUser } from "@/lib/actions/categories";
+import { getBudgetByUserAndPeriod, getCategoriesByUser } from "@/lib/actions/categories";
 import { getMovementsByUserAndFilter, deleteMovement } from "@/lib/actions/movements"
 import { getTagsByUser } from "@/lib/actions/tags"
 
 import { Tags } from "@/lib/schemas/tag"
 import { Movement, Movements } from "@/lib/schemas/movement"
 import { TxType } from "@/lib/schemas/definitions";
-import { Category } from "@/lib/schemas/category";
+import { Category, CategoryBudget } from "@/lib/schemas/category";
 
 import { formatToBalance } from "@/lib/quick-spend-constants"
-import { getDateStringsForFilter, getLastNMonths } from "@/lib/dateUtils"
+import { getDateStringsForFilter, getDaysRemainingInMonth, getLastNMonths } from "@/lib/dateUtils"
 import { useDashboard } from '@/app/dashboard/dashboardContext';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -35,6 +35,7 @@ interface PaymentItem {
 export default function InicioPage() {
 
 	const now = new Date();
+	const { user, userBalance, setUserBalance, loadingUser, error, cats, setCats, loadingCats } = useDashboard();
 
 	/**
 	 * 
@@ -42,8 +43,6 @@ export default function InicioPage() {
 	 * 
 	 */
 
-	// Categories state (allows creation, setsnewone after created)
-	const [cats, setCats] = useState<Category[]>([]);
 
 	/**
 	 * Fetch Categories
@@ -59,12 +58,44 @@ export default function InicioPage() {
 			catch (err: any) {
 				// console.error('Failed to fetch categories:', err);
 				return err;
-				setCats([]);
 			}
 		};
 
 		fetchData();
 	}, []);
+
+
+	// literal filters for api, these are here bacause of chart requiring this data
+	let filters: any = {
+
+	};
+
+	const { start, end } = getLastNMonths(1);
+	const result = getDateStringsForFilter(start, end);
+	filters.startDate = result.startDate;
+	filters.endDate = result.endDate;
+
+	const [budgetedCats, setBudgetedCats] = useState<CategoryBudget[]>([])
+
+	useEffect(() => {
+		const getBudget = async () => {
+			let budgetedCats = await getBudgetByUserAndPeriod(filters.startDate, filters.endDate);
+
+			setBudgetedCats(budgetedCats);
+		}
+
+		getBudget();
+	}, []);
+
+	// Mock data for budget summary and progress
+	const monthlyBudget = user?.totalBudget || 0
+	const totalSpent = budgetedCats.filter((t) => t.type === TxType.EXPENSE).reduce((sum, t) => sum + t.totalExpenses, 0)
+	const monthlyBudgetRemaining = monthlyBudget - totalSpent
+	const progressPercentage = (totalSpent / monthlyBudget) * 100
+
+	// Calculate daily spending suggestion (mock for now, assuming 4 days remaining)
+	const daysRemaining = getDaysRemainingInMonth();
+	const dailySpendSuggestion = monthlyBudgetRemaining > 0 ? monthlyBudgetRemaining / daysRemaining : 0
 
 	/**
 	 * 
@@ -107,12 +138,6 @@ export default function InicioPage() {
 	 * 
 	 */
 
-	// Mock data for budget summary and progress
-	const monthlyBudget = 1000 // Example total budget
-	const totalSpent = 200 // Example spent amount
-	const monthlyBudgetRemaining = monthlyBudget - totalSpent
-	const progressPercentage = (totalSpent / monthlyBudget) * 100
-
 
 	// Mock data for upcoming payments
 	const upcomingPayments: PaymentItem[] = [
@@ -120,28 +145,6 @@ export default function InicioPage() {
 		{ id: "2", name: "Internet", amount: 30, dueDate: "15/mes" },
 		// { id: "3", name: {/* Mock data */}"Electricidad", amount: 70, dueDate: "20/mes" },
 	]
-
-	// Calculate daily spending suggestion (mock for now, assuming 4 days remaining)
-	const daysRemaining = 4 // This would be dynamic in a real app
-	const dailySpendSuggestion = monthlyBudgetRemaining > 0 ? monthlyBudgetRemaining / daysRemaining : 0
-
-	/**
-	 * 
-	 * User
-	 * 
-	 */
-	// const [userProfile, setUserProfile] = useState<User | null>(null);
-	// const [userBalance, setUserBalance] = useState<number>(0);
-	// const [loadingUser, setLoadingUser] = useState(true);
-
-	const { user, userBalance, loadingUser, setUserBalance } = useDashboard();
-
-	// REVALIDATE on mount because of changes applied of other pages
-	useEffect(() => {
-		// Rule: Revalidate immediately after mutations that change the data, not "when you need it later."
-		// so this might be wrong
-		revalidateUser()
-	}, []);
 
 	/**
 	 * 

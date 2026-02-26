@@ -16,7 +16,7 @@ export default function CategoryDonutChart({ budgetedCategories }: { budgetedCat
 	const filtered = budgetedCategories.filter((t) => t.type === viewType)
 	const total = filtered.reduce((sum, t) => sum + t.totalExpenses, 0)
 
-	const segments = budgetedCategories
+	const segments = filtered
 		.filter(cat => cat.totalExpenses > 0)
 		.map(cat => {
 			const percentage = (cat.totalExpenses / total) * 100
@@ -67,7 +67,9 @@ export default function CategoryDonutChart({ budgetedCategories }: { budgetedCat
 					<div className="flex rounded-lg border overflow-hidden">
 						<button
 							type="button"
-							onClick={() => setViewType(TxType.EXPENSE)}
+							// onClick={() => setViewType(TxType.EXPENSE)}
+							onClick={() => { setViewType(TxType.EXPENSE); console.log(filtered) }}
+
 							className={cn(
 								"px-3 py-1.5 text-xs font-medium transition-colors",
 								viewType === TxType.EXPENSE
@@ -79,7 +81,7 @@ export default function CategoryDonutChart({ budgetedCategories }: { budgetedCat
 						</button>
 						<button
 							type="button"
-							onClick={() => setViewType(TxType.INCOME)}
+							onClick={() => { setViewType(TxType.INCOME); console.log(filtered) }}
 							className={cn(
 								"px-3 py-1.5 text-xs font-medium transition-colors",
 								viewType === TxType.INCOME
@@ -93,7 +95,7 @@ export default function CategoryDonutChart({ budgetedCategories }: { budgetedCat
 				</div>
 			</CardHeader>
 			<CardContent className="space-y-4">
-				{total > 0 ? (
+				{filtered.length > 0 ? (
 					<>
 						{/* Donut Chart */}
 						<div className="flex justify-center">

@@ -5,64 +5,29 @@ import { ChevronDown, ChevronUp } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { CategoryBudget } from "@/lib/schemas/category"
+import { availableColors } from "@/lib/quick-spend-constants"
 
-const categoryColors: Record<string, string> = {
-	comida: "#f97316",
-	comestibles: "#22c55e",
-	transporte: "#3b82f6",
-	hogar: "#a855f7",
-	entretenimiento: "#ef4444",
-	servicios: "#eab308",
-	regalos: "#ec4899",
-	belleza: "#6366f1",
-	trabajo: "#6b7280",
-	viajes: "#06b6d4",
-	ingreso: "#16a34a",
-}
-
-interface Transaction {
-	id: string
-	title: string
-	amount: number
-	type: "gasto" | "ingreso"
-	category: string
-	date: string
-	time: string
-}
-
-interface Category {
-	id: string
-	name: string
-	icon: any
-	color: string
-	budget: number
-}
-
-interface CategoryBudgetListProps {
-	transactions: Transaction[]
-	categories: Category[]
-}
-
-export default function CategoryBudgetList({ transactions, categories }: CategoryBudgetListProps) {
+export default function CategoryBudgetList({ budgetedCategories }: { budgetedCategories: CategoryBudget[] }) {
 	const [expanded, setExpanded] = useState(false)
 	const VISIBLE_COUNT = 5
 
-	const expenses = transactions.filter((t) => t.type === "gasto")
+	// const expenses = budgetedCategories.filter((t) => t.type === TxType.EXPENSE)
 
-	const categoryTotals = expenses.reduce(
+	const categoryTotals = budgetedCategories.reduce(
 		(acc, t) => {
-			acc[t.category] = (acc[t.category] || 0) + t.amount
+			acc[t.id] = (acc[t.id] || 0) + t.totalExpenses
 			return acc
 		},
 		{} as Record<string, number>,
 	)
 
-	const totalBudget = categories
+	const totalBudget = budgetedCategories
 		.filter((c) => c.id !== "all" && c.budget > 0)
 		.reduce((sum, c) => sum + c.budget, 0)
 	const totalSpent = Object.values(categoryTotals).reduce((sum, a) => sum + a, 0)
 
-	const items = categories
+	const items = budgetedCategories
 		.filter((c) => c.id !== "all" && (c.budget > 0 || categoryTotals[c.id]))
 		.map((cat) => {
 			const spent = categoryTotals[cat.id] || 0
@@ -74,7 +39,8 @@ export default function CategoryBudgetList({ transactions, categories }: Categor
 				spent,
 				budget,
 				percentage,
-				color: categoryColors[cat.id] || "#6b7280",
+				color: availableColors.find(c => c.id === cat.color)?.hex
+
 			}
 		})
 		.sort((a, b) => b.spent - a.spent)

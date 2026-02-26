@@ -40,17 +40,14 @@ export async function getBudgetByUserAndPeriod(
 	const params = new URLSearchParams({
 	});
 
-	if (startDate) params.append('startDate ', startDate);
-	console.log('startDate ', startDate);;
+	if (startDate) params.append('startDate', startDate);
 
-	if (endDate) params.append('endDate ', endDate);
-	console.log('endDate ', endDate);;
-
+	if (endDate) params.append('endDate', endDate);
 
 	const url = `category/user/${session!.user.id}/budget?${params.toString()}`;
-	console.log('url ', url);
 
-	return await getMethod<Array<CategoryBudget>>(url, await session?.user.id);
+	return await getMethod<Array<CategoryBudget>>(url);
+
 }
 
 export async function deleteCategoryById(id: string) {

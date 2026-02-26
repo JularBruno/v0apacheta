@@ -12,8 +12,6 @@ import {
 	Search,
 	Filter,
 	X,
-	ChevronDown,
-	ChevronUp,
 	Trash
 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -43,114 +41,10 @@ import { useDashboard } from "../dashboardContext"
 import CategoryBudgetList from "@/components/dashboard/category-budget-list"
 import CategoryDonutChart from "@/components/dashboard/category-donut-chart"
 
-// Categories with budget data
-const categories = [
-	{ id: "all", name: "Todas", icon: MoreHorizontal, color: "bg-gray-500", budget: 0 },
-	{ id: "comida", name: "Comida", icon: MoreHorizontal, color: "bg-orange-500", budget: 200 },
-	{ id: "comestibles", name: "Comestibles", icon: MoreHorizontal, color: "bg-green-500", budget: 300 },
-	{ id: "transporte", name: "Transporte", icon: MoreHorizontal, color: "bg-blue-500", budget: 150 },
-	{ id: "hogar", name: "Hogar", icon: MoreHorizontal, color: "bg-purple-500", budget: 100 },
-	{ id: "entretenimiento", name: "Entretenimiento", icon: MoreHorizontal, color: "bg-red-500", budget: 80 },
-	{ id: "servicios", name: "Servicios", icon: MoreHorizontal, color: "bg-yellow-500", budget: 120 },
-	{ id: "regalos", name: "Regalos", icon: MoreHorizontal, color: "bg-pink-500", budget: 50 },
-	{ id: "belleza", name: "Belleza", icon: MoreHorizontal, color: "bg-indigo-500", budget: 60 },
-	{ id: "trabajo", name: "Trabajo", icon: MoreHorizontal, color: "bg-gray-500", budget: 0 },
-	{ id: "viajes", name: "Viajes", icon: MoreHorizontal, color: "bg-cyan-500", budget: 200 },
-	{ id: "ingreso", name: "Ingreso", icon: MoreHorizontal, color: "bg-green-600", budget: 0 },
-]
-
-// Mock transaction data
-const mockTransactions = [
-	{
-		id: "1",
-		title: "Almuerzo en restaurante",
-		amount: 45.5,
-		type: "gasto" as const,
-		category: "comida",
-		date: "2024-07-09",
-		time: "14:30",
-	},
-	{
-		id: "2",
-		title: "Supermercado Coto",
-		amount: 89.2,
-		type: "gasto" as const,
-		category: "comestibles",
-		date: "2024-07-08",
-		time: "18:45",
-	},
-	{
-		id: "3",
-		title: "Uber al centro",
-		amount: 12.75,
-		type: "gasto" as const,
-		category: "transporte",
-		date: "2024-07-08",
-		time: "16:20",
-	},
-	{
-		id: "4",
-		title: "Salario mensual",
-		amount: 2500.0,
-		type: "ingreso" as const,
-		category: "trabajo",
-		date: "2024-07-01",
-		time: "09:00",
-	},
-	{
-		id: "5",
-		title: "Netflix suscripción",
-		amount: 8.99,
-		type: "gasto" as const,
-		category: "entretenimiento",
-		date: "2024-07-02",
-		time: "10:00",
-	},
-	{
-		id: "6",
-		title: "Café con amigos",
-		amount: 15.3,
-		type: "gasto" as const,
-		category: "comida",
-		date: "2024-07-02",
-		time: "16:15",
-	},
-	{
-		id: "7",
-		title: "Gasolina",
-		amount: 35.0,
-		type: "gasto" as const,
-		category: "transporte",
-		date: "2024-07-01",
-		time: "08:30",
-	},
-	{
-		id: "8",
-		title: "Compras en farmacia",
-		amount: 22.5,
-		type: "gasto" as const,
-		category: "belleza",
-		date: "2024-06-30",
-		time: "19:15",
-	},
-]
 
 export default function HistorialPage() {
 
 	const [selectedType, setSelectedType] = useState("all")
-
-
-	const filteredTransactions = mockTransactions.filter((transaction) => {
-		// const categoryMatch = selectedCategory === "all" || transaction.category === selectedCategory
-		const typeMatch = selectedType === "all" || transaction.type === selectedType
-		// const amountMatch =
-		// 	(minAmount === "" || transaction.amount >= Number.parseFloat(minAmount)) &&
-		// 	(maxAmount === "" || transaction.amount <= Number.parseFloat(maxAmount))
-		// const dateMatch = getDateFilterMatch(transaction, selectedDateFilter)
-		// const searchMatch = transaction.title.toLowerCase().includes(searchTerm.toLowerCase())
-
-		return typeMatch
-	})
 
 	const allFilteredId = "all"; // this the id for when selecting all on a picker as a constant
 
@@ -160,15 +54,17 @@ export default function HistorialPage() {
 	const [selectedDateFilter, setSelectedDateFilter] = useState("month")
 
 	const [showFilters, setShowFilters] = useState(false)
-	// Hide or show category on mobile
-	const [showCategoryBreakdown, setShowCategoryBreakdown] = useState(false)
 
-	/**
-	 * 
-	 * DATE 
-	 * 
-	 */
-	const monthName = getMonthName(); // Uses current date
+	// literal filters for api, these are here bacause of chart requiring this data
+	let filters: any = {
+
+	};
+
+	const { start, end } = getLastNMonths(1);
+	const result = getDateStringsForFilter(start, end);
+	filters.startDate = result.startDate;
+	filters.endDate = result.endDate;
+
 
 	/**
 	 * 
@@ -176,23 +72,24 @@ export default function HistorialPage() {
 	 * 
 	 */
 
-	const [catsEmpty, setEmptyCats] = useState<Category[]>([])
 	const { error, cats, setCats, loadingCats } = useDashboard();
-
 
 	const [budgetedCats, setBudgetedCats] = useState<CategoryBudget[]>([])
 
+	useEffect(() => {
+		const getBudget = async () => {
+			let budgetedCats = await getBudgetByUserAndPeriod(filters.startDate, filters.endDate);
 
+			setBudgetedCats(budgetedCats);
+		}
 
+		getBudget();
+	}, [selectedDateFilter]);
 	/**
 	 * 
 	 * MOVEMENT
 	 * 
 	 */
-
-	// literal filters for api, these are here bacause of chart requiring this data
-	let filters: any = {
-	};
 
 	// clear filters but date
 	const clearFilters = () => {
@@ -432,28 +329,6 @@ export default function HistorialPage() {
 		if (selectedType !== allFilteredId) setSelectedCategory(allFilteredId);
 	}, [selectedType]);
 
-
-	useEffect(() => {
-
-		console.log('use efect');
-
-		const getBudget = async () => {
-			// const { start, end } = getLastNMonths(1);
-			// const result = getDateStringsForFilter(start, end);
-			// let budgetedCats = await getBudgetByUserAndPeriod(result.startDate, result.endDate);
-			console.log(filters.startDate);
-			console.log(filters.endDate);
-
-			let budgetedCats = await getBudgetByUserAndPeriod(filters.startDate, filters.endDate);
-			console.log('budgetedCats ', budgetedCats);
-
-			setBudgetedCats(budgetedCats);
-		}
-
-		getBudget();
-	}, [selectedDateFilter]);
-
-
 	return (
 		<div className="space-y-6">
 			{/* 
@@ -463,7 +338,7 @@ export default function HistorialPage() {
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
 				{/* Category Budget Breakdown */}
-				<CategoryBudgetList transactions={filteredTransactions} categories={categories} />
+				<CategoryBudgetList budgetedCategories={budgetedCats} />
 
 				{/* Donut Chart */}
 				<CategoryDonutChart budgetedCategories={budgetedCats} />
