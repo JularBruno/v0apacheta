@@ -33,11 +33,12 @@ import { Loading } from "@/components/ui/loading"
 import { BalanceInput } from "../balance-input/balance-input-form";
 import { useDashboard } from "@/app/dashboard/dashboardContext";
 import { useToast } from '@/hooks/use-toast';
+import { getTagsByUser, revalidateTags } from "@/lib/actions/tags";
 
 /**
  * @title Quick Spend Card used in home and asset
  * @param onAdd Callback with the data of MOVEMENT when added
- * @param initialType Initial type to use when opening asset (gasto/ingreso)
+ * @param initialType Initial type to use when opening asset (gasto/ingreso) TODO
  * @param onCancel Callback on cancel used on asset (TODO is this required? it could be good to clean anyform on asset)
  * @returns 
  */
@@ -45,20 +46,10 @@ export default function QuickSpendCard({
 	onAdd,
 	// initialType,
 	onCancel,
-	// cats,
-	// setCats,
-	allTags,
-	setAllTags,
-	loading
 }: {
 	onAdd: (data: Movement) => void
 	// initialType?: TxType
 	onCancel?: () => void
-	// cats: Category[]
-	// setCats: React.Dispatch<React.SetStateAction<Category[]>>
-	allTags: Tags[],
-	setAllTags: React.Dispatch<React.SetStateAction<Tags[]>>
-	loading: boolean
 }) {
 	const { toast } = useToast();
 
@@ -73,6 +64,8 @@ export default function QuickSpendCard({
 			if (liveRegionRef.current) liveRegionRef.current.textContent = ""
 		}, 800)
 	}
+
+	const { error, cats, setCats, allTags, setAllTags, loadingTags } = useDashboard();
 
 	/**
 	 * 
@@ -96,14 +89,6 @@ export default function QuickSpendCard({
 			setSelectedIncomeCat((prev) => prev || first || "trabajo")
 		}
 	}
-
-	/**
-	 * 
-	 * CATEGORY cats and card handlers
-	 * 
-	 */
-
-	const { user, userBalance, loadingUser, error, cats, setCats, loadingCats } = useDashboard();
 
 
 	// fitlered cats
@@ -368,14 +353,25 @@ export default function QuickSpendCard({
 				createdAt: showDateTime ? isoString : undefined, // Only include if custom date selected
 			};
 
+			/**
+			 * I wanted to write this since i was having a bad time understanding this properly
+			 * The flow:
+			 * postMovement() → saves to DB → revalidateTag('tags') → cache is marked stale
+			 * getTagsByUser() → sees cache is stale → fetches fresh data → updates cache
+			 * setAllTags(freshTags) → updates React state
+			 */
 			const movement = await postMovement(movementData);
 
 			let currentTag = allTags.find((t) => t.id === tagId)
 
 			// Always update tag default amount to last used as done in api
+			// console.log(currentTag);
 			if (currentTag) {
 				const updated = { ...currentTag, amount: data.amount }
 				setAllTags((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
+			}
+			else {
+				setAllTags(await getTagsByUser()); // revalidate cached tags
 			}
 
 			// AFTER SUBMITING reset form and states
@@ -405,7 +401,7 @@ export default function QuickSpendCard({
 	 * ADD TRANSACTION
 	 * 
 	 */
-	if (loading) {
+	if (loadingTags) {
 		return <QuickSpendSkeleton />;
 	}
 	return (

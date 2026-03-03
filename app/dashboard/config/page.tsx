@@ -92,8 +92,8 @@ export default function SettingsPage() {
 					{/* Action buttons for PWA/Notifications */}
 					<div className="m-4 p-4 border-t border-gray-200">
 						<SubscriptionButtonNotification>
-							{/** SUPER COMPONENT FOR activating notifications and suscribing user to them */}
 						</SubscriptionButtonNotification>
+						{/** SUPER COMPONENT FOR activating notifications and suscribing user to them */}
 					</div>
 
 					<div className="flex items-center justify-between">

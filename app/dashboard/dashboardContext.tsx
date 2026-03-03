@@ -5,8 +5,8 @@ import { getProfile } from '@/lib/actions/user';
 import { User } from '@/lib/schemas/user';
 import { revalidateTag } from 'next/cache'
 import { Category, CategoryBudget } from '@/lib/schemas/category';
-import { Tag } from '@/lib/schemas/tag';
-import { getCategoriesByUser } from '@/lib/actions/categories';
+import { Tag, Tags } from '@/lib/schemas/tag';
+import { getBudgetByUserAndPeriod, getBudgetByUserAndPeriodCached, getCategoriesByUser } from '@/lib/actions/categories';
 import { getTagsByUser } from '@/lib/actions/tags';
 
 export interface DashboardUserContextType {
@@ -19,11 +19,12 @@ export interface DashboardUserContextType {
 	cats: Category[];
 	setCats: Dispatch<SetStateAction<Category[]>>;
 	loadingCats: boolean;
-	tags: Tag[];
-	setTags: Dispatch<SetStateAction<Tag[]>>;
+	allTags: Tags[];
+	setAllTags: Dispatch<SetStateAction<Tags[]>>;
 	loadingTags: boolean;
-	// tags: Tag[] | null;
-	// setTags: Dispatch<SetStateAction<Tag[]>>;
+	budgetedCats: CategoryBudget[];
+	setBudgetedCats: Dispatch<SetStateAction<CategoryBudget[]>>;
+	loadingBudgetedCats: boolean;
 }
 /**
  * Context to be called with the type returned by the provider
@@ -48,11 +49,11 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 	const [cats, setCats] = useState<Category[]>([]);
 	const [loadingCats, setLoadingCats] = useState(true);
 
-	const [tags, setTags] = useState<Tag[]>([]);
+	const [allTags, setAllTags] = useState<Tags[]>([]);
 	const [loadingTags, setLoadingTags] = useState(true);
 
-	const [budget, setBudget] = useState<CategoryBudget[]>([]);
-	const [loadingBudget, setLoadingBudget] = useState(true);
+	const [budgetedCats, setBudgetedCats] = useState<CategoryBudget[]>([]);
+	const [loadingBudgetedCats, setLoadingBudgetedCats] = useState(true);
 
 	const fetchProfile = async () => {
 		try {
@@ -89,7 +90,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 		try {
 			setLoadingTags(true);
 			const tags = await getTagsByUser();
-			setTags(tags);
+			setAllTags(tags);
 		}
 		catch (error: any) {
 			setError(error);
@@ -99,19 +100,19 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 		}
 	}
 
-	// const fetchBudgetForThisMonth = async () => { // was about to join with cats but this has default filter for this month
-	// 	try {
-	// 		setLoadingBudget(true);
-	// 		const budget = await getBudgetByUserAndPeriod();
-	// 		setBudget(budget);
-	// 	}
-	// 	catch (error: any) {
-	// 		setError(error);
-	// 		return;
-	// 	} finally {
-	// 		setLoadingBudget(false);
-	// 	}
-	// }
+	const fetchBudgetForThisMonth = async () => { // was about to join with cats but this has default filter for this month
+		try {
+			setLoadingBudgetedCats(true);
+			const budget = await getBudgetByUserAndPeriodCached();
+			setBudgetedCats(budget);
+		}
+		catch (error: any) {
+			setError(error);
+			return;
+		} finally {
+			setLoadingBudgetedCats(false);
+		}
+	}
 
 	/**
 	 * Just fetch profile, might want to do function outside useEffect to call it
@@ -126,7 +127,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 			await Promise.all([
 				fetchCategories(),
 				fetchProfile(),
-				fetchTags()
+				fetchTags(),
+				fetchBudgetForThisMonth()
 			]);
 
 		} catch (error) {
@@ -150,9 +152,12 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 		cats,
 		setCats,
 		loadingCats,
-		tags,
-		setTags,
-		loadingTags
+		allTags,
+		setAllTags,
+		loadingTags,
+		budgetedCats,
+		setBudgetedCats,
+		loadingBudgetedCats
 	};
 
 	return (

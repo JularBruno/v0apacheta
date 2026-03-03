@@ -3,8 +3,7 @@
 import { Tags } from '../schemas/tag';
 import { getSession, getMethod, postMethod, getMethodWithoutSession } from './utils';
 import { unstable_cache } from 'next/cache';
-
-const url = 'tag';
+import { revalidateTag } from "next/cache";
 
 //// All Tag methods
 export async function getTagsByUser(): Promise<Array<Tags>> {
@@ -23,3 +22,8 @@ export async function getTagsByUser(): Promise<Array<Tags>> {
 	return await getTags();
 }
 
+
+export async function revalidateTags() {
+	console.log('revalidatingTags');
+	revalidateTag('tags'); // get categories from api! revalidate cache
+}

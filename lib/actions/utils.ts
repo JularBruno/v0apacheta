@@ -46,8 +46,8 @@ export async function getMethodWithoutSession<T>(
 	session: Session | null,
 	id?: string | number,
 ): Promise<T> {
-
 	const endpoint = id ? `${urlDev}/${url}/${id}` : `${urlDev}/${url}`;
+	console.log('about to fetch ', endpoint);
 
 	const response = await fetch(endpoint, {
 		method: 'GET',
@@ -123,10 +123,10 @@ export async function postMethod<T>(
 	if (requiresAuth) {
 		const session = await getSession();
 
-		// if (!session?.user?.id || !session?.accessToken) {
-		// 	await signOut({ redirect: false });
-		// 	redirect('/login?expired=true');
-		// }
+		if (!session?.user?.id || !session?.accessToken) {
+			await signOut({ redirect: false });
+			redirect('/login?expired=true');
+		}
 	}
 
 	try {

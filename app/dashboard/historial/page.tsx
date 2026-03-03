@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Loading } from "@/components/ui/loading"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Progress } from "@/components/ui/progress"
 import {
 	Search,
 	Filter,
@@ -15,12 +14,11 @@ import {
 	Trash
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import TransactionDonutChart from "@/components/dashboard/transaction-chart"
 import { useEffect, useState } from "react";
 import { Movements } from "@/lib/schemas/movement";
 import { TxType } from "@/lib/schemas/definitions";
 import { Category, CategoryBudget } from "@/lib/schemas/category";
-import { getBudgetByUserAndPeriod, getCategoriesByUser } from "@/lib/actions/categories";
+import { getBudgetByUserAndPeriod } from "@/lib/actions/categories";
 import { deleteMovement, getMovementsByUserAndFilter, postMovement } from "@/lib/actions/movements";
 import { quickFilters, formatNumberToInput, formatToBalance } from "@/lib/quick-spend-constants";
 import { formatDate, getDateStringsForFilter, formatDateNoYear, getLastNDays, getLastNMonths, getMonthRange, getMonthName } from "@/lib/dateUtils";
@@ -35,8 +33,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 import IconComponent from "@/components/transactions/icon-component"
-import { unstable_cache } from "next/cache"
-import { getSession } from "@/lib/actions/utils"
 import { useDashboard } from "../dashboardContext"
 import CategoryBudgetList from "@/components/dashboard/category-budget-list"
 import CategoryDonutChart from "@/components/dashboard/category-donut-chart"
@@ -57,7 +53,6 @@ export default function HistorialPage() {
 
 	// literal filters for api, these are here bacause of chart requiring this data
 	let filters: any = {
-
 	};
 
 	const { start, end } = getLastNMonths(1);
@@ -65,6 +60,85 @@ export default function HistorialPage() {
 	filters.startDate = result.startDate;
 	filters.endDate = result.endDate;
 
+	/**
+	 * FILTERS
+	 */
+
+	const getFiltersForDateSelection = () => {
+		let filters: any = {};
+		// Bring based on filter, since is the best option for pagination
+		switch (selectedDateFilter) { // default one is "month"
+			case quickFilters[0].id: { // last 24 hours (yesterday to now)
+
+				// For last 24 hours
+				const { start, end } = getLastNDays(1);
+				const result = getDateStringsForFilter(start, end);
+				filters.startDate = result.startDate;
+				filters.endDate = result.endDate;
+				break;
+			}
+
+			case quickFilters[1].id: { // last week (7 days ago to now)
+				const { start, end } = getLastNDays(7);
+				const result = getDateStringsForFilter(start, end);
+				filters.startDate = result.startDate;
+				filters.endDate = result.endDate;
+				break;
+			}
+
+			case quickFilters[2].id: {// last month (30 days ago to now)
+				const { start, end } = getLastNMonths(1);
+				const result = getDateStringsForFilter(start, end);
+				filters.startDate = result.startDate;
+				filters.endDate = result.endDate;
+				break;
+			}
+
+			case quickFilters[3].id: {// last 3 months (90 days ago to now)
+
+				const { start, end } = getLastNMonths(6);
+				const result = getDateStringsForFilter(start, end);
+				filters.startDate = result.startDate;
+				filters.endDate = result.endDate;
+
+				break;
+			}
+
+			case quickFilters[3].id: {// last 6 months TEST
+
+				const { start, end } = getLastNMonths(3);
+				const result = getDateStringsForFilter(start, end);
+				filters.startDate = result.startDate;
+				filters.endDate = result.endDate;
+
+				break;
+			}
+
+			case quickFilters[4].id: // TEST: EVERY DATES
+				// TODO REMOVE THIS
+				filters.startDate = null;
+				filters.endDate = null;
+
+				break;
+
+			default:
+				// Handle specific month selection: "month-9-2024"
+				if (selectedDateFilter.startsWith("month-")) {
+					const [_, monthStr, yearStr] = selectedDateFilter.split("-");
+
+					const month = parseInt(monthStr, 10); // 9 = October (0-indexed)
+					const year = parseInt(yearStr, 10);
+
+					const { start, end } = getMonthRange(month, year);
+					const result = getDateStringsForFilter(start, end);
+					filters.startDate = result.startDate;
+					filters.endDate = result.endDate;
+				}
+				break;
+
+		}
+		return filters;
+	}
 
 	/**
 	 * 
@@ -78,13 +152,14 @@ export default function HistorialPage() {
 
 	useEffect(() => {
 		const getBudget = async () => {
+			let filters = getFiltersForDateSelection();
 			let budgetedCats = await getBudgetByUserAndPeriod(filters.startDate, filters.endDate);
-
 			setBudgetedCats(budgetedCats);
 		}
 
 		getBudget();
 	}, [selectedDateFilter]);
+
 	/**
 	 * 
 	 * MOVEMENT
@@ -146,90 +221,9 @@ export default function HistorialPage() {
 
 	const fetchData = async () => {
 		try {
-			// Make pagination based on time periods
-			// let filters: any = {
-			// };
-
-			// Bring based on filter, since is the best option for pagination
-			switch (selectedDateFilter) { // default one is "month"
-				case quickFilters[0].id: { // last 24 hours (yesterday to now)
-
-					// For last 24 hours
-					const { start, end } = getLastNDays(1);
-					const result = getDateStringsForFilter(start, end);
-					filters.startDate = result.startDate;
-					filters.endDate = result.endDate;
-					break;
-				}
-
-				case quickFilters[1].id: { // last week (7 days ago to now)
-					const { start, end } = getLastNDays(7);
-					const result = getDateStringsForFilter(start, end);
-					filters.startDate = result.startDate;
-					filters.endDate = result.endDate;
-					break;
-				}
-
-				case quickFilters[2].id: {// last month (30 days ago to now)
-					const { start, end } = getLastNMonths(1);
-					const result = getDateStringsForFilter(start, end);
-					filters.startDate = result.startDate;
-					filters.endDate = result.endDate;
-					break;
-				}
-
-				case quickFilters[3].id: {// last 3 months (90 days ago to now)
-
-					const { start, end } = getLastNMonths(6);
-					const result = getDateStringsForFilter(start, end);
-					filters.startDate = result.startDate;
-					filters.endDate = result.endDate;
-
-					break;
-				}
-
-				case quickFilters[3].id: {// last 6 months TEST
-
-					const { start, end } = getLastNMonths(3);
-					const result = getDateStringsForFilter(start, end);
-					filters.startDate = result.startDate;
-					filters.endDate = result.endDate;
-
-					break;
-				}
-
-				case quickFilters[4].id: // TEST: EVERY DATES
-					// filters.startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-					filters.startDate = null;
-					filters.endDate = null;
-
-					break;
-
-				default:
-					// Handle specific month selection: "month-9-2024"
-					if (selectedDateFilter.startsWith("month-")) {
-						const [_, monthStr, yearStr] = selectedDateFilter.split("-");
-
-						const month = parseInt(monthStr, 10); // 9 = October (0-indexed)
-						const year = parseInt(yearStr, 10);
-
-						const { start, end } = getMonthRange(month, year);
-						const result = getDateStringsForFilter(start, end);
-						filters.startDate = result.startDate;
-						filters.endDate = result.endDate;
-					}
-					break;
-			}
 
 			// get movement with filters for API
-			const movements = await getMovementsByUserAndFilter(filters)
-
-			// const getMovementsCache = unstable_cache(async () => {
-			// 	return await getMovementsByUserAndFilter(filters)
-			// },
-			// 	['movements-api'],
-			// 	{ revalidate: 3600, tags: ['movements'] }
-			// );
+			const movements = await getMovementsByUserAndFilter(getFiltersForDateSelection())
 
 			// sort by date because these come unsorted from the backend
 			let sortedMovements = movements.sort(

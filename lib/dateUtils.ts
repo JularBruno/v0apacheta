@@ -23,7 +23,9 @@ export const getCurrentDateTimeInfo = () => {
  * Get month name (e.g., "enero", "febrero")
  */
 export const getMonthName = (date = new Date()) => {
-	return new Intl.DateTimeFormat(undefined, { month: 'long' }).format(date);
+	const month = new Intl.DateTimeFormat('es-AR', { month: 'long' }).format(date);
+	const capitalized = month.charAt(0).toUpperCase() + month.slice(1);
+	return capitalized;
 };
 
 /**
@@ -98,5 +100,15 @@ export const getDaysRemainingInMonth = () => {
 	const now = getNow();
 	const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 	const daysRemaining = lastDayOfMonth.getDate() - now.getDate();
-	return daysRemaining;
+	return Math.max(daysRemaining, 1); // ← Minimum 1 day to avoid division by zero
+};
+
+/**
+ * get current month range
+ */
+export const getCurrentMonthRange = () => {
+	const now = getNow();
+	const month = now.getMonth(); // 0-indexed (Feb = 1)
+	const year = now.getFullYear();
+	return getMonthRange(month, year);
 };

@@ -68,11 +68,19 @@ export async function deleteMovement(id: string) {
 
 export async function postMovement(data: Movement): Promise<Movement> {
 	const session = await getSession();
+	console.log('data ', data);
+
 
 	const result = await postMethod<Movement>(url, {
 		...data,
 		userId: session!.user.id,
 	});
+
+	console.log('revalidateTag tags');
+
+	revalidateTag('tags');
+	// if (!data.tagId) {
+	// }
 
 	// i didnt want to di because it might be expensive, /dashobard/inicio updates balance
 	// revalidateTag('user'); // get user from api! to acutally update context balance

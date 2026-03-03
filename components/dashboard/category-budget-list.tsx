@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { CategoryBudget } from "@/lib/schemas/category"
 import { availableColors } from "@/lib/quick-spend-constants"
+import { getMonthName } from "@/lib/dateUtils"
 
 export default function CategoryBudgetList({ budgetedCategories }: { budgetedCategories: CategoryBudget[] }) {
 	const [expanded, setExpanded] = useState(false)
@@ -61,7 +62,7 @@ export default function CategoryBudgetList({ budgetedCategories }: { budgetedCat
 		<Card>
 			<CardHeader className="pb-3">
 				<div className="flex items-center justify-between">
-					<CardTitle className="text-base">Presupuesto por Categoria</CardTitle>
+					<CardTitle className="text-base">Presupuesto por Categoria {getMonthName()}</CardTitle>
 					<div className="text-right">
 						<p className="text-lg font-bold tabular-nums">${totalSpent.toFixed(0)}</p>
 						<p className="text-xs text-muted-foreground">de ${totalBudget.toFixed(0)}</p>
