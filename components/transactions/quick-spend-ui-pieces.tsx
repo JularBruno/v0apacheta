@@ -19,9 +19,11 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-import { formatToBalance, iconComponents } from "@/lib/quick-spend-constants"
+import { formatToBalance } from "@/lib/quick-spend-constants"
 import { getCurrentDateTimeInfo } from "@/lib/dateUtils"
 import { Movement, movementSchema, MovementFormData } from "@/lib/schemas/movement";
+import IconComponent from "./icon-component";
+import { TxType } from "@/lib/schemas/definitions";
 
 
 type CategoryHeaderProps = {
@@ -102,38 +104,40 @@ export function CategoryHeaderMobile({
 type CategoryGridProps = {
 	items: Category[],
 	categoryId: string,
-	setCategory: (id: string) => void
+	setCategory: (id: string) => void,
+	loading: boolean
 }
 
 export function CategoryGrid({
 	items,
 	categoryId,
-	setCategory
+	setCategory,
+	loading
 }: CategoryGridProps
 ) {
 	return (
 		<>
 			<div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-5">
-				{items.map((c) => {
-					const Icon = iconComponents[c.icon as keyof typeof iconComponents]
-					const active = categoryId === c.id
+				{items.map((category) => {
+					const active = categoryId === category.id
 					return (
 						<button
 							type="button"
-							key={c.id}
-							onClick={() => setCategory(c.id)}
+							key={category.id}
+							onClick={() => setCategory(category.id)}
 							className={cn(
 								"p-3 rounded-lg border flex items-center gap-2 transition-all text-left min-w-0",
 								active
 									? "border-blue-600 bg-blue-50 ring-2 ring-blue-200 shadow-md"
 									: "border-gray-200 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm",
 							)}
+							disabled={loading}
 						>
-							<span className={cn("w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0", c.color)}>
-								<Icon className="w-4 h-4 text-white" />
+							<span className={cn("w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0", category.color)}>
+								<IconComponent icon={category.icon} className="w-4 h-4 text-white" />
 							</span>
 							<span className={cn("text-sm font-medium truncate", active ? "text-blue-900" : "text-gray-700")}>
-								{c.name}
+								{category.name}
 							</span>
 						</button>
 					)
@@ -148,24 +152,28 @@ type TagRowProps = {
 	setTagInput: (name: string) => void,
 	tagId: string | undefined,
 	setTagId: (id: string) => void,
+	categoryType: TxType, // this was just for hiding the tag amount on income pills
 	matchingSuggestions: Tag[],
 	matchingSuggestionsMobile: Tag[],
 	selectTag: (id?: string) => void,
 	tagNameError?: string,
-	onInputKeyDown?: () => void,
-	register: UseFormRegister<MovementFormData>
+	onInputKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void,
+	register: UseFormRegister<MovementFormData>,
+	loading: boolean
 }
 
 export function TagRow({
 	setTagInput,
 	tagId,
 	setTagId,
+	categoryType,
 	matchingSuggestions,
 	matchingSuggestionsMobile,
 	selectTag,
 	tagNameError,
 	onInputKeyDown,
-	register
+	register,
+	loading
 }: TagRowProps
 ) {
 	// const tagInputRef = useRef<HTMLInputElement>(null)
@@ -181,7 +189,7 @@ export function TagRow({
 				<div className=" gap-2">
 					<Input
 						role="combobox"
-						aria-autocomplete="list"
+						// aria-autocomplete="list"
 						aria-controls={listId}
 						aria-describedby="tag-hint"
 						placeholder="Escribe una descripción, o selecciona un movimiento previo"
@@ -191,12 +199,13 @@ export function TagRow({
 								setTagId("");
 							}
 						})}
-						onKeyDown={onInputKeyDown}
-						autoCapitalize="none"
-						autoCorrect="off"
-						autoComplete="off"
-						enterKeyHint="done"
+						onKeyDown={(e) => onInputKeyDown(e)}
+						// autoCapitalize="none"
+						// autoCorrect="off"
+						// autoComplete="off"
+						enterKeyHint="next"
 						className="flex-1"
+
 					/>
 					{tagNameError && (
 						<p className="text-red-500 text-sm mt-1">{tagNameError}</p>
@@ -212,6 +221,7 @@ export function TagRow({
 						aria-label="Crear nuevo tag"
 						role="option"
 						aria-selected={tagId === ""}
+						disabled={loading}
 					>
 						Nuevo
 					</button>
@@ -228,9 +238,10 @@ export function TagRow({
 									? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-200 shadow-md"
 									: "border-gray-200 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm",
 							)}
+							disabled={loading}
 						>
 							{t.name}
-							<span className="text-xs text-gray-500 ml-1">{formatToBalance(t.amount)}</span>
+							<span className="text-xs text-gray-500 ml-1" hidden={categoryType == TxType.INCOME}>{formatToBalance(t.amount)}</span>
 							{/* {t.category.type === "whatever" && (
 							<span className="text-xs text-gray-500 ml-1">
 								{formatToBalance(t.amount)}
@@ -271,7 +282,7 @@ export function TagRow({
 										: "border-gray-200 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm",
 								)}
 							>
-								{t.name} <span className="text-xs text-gray-500 ml-1">${t.amount}</span>
+								{t.name} <span className="text-xs text-gray-500 ml-1" hidden={categoryType == TxType.INCOME}>{formatToBalance(t.amount)}</span>
 							</button>
 						))}
 					</div>

@@ -6,8 +6,12 @@ import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
 import { User, UserState } from '../schemas/user';
 import { z } from 'zod';
-import { getSession, getMethod, postMethod } from './utils';
+import { getSession, getMethodWithoutSession, getMethod, postMethod, putMethod } from './utils';
 import { errorMonitor } from 'events';
+import { unstable_cache } from 'next/cache'
+import { revalidateTag } from 'next/cache'
+import { headers } from 'next/headers'
+import { cacheTag } from 'next/dist/server/use-cache/cache-tag';
 
 /* FormSchemas for validating each form parameter with an specific error before post on actual server */
 const PostUserFormSchema = z.object({
@@ -110,7 +114,43 @@ export async function register(prevState: UserState, formData: FormData) {
  * @title Get user profile including Balance
  * @returns User obejct
  */
-export async function getProfile() {
+export async function getProfile(): Promise<User> {
 	const url = 'user/profile';
-	return await getMethod<User>(url);
+	const session = await getSession();
+
+	const getProfile = unstable_cache(async () => {
+		return await getMethodWithoutSession<User>(url, session);
+	},
+		['user-profile'],
+		{ revalidate: 3600, tags: ['user'] }
+	);
+
+	return await getProfile();
+}
+
+
+export async function putUser(
+	data: {
+		name?: string;
+		totalBudget?: number;
+		balance?: number;
+	},
+): Promise<User> {
+	const session = await getSession();
+	const url = 'user';
+
+	if (!session?.user.id) throw new Error('User ID is missing');
+
+	const result = await putMethod<User>(url, session.user?.id, {
+		...data
+	});
+
+	return result;
+}
+
+
+// Rule: Revalidate immediately after mutations that change the data, not "when you need it later."
+// the user cannot be mutated yet
+export async function revalidateUser() {
+	revalidateTag('user'); // get user from api!
 }

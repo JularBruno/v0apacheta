@@ -10,4 +10,10 @@ const nextConfig = {
 	images: {
 		unoptimized: true,
 	},
+	// experimental: {
+	// 	serverActions: true,
+	// 	dynamicIO: true,
+	// },
 }
+
+export default nextConfig;

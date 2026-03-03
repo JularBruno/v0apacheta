@@ -7,24 +7,20 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Loading } from "@/components/ui/loading"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Progress } from "@/components/ui/progress"
 import {
 	Search,
 	Filter,
 	X,
-	ChevronDown,
-	ChevronUp,
 	Trash
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import TransactionDonutChart from "@/components/dashboard/transaction-donut-chart"
 import { useEffect, useState } from "react";
-import { Movement, movementSchema, MovementFormData, Movements } from "@/lib/schemas/movement";
+import { Movements } from "@/lib/schemas/movement";
 import { TxType } from "@/lib/schemas/definitions";
-import { Category } from "@/lib/schemas/category";
-import { getCategoriesByUser, deleteCategoryById } from "@/lib/actions/categories";
+import { Category, CategoryBudget } from "@/lib/schemas/category";
+import { getBudgetByUserAndPeriod } from "@/lib/actions/categories";
 import { deleteMovement, getMovementsByUserAndFilter, postMovement } from "@/lib/actions/movements";
-import { iconComponents, quickFilters, formatNumberToInput, formatToBalance } from "@/lib/quick-spend-constants";
+import { quickFilters, formatNumberToInput, formatToBalance } from "@/lib/quick-spend-constants";
 import { formatDate, getDateStringsForFilter, formatDateNoYear, getLastNDays, getLastNMonths, getMonthRange, getMonthName } from "@/lib/dateUtils";
 import { PeriodSelector } from "@/components/transactions/period-selector"
 import { toast } from "@/hooks/use-toast"
@@ -36,28 +32,113 @@ import {
 	DropdownMenuItem
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
+import IconComponent from "@/components/transactions/icon-component"
+import { useDashboard } from "../dashboardContext"
+import CategoryBudgetList from "@/components/dashboard/category-budget-list"
+import CategoryDonutChart from "@/components/dashboard/category-donut-chart"
+
 
 export default function HistorialPage() {
+
+	const [selectedType, setSelectedType] = useState("all")
 
 	const allFilteredId = "all"; // this the id for when selecting all on a picker as a constant
 
 	const [searchTerm, setSearchTerm] = useState("")
 	const [selectedCategory, setSelectedCategory] = useState("all")
-	const [selectedType, setSelectedType] = useState("all")
-
+	// const [selectedType, setSelectedType] = useState("all")
 	const [selectedDateFilter, setSelectedDateFilter] = useState("month")
 
 	const [showFilters, setShowFilters] = useState(false)
 
-	// Hide or show category on mobile
-	const [showCategoryBreakdown, setShowCategoryBreakdown] = useState(false)
+	// literal filters for api, these are here bacause of chart requiring this data
+	let filters: any = {
+	};
+
+	const { start, end } = getLastNMonths(1);
+	const result = getDateStringsForFilter(start, end);
+	filters.startDate = result.startDate;
+	filters.endDate = result.endDate;
 
 	/**
-	 * 
-	 * DATE 
-	 * 
+	 * FILTERS
 	 */
-	const monthName = getMonthName(); // Uses current date
+
+	const getFiltersForDateSelection = () => {
+		let filters: any = {};
+		// Bring based on filter, since is the best option for pagination
+		switch (selectedDateFilter) { // default one is "month"
+			case quickFilters[0].id: { // last 24 hours (yesterday to now)
+
+				// For last 24 hours
+				const { start, end } = getLastNDays(1);
+				const result = getDateStringsForFilter(start, end);
+				filters.startDate = result.startDate;
+				filters.endDate = result.endDate;
+				break;
+			}
+
+			case quickFilters[1].id: { // last week (7 days ago to now)
+				const { start, end } = getLastNDays(7);
+				const result = getDateStringsForFilter(start, end);
+				filters.startDate = result.startDate;
+				filters.endDate = result.endDate;
+				break;
+			}
+
+			case quickFilters[2].id: {// last month (30 days ago to now)
+				const { start, end } = getLastNMonths(1);
+				const result = getDateStringsForFilter(start, end);
+				filters.startDate = result.startDate;
+				filters.endDate = result.endDate;
+				break;
+			}
+
+			case quickFilters[3].id: {// last 3 months (90 days ago to now)
+
+				const { start, end } = getLastNMonths(6);
+				const result = getDateStringsForFilter(start, end);
+				filters.startDate = result.startDate;
+				filters.endDate = result.endDate;
+
+				break;
+			}
+
+			case quickFilters[3].id: {// last 6 months TEST
+
+				const { start, end } = getLastNMonths(3);
+				const result = getDateStringsForFilter(start, end);
+				filters.startDate = result.startDate;
+				filters.endDate = result.endDate;
+
+				break;
+			}
+
+			case quickFilters[4].id: // TEST: EVERY DATES
+				// TODO REMOVE THIS
+				filters.startDate = null;
+				filters.endDate = null;
+
+				break;
+
+			default:
+				// Handle specific month selection: "month-9-2024"
+				if (selectedDateFilter.startsWith("month-")) {
+					const [_, monthStr, yearStr] = selectedDateFilter.split("-");
+
+					const month = parseInt(monthStr, 10); // 9 = October (0-indexed)
+					const year = parseInt(yearStr, 10);
+
+					const { start, end } = getMonthRange(month, year);
+					const result = getDateStringsForFilter(start, end);
+					filters.startDate = result.startDate;
+					filters.endDate = result.endDate;
+				}
+				break;
+
+		}
+		return filters;
+	}
 
 	/**
 	 * 
@@ -65,27 +146,19 @@ export default function HistorialPage() {
 	 * 
 	 */
 
-	const [cats, setCats] = useState<Category[]>([])
-	const [catsEmpty, setEmptyCats] = useState<Category[]>([])
-	const [loadingCats, setLoadingCats] = useState<boolean>(true)
+	const { error, cats, setCats, loadingCats } = useDashboard();
 
-	/**
-	 * Fetch Categories
-	 */
+	const [budgetedCats, setBudgetedCats] = useState<CategoryBudget[]>([])
+
 	useEffect(() => {
-		const fetchData = async () => {
-			try {
-				const cats = await getCategoriesByUser();
-				setCats(cats);
-				setLoadingCats(false);
-			} catch (error) {
-				console.error('Failed to fetch categories:', error);
-			}
-		};
+		const getBudget = async () => {
+			let filters = getFiltersForDateSelection();
+			let budgetedCats = await getBudgetByUserAndPeriod(filters.startDate, filters.endDate);
+			setBudgetedCats(budgetedCats);
+		}
 
-		fetchData();
-	}, []);
-
+		getBudget();
+	}, [selectedDateFilter]);
 
 	/**
 	 * 
@@ -110,12 +183,14 @@ export default function HistorialPage() {
 
 	// ALl movements from api. Filtered by default one month ago 
 	const [movements, setMovements] = useState<Movements[]>([]);
+	// All movements filtered in UI for selectedCategory, selectedType, and searchTerm
+	const [filteredMovements, setFilteredMovements] = useState<Movements[]>([])
+
 	// random data thats cool set on MovementsFetch
 	const [movementsTotal, setMovementsTotal] = useState<number>(0);
 	const [movementsTotalIncome, setMovementsTotalIncome] = useState<number>(0);
 	const [movementsAverage, setMovementsAverage] = useState<number>(0);
-	// All movements filtered in UI for selectedCategory, selectedType, and searchTerm
-	const [filteredMovements, setFilteredMovements] = useState<Movements[]>([])
+
 	// refresh trigger for fetching movements on deletion on when refresh required
 	const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -140,129 +215,58 @@ export default function HistorialPage() {
 		setRefreshTrigger(prev => prev + 1);
 	};
 
-
 	/**
 	 * API Fetch and api filters
 	 */
-	useEffect(() => {
-		setLoadingMovements(true);
 
-		const fetchData = async () => {
-			try {
-				// Make pagination based on time periods
-				let filters: any = {
-				};
+	const fetchData = async () => {
+		try {
 
-				// Bring based on filter, since is the best option for pagination
-				switch (selectedDateFilter) { // default one is "month"
-					case quickFilters[0].id: { // last 24 hours (yesterday to now)
+			// get movement with filters for API
+			const movements = await getMovementsByUserAndFilter(getFiltersForDateSelection())
 
-						// For last 24 hours
-						const { start, end } = getLastNDays(1);
-						const result = getDateStringsForFilter(start, end);
-						filters.startDate = result.startDate;
-						filters.endDate = result.endDate;
-						break;
-					}
+			// sort by date because these come unsorted from the backend
+			let sortedMovements = movements.sort(
+				(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+			);
 
-					case quickFilters[1].id: { // last week (7 days ago to now)
-						const { start, end } = getLastNDays(7);
-						const result = getDateStringsForFilter(start, end);
-						filters.startDate = result.startDate;
-						filters.endDate = result.endDate;
-						break;
-					}
-
-					case quickFilters[2].id: {// last month (30 days ago to now)
-						const { start, end } = getLastNMonths(1);
-						const result = getDateStringsForFilter(start, end);
-						filters.startDate = result.startDate;
-						filters.endDate = result.endDate;
-						break;
-					}
-
-					case quickFilters[3].id: {// last 3 months (90 days ago to now)
-
-						const { start, end } = getLastNMonths(6);
-						const result = getDateStringsForFilter(start, end);
-						filters.startDate = result.startDate;
-						filters.endDate = result.endDate;
-
-						break;
-					}
-
-					case quickFilters[3].id: {// last 6 months TEST
-
-						const { start, end } = getLastNMonths(3);
-						const result = getDateStringsForFilter(start, end);
-						filters.startDate = result.startDate;
-						filters.endDate = result.endDate;
-
-						break;
-					}
-
-					case quickFilters[4].id: // TEST: EVERY DATES
-						// filters.startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-						filters.startDate = null;
-						filters.endDate = null;
-
-						break;
-
-					default:
-						// Handle specific month selection: "month-9-2024"
-						if (selectedDateFilter.startsWith("month-")) {
-							const [_, monthStr, yearStr] = selectedDateFilter.split("-");
-
-							const month = parseInt(monthStr, 10); // 9 = October (0-indexed)
-							const year = parseInt(yearStr, 10);
-
-							const { start, end } = getMonthRange(month, year);
-							const result = getDateStringsForFilter(start, end);
-							filters.startDate = result.startDate;
-							filters.endDate = result.endDate;
-						}
-						break;
+			let calculateMovementsTotal = movements.reduce((sum, item) => {
+				if (item.type === TxType.EXPENSE) {
+					return sum + item.amount;
 				}
+				return sum;
+			}, 0);
 
-				// get movement with filters for API
-				const movements = await getMovementsByUserAndFilter(filters)
+			let calculateMovementsTotalIncome = movements.reduce((sum, item) => {
+				if (item.type === TxType.INCOME) {
+					return sum + item.amount;
+				}
+				return sum;
+			}, 0);
 
-				// sort by date because these come unsorted from the backend
-				let sortedMovements = movements.sort(
-					(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-				);
+			// setMovements(sortedMovements);
+			// setFilteredMovements(sortedMovements);
+			setMovementsTotal(calculateMovementsTotal);
+			setMovementsTotalIncome(calculateMovementsTotalIncome);
+			setMovementsAverage(calculateMovementsTotal / movements.length);
 
-				let calculateMovementsTotal = movements.reduce((sum, item) => {
-					if (item.type === TxType.EXPENSE) {
-						return sum + item.amount;
-					}
-					return sum;
-				}, 0);
+			return sortedMovements;
+		} catch (error) {
+			console.error('Failed to fetch movements:', error);
+		}
+	};
 
-				let calculateMovementsTotalIncome = movements.reduce((sum, item) => {
-					if (item.type === TxType.INCOME) {
-						return sum + item.amount;
-					}
-					return sum;
-				}, 0);
+	useEffect(() => {
+		const load = async () => {
+			const movements: any = await fetchData()
+			setMovements(movements)
+		}
+		load();
+	}, [selectedDateFilter, refreshTrigger])
 
-				setMovements(sortedMovements);
-				setFilteredMovements(sortedMovements);
-				setMovementsTotal(calculateMovementsTotal);
-				setMovementsTotalIncome(calculateMovementsTotalIncome);
-				setMovementsAverage(calculateMovementsTotal / movements.length);
-			} catch (error) {
-				console.error('Failed to fetch movements:', error);
-			}
-		};
-
-		fetchData();
-	}, [selectedDateFilter, refreshTrigger]);
 
 	/**
-	 * 
 	 * UI FILTERS for getting movements called by useeffect when filtering 
-	 * 
 	 */
 	useEffect(() => {
 		// remmember this is called when movements update
@@ -302,10 +306,11 @@ export default function HistorialPage() {
 		setMovementsTotalIncome(calculateMovementsTotalIncome);
 		setMovementsAverage(calculateMovementsTotal / filtered.length);
 
-		console.log("setFilteredMovements ", filtered);
-		console.log("setFilteredMovements ", filtered.find(a => a.category === null));
+		// console.log("setFilteredMovements ", filtered);
+		// console.log("setFilteredMovements ", filtered.find(a => a.category === null));
 
 		setFilteredMovements(filtered);
+
 		setLoadingMovements(false);
 	}, [movements, selectedCategory, selectedType, searchTerm]);
 
@@ -318,182 +323,19 @@ export default function HistorialPage() {
 		if (selectedType !== allFilteredId) setSelectedCategory(allFilteredId);
 	}, [selectedType]);
 
-
 	return (
 		<div className="space-y-6">
 			{/* 
 			* Donut Chart and categories presupuestos
 			*/}
+
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-				{/* Chart - always visible */}
-				{/* <div className="lg:col-span-2 xl:col-span-1">
-					<TransactionDonutChart movements={movements} categories={cats} />
-				</div> */}
 
-				{/* Category breakdown 
-				* collapsible on mobile, always visible on desktop 
-				*/}
-				<div className="xl:col-span-1 hidden">
+				{/* Category Budget Breakdown */}
+				<CategoryBudgetList budgetedCategories={budgetedCats} />
 
-					{/* Mobile: Collapsible header */}
-					<div className="lg:hidden">
-						<Card>
-							<CardHeader className="pb-3">
-								<Button
-									variant="ghost"
-									onClick={() => setShowCategoryBreakdown(!showCategoryBreakdown)}
-									className="flex items-center justify-between w-full p-0 h-auto"
-								>
-									<CardTitle className="text-lg">Gastos por categoría: {monthName}</CardTitle>
-									{showCategoryBreakdown ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-								</Button>
-							</CardHeader>
-							{loadingCats ? (
-								<Loading></Loading>
-							) :
-								showCategoryBreakdown && (
-									<CardContent className="pt-0">
-										<div className="grid gap-4">
-											{/* {cats */}
-											{catsEmpty
-												.filter((cat) => cat.type == TxType.EXPENSE)
-												.map((category) => {
-													const Icon = iconComponents[category.icon as keyof typeof iconComponents]
-													const amountUsedThisMonth = filteredMovements.filter(m => m.categoryId === category.id).reduce((sum, m) => sum + m.amount, 0);
-
-													// const spent = filteredTransactions
-													//   .filter((t) => t.type === "gasto" && t.category === category.id)
-													//   .reduce((sum, t) => sum + t.amount, 0)
-													// const remaining = category.budget - spent
-													// const percentage = (spent / category.budget) * 100
-
-													return (
-														<Card key={category.id} className="p-4">
-															<div className="flex items-center justify-between mb-3">
-																<div className="flex items-center gap-3">
-																	<div
-																		className={cn(
-																			"w-10 h-10 rounded-lg flex items-center justify-center",
-																			category.color,
-																		)}
-																	>
-																		<Icon className="w-5 h-5 text-white" />
-																	</div>
-																	<div>
-																		<p className="font-medium text-sm">{category.name}</p>
-																		<p className="text-xs text-gray-500">
-																			{/* ${spent.toFixed(0)} de ${category.budget} */}
-																		</p>
-																	</div>
-																</div>
-																<div className="text-right">
-																	<p
-																		className={cn(
-																			// "font-semibold text-sm",
-																			// spent > category.budget ? "text-red-600" : "text-gray-900",
-																			"font-semibold text-sm text-red-600",
-																		)}
-																	>
-																		{/* ${remaining.toFixed(0)} restante */}
-																		${100} restante
-																	</p>
-																	<p className="text-xs text-gray-500">{0}% usado. Total gastado: ${amountUsedThisMonth}</p>
-																</div>
-															</div>
-															<Progress
-																// value={Math.min(100, percentage)}
-																// className={cn(
-																//   "h-2",
-																//   spent > category.budget ? "[&>div]:bg-red-500" : "[&>div]:bg-primary-500",
-																// )}
-																value={400}
-																className="h-2 bg-red-500"
-															/>
-														</Card>
-													)
-												})}
-										</div>
-									</CardContent>
-								)}
-						</Card>
-					</div>
-
-					{/* Desktop: Always visible */}
-					<div className="hidden lg:col-span-1 xl:block">
-						<Card>
-							<CardHeader>
-								<CardTitle >Desglose de gastos por categoría {monthName}</CardTitle>
-							</CardHeader>
-							<CardContent>
-								<div className="grid gap-4">
-									{loadingCats ? (
-										<Loading></Loading>
-									) :
-										// cats
-										catsEmpty
-											// .filter((cat) => cat.budget > 0)
-											.map((category) => {
-												const Icon = iconComponents[category.icon as keyof typeof iconComponents]
-												const amountUsedThisMonth = filteredMovements.filter(m => m.categoryId === category.id).reduce((sum, m) => sum + m.amount, 0);
-
-												// const spent = filteredTransactions
-												//   .filter((t) => t.type === "gasto" && t.category === category.id)
-												//   .reduce((sum, t) => sum + t.amount, 0)
-												// const remaining = category.budget - spent
-												// const percentage = (spent / category.budget) * 100
-
-												return (
-													<Card key={category.id} className="p-4">
-														<div className="flex items-center justify-between mb-2">
-															<div className="flex items-center gap-3">
-																<div
-																	className={cn("w-8 h-8 rounded-lg flex items-center justify-center", category.color)}
-																>
-																	{/* <category.icon className="w-4 h-4 text-white" /> */}
-																	<Icon className="w-4 h-4 text-white" />
-																</div>
-																<div>
-																	<p className="font-medium text-sm">{category.name}</p>
-																	<p className="text-xs text-gray-500">
-																		{/* ${spent.toFixed(0)} de ${category.budget} */}
-																	</p>
-																</div>
-															</div>
-															<div className="text-right">
-																<p
-																	// className={cn(
-																	//   "font-semibold text-sm",
-																	//   spent > category.budget ? "text-red-600" : "text-gray-900",
-																	// )}
-																	className={"font-semibold text-sm text-gray-900"}
-																>
-																	{/* ${remaining.toFixed(0)} restante */}
-																	${100} restante
-																</p>
-																{/* <p className="text-xs text-gray-500">{percentage.toFixed(0)}% usado</p> */}
-																<p className="text-xs text-gray-500">{0}% usado. Total gastado: ${amountUsedThisMonth}</p>
-															</div>
-														</div>
-														<Progress
-															// value={Math.min(100, percentage)}
-															// className={cn(
-															// 	"h-2",
-															// 	spent > category.budget ? "[&>div]:bg-red-500" : "[&>div]:bg-primary-500",
-															// )
-															value={50}
-															className={
-																"h-2 [&>div]:bg-primary-500"}
-														/>
-													</Card>
-												)
-											})}
-								</div>
-							</CardContent>
-						</Card>
-					</div>
-				</div>
-
-				{/* </div> */}
+				{/* Donut Chart */}
+				<CategoryDonutChart budgetedCategories={budgetedCats} />
 
 				{/* 
 				* Movements List 
@@ -674,26 +516,13 @@ export default function HistorialPage() {
 												:
 												filteredMovements.map((movement) => {
 
-													// const categoryInfo = getCategoryInfo(movement.categoryId)
-													// const Icon = iconComponents[movement.category.icon as keyof typeof iconComponents]
-													const Icon =
-														iconComponents[
-														(movement.category?.icon as keyof typeof iconComponents) ?? "Tag"
-														] || iconComponents["Tag"];
-
-													/** FILTERED REMOVED CATEGORIES TEMPORARY SOLUTION */
-													if (!movement.category) {
-														console.log("null category");
-														return;
-													}
-
 													return (
 														<Card key={movement.id} className="p-3 hover:shadow-sm transition-all md:p-4">
 															<div className="flex flex-col space-y-3">
 																{/* Top row: Badge (left) + Dropdown Menu (right) */}
 																<div className="flex items-center justify-between">
 																	<span className="bg-gray-100 px-2.5 py-1 rounded-full text-xs font-medium text-gray-700">
-																		{movement.category?.name}
+																		{movement.category?.name} {movement.category?.deletedAt ? ' (Categoría borrada en ' + formatDateNoYear(movement.category?.deletedAt) + ')' : ''}
 																	</span>
 																	{/* Menu on top */}
 																	<DropdownMenu>
@@ -719,7 +548,7 @@ export default function HistorialPage() {
 																			movement.category.color,
 																		)}
 																	>
-																		<Icon className="w-5 h-5 text-white" />
+																		<IconComponent icon={movement.category?.icon} className="w-5 h-5 text-white" />
 																	</div>
 																	<p className="font-semibold text-sm text-gray-900 line-clamp-2 flex-1">{movement.tag.name}</p>
 																</div>

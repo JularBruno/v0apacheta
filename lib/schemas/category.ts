@@ -5,12 +5,21 @@ import { z } from 'zod';
  * Category type with userId, equal to api
  */
 export type Category = {
-  id: string;
-  // userId: string
-  name: string;
-  color: string;
-  icon: string;
-  type: TxType;
+	id: string;
+	// userId: string
+	name: string;
+	color: string;
+	icon: string;
+	type: TxType;
+	updatedAt?: string;
+	deletedAt?: string;
+};
+
+// ✅ For retrieved data (server → client)
+export type CategoryBudget = Category & {
+	createdAt: string;
+	budget: number,
+	totalExpenses: number
 };
 
 /**
@@ -19,11 +28,11 @@ export type Category = {
  * Update requires id on path
  */
 export const categorySchema = z.object({
-  name: z
-    .string()
-    .min(1, 'Ingresa un nombre')
-    .max(20, 'Intenta que tenga menos de 20 caracteres'),
-  icon: z.string().min(1, 'icon is required'),
-  color: z.string().min(1, 'color is required'),
-  type: z.enum([TxType.EXPENSE, TxType.INCOME]),
+	name: z
+		.string()
+		.min(1, 'Ingresa un nombre')
+		.max(20, 'Intenta que tenga menos de 20 caracteres'),
+	icon: z.string().min(1, 'icon is required'),
+	color: z.string().min(1, 'color is required'),
+	type: z.enum([TxType.EXPENSE, TxType.INCOME]),
 });

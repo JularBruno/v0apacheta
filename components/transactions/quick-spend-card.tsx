@@ -30,12 +30,15 @@ import { CategoryHeaderDesktop, CategoryHeaderMobile, CategoryGrid, TagRow, Date
 import { getCurrentDateTimeInfo } from "@/lib/dateUtils";
 import QuickSpendSkeleton from "./quick-spend-skeleton";
 import { Loading } from "@/components/ui/loading"
-import { BalanceInput } from "./balance-input";
+import { BalanceInput } from "../balance-input/balance-input-form";
+import { useDashboard } from "@/app/dashboard/dashboardContext";
+import { useToast } from '@/hooks/use-toast';
+import { getTagsByUser, revalidateTags } from "@/lib/actions/tags";
 
 /**
  * @title Quick Spend Card used in home and asset
  * @param onAdd Callback with the data of MOVEMENT when added
- * @param initialType Initial type to use when opening asset (gasto/ingreso)
+ * @param initialType Initial type to use when opening asset (gasto/ingreso) TODO
  * @param onCancel Callback on cancel used on asset (TODO is this required? it could be good to clean anyform on asset)
  * @returns 
  */
@@ -43,21 +46,12 @@ export default function QuickSpendCard({
 	onAdd,
 	// initialType,
 	onCancel,
-	cats,
-	setCats,
-	allTags,
-	setAllTags,
-	loading
 }: {
 	onAdd: (data: Movement) => void
 	// initialType?: TxType
 	onCancel?: () => void
-	cats: Category[]
-	setCats: React.Dispatch<React.SetStateAction<Category[]>>
-	allTags: Tags[],
-	setAllTags: React.Dispatch<React.SetStateAction<Tags[]>>
-	loading: boolean
 }) {
+	const { toast } = useToast();
 
 	/** By using an ARIA live region, you make your app accessible (A11y = accessibility). */
 	// A11y live region
@@ -70,6 +64,8 @@ export default function QuickSpendCard({
 			if (liveRegionRef.current) liveRegionRef.current.textContent = ""
 		}, 800)
 	}
+
+	const { error, cats, setCats, allTags, setAllTags, loadingTags } = useDashboard();
 
 	/**
 	 * 
@@ -93,12 +89,6 @@ export default function QuickSpendCard({
 			setSelectedIncomeCat((prev) => prev || first || "trabajo")
 		}
 	}
-
-	/**
-	 * 
-	 * CATEGORY cats and card handlers
-	 * 
-	 */
 
 
 	// fitlered cats
@@ -209,6 +199,11 @@ export default function QuickSpendCard({
 		}
 
 		announce(`Categoría ${cat.name} eliminada`)
+		toast({
+			title: `Categoría eliminada`,
+			description: `Se eliminó la categoría`,
+			variant: "success",
+		})
 	}
 
 	/**
@@ -280,9 +275,23 @@ export default function QuickSpendCard({
 
 
 	// Helps to clear specific error when typing again
-	function handleTagKeyDown() {
-		clearErrors("tagName");
+	function handleTagKeyDown(e: any) {
+		if (e.key === 'Enter') {
+			e.preventDefault();
+			setTimeout(() => {
+				inputAmountRef.current?.scrollIntoView({
+					behavior: 'smooth',
+					block: 'center'
+				});
+				inputAmountRef.current?.focus();
+			}, 100);
+		} else {
+			clearErrors("tagName");
+		}
 	}
+
+	// reference to amount input! to be focused when required
+	const inputAmountRef = useRef<HTMLInputElement>(null)
 
 	// Selecting tag and its actions
 	const selectTag = (id?: string) => { // when removing the optional id, TS yells at calling without param, IT SHOULD be okey since makes sense when creating new tag after submit
@@ -292,6 +301,16 @@ export default function QuickSpendCard({
 		setTagId(t.id)
 		setValue('amount', t.amount || 0); // Update form amount too
 		setValue('tagName', t.name); // Update form amount too
+
+		// inputAmountRef.current?.focus()
+		// Mobile-friendly focus with scroll
+		setTimeout(() => {
+			inputAmountRef.current?.scrollIntoView({
+				behavior: 'smooth',
+				block: 'center'
+			});
+			inputAmountRef.current?.focus();
+		}, 100);
 
 		// match category and type to tag
 		const cat = cats.find((c) => c.id === t.categoryId)
@@ -334,14 +353,25 @@ export default function QuickSpendCard({
 				createdAt: showDateTime ? isoString : undefined, // Only include if custom date selected
 			};
 
+			/**
+			 * I wanted to write this since i was having a bad time understanding this properly
+			 * The flow:
+			 * postMovement() → saves to DB → revalidateTag('tags') → cache is marked stale
+			 * getTagsByUser() → sees cache is stale → fetches fresh data → updates cache
+			 * setAllTags(freshTags) → updates React state
+			 */
 			const movement = await postMovement(movementData);
 
 			let currentTag = allTags.find((t) => t.id === tagId)
 
 			// Always update tag default amount to last used as done in api
+			// console.log(currentTag);
 			if (currentTag) {
 				const updated = { ...currentTag, amount: data.amount }
 				setAllTags((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
+			}
+			else {
+				setAllTags(await getTagsByUser()); // revalidate cached tags
 			}
 
 			// AFTER SUBMITING reset form and states
@@ -371,7 +401,7 @@ export default function QuickSpendCard({
 	 * ADD TRANSACTION
 	 * 
 	 */
-	if (loading) {
+	if (loadingTags) {
 		return <QuickSpendSkeleton />;
 	}
 	return (
@@ -389,6 +419,12 @@ export default function QuickSpendCard({
 			</CardHeader>
 			<CardContent className="space-y-4 p-4">
 				<form onSubmit={handleSubmit(onSubmitHandler, onInvalid)}>
+					{/* <form
+					onSubmit={(e) => {
+						e.preventDefault(); // block form submit
+						handleSubmit(onSubmitHandler, onInvalid)
+					}}
+				> */}
 
 					{/* A11y live region */}
 					<div ref={liveRegionRef} className="sr-only" aria-live="polite" aria-atomic="true"></div>
@@ -442,12 +478,15 @@ export default function QuickSpendCard({
 						items={shownCategories}
 						categoryId={categoryId}
 						setCategory={setCategory}
+						loading={movementLoading} // set diabled on loading movement submit
 					/>
 
 					{/* Tags */}
 					<TagRow
 						tagInput={tagInput}
 						setTagInput={setTagInput}
+
+						categoryType={type}
 
 						tagId={tagId}
 						setTagId={setTagId}
@@ -460,6 +499,8 @@ export default function QuickSpendCard({
 						onInputKeyDown={handleTagKeyDown}
 
 						register={register}
+
+						loading={movementLoading} // set diabled on loading movement submit
 					/>
 
 					{/* Amount */}
@@ -469,7 +510,7 @@ export default function QuickSpendCard({
 							<BalanceInput
 								errors={errors}
 								clearErrors={clearErrors}
-
+								inputAmountRef={inputAmountRef}
 								control={control}
 							/>
 						</div>
@@ -503,7 +544,6 @@ export default function QuickSpendCard({
 			{/* Category Dialogs */}
 			<QuickSpendCategoryDialogs
 				// objects
-				cats={cats}
 				allTags={allTags}
 				// handlers for popup
 				showCreateCategory={showCreateCategory}

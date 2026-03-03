@@ -19,16 +19,18 @@ import { cn } from "@/lib/utils"
 
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Category, categorySchema } from "@/lib/schemas/category";
-import { postCategory, putCategory } from "@/lib/actions/categories";
+import { postCategory, putCategory, revalidateCategories } from "@/lib/actions/categories";
 import { Tag } from "@/lib/schemas/tag";
 import { TxType } from "@/lib/schemas/definitions";
 
-import { availableColors, availableIcons, iconComponents } from "../../lib/quick-spend-constants"
+import { availableColors, availableIcons } from "../../lib/quick-spend-constants"
+import IconComponent from "./icon-component";
+import { useDashboard } from "@/app/dashboard/dashboardContext";
+import { useToast } from '@/hooks/use-toast';
 
 type CategoryFormData = z.infer<typeof categorySchema>;
 
 type Props = {
-	cats: Category[],
 	allTags: Tag[],
 	showCreateCategory: boolean,
 	setShowCreateCategory: (open: boolean) => void,
@@ -43,7 +45,6 @@ type Props = {
 
 /**
  * Dialogs for creating and managing categories (used in QuickSpendCard component)
- * @param cats Categories array
  * @param allTags All tags array
  * @param showCreateCategory Boolean to control the visibility of the create category dialog
  * @param setShowCreateCategory Function to set the visibility of the create category dialog
@@ -55,7 +56,6 @@ type Props = {
  * @param onSubmit Function to handle the submission of a new or edited category
  */
 export function QuickSpendCategoryDialogs({
-	cats,
 	allTags,
 	showCreateCategory,
 	setShowCreateCategory,
@@ -66,6 +66,9 @@ export function QuickSpendCategoryDialogs({
 	deleteCategory,
 	onSubmit,
 }: Props) {
+	const { toast } = useToast();
+
+	const { user, userBalance, loadingUser, error, cats, setCats, loadingCats } = useDashboard();
 
 	// values to use in selectors and in the form
 	const [newCatIconId, setNewCatIconId] = useState(availableIcons[0].id)
@@ -100,7 +103,7 @@ export function QuickSpendCategoryDialogs({
 			name: cat.name,
 			color: cat.color,
 			icon: cat.icon,
-			type: cat.type, // Assuming 'kind' maps to 'type'
+			type: cat.type,
 		});
 
 		setEditingCategory(cat);
@@ -123,17 +126,27 @@ export function QuickSpendCategoryDialogs({
 				// Editing existing category
 				const cat = await putCategory(editingCategory.id, data);
 				onSubmit(cat); // Call parent's submit handler
-				setShowManageCategories(false); // Close dialog
+				setShowManageCategories(false); // Close dialog of categories
 
 			} else {
 				const cat = await postCategory(data);
 				onSubmit(cat); // Call parent's submit handler
 			}
 
+			revalidateCategories(); // revalidate cached categories
+			console.log('about to toastr');
+
+			toast({
+				title: `Categoría ${editingCategory?.id ? "editada" : "creada"}!`,
+				description: `Se ${editingCategory?.id ? "editó" : "creó"} la categoría`,
+				variant: "success",
+			})
+
 			setShowCreateCategory(false);
 
 			setNewCatColorId(availableColors[0]?.id);
 			setNewCatIconId(availableIcons[0]?.id);
+			setEditingCategory(null);
 			// reset form values too
 			reset({
 				name: '',
@@ -141,6 +154,8 @@ export function QuickSpendCategoryDialogs({
 				icon: availableIcons[0]?.id,
 				type: newCatType,
 			});
+
+
 		} catch (error) {
 			console.error('Submit error:', error);
 		}
@@ -194,8 +209,6 @@ export function QuickSpendCategoryDialogs({
 									id="name"
 									placeholder="Ej: Mascotas"
 									{...register('name')}
-								// value={newCatName}
-								// onChange={(e) => setNewCatName(e.target.value)}
 								/>
 								{errors.name && ( // ← Show error message
 									<p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
@@ -282,9 +295,6 @@ export function QuickSpendCategoryDialogs({
 					</DialogHeader>
 					<div className="space-y-4 py-2 max-h-96 overflow-y-auto">
 						{cats.map((cat) => {
-							// const Icon = cat.icon
-							const Icon = iconComponents[cat.icon as keyof typeof iconComponents] // MAPPING icon to category string
-
 							const isEditing = editingCategory?.id === cat.id
 							const relatedTagsCount = allTags.filter((t) => t.categoryId === cat.id).length
 
@@ -294,7 +304,7 @@ export function QuickSpendCategoryDialogs({
 										<span
 											className={cn("w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0", cat.color)}
 										>
-											<Icon className="w-4 h-4 text-white" />
+											<IconComponent icon={cat?.icon} className="w-4 h-4 text-white" />
 										</span>
 										<div className="min-w-0 flex-1">
 											<p className="font-medium truncate">{cat.name}</p>

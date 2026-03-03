@@ -1,6 +1,8 @@
 import type { NextAuthConfig } from 'next-auth';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import NextAuth from 'next-auth';
+import { getSession } from './lib/actions/utils';
+import { getToken } from 'next-auth/jwt' // If using NextAuth
 
 /**
  * @title Auth config to extend with basic setting
@@ -17,7 +19,6 @@ export const authConfig = {
 			const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
 			const publicPaths = ['/login', '/onboarding'];
 			const isPublic = publicPaths.includes(nextUrl.pathname);
-
 			// If on dashboard and not logged in, redirect to login
 			if (isOnDashboard && !isLoggedIn) {
 				const loginUrl = new URL('/login', nextUrl.origin);
@@ -43,7 +44,7 @@ export const authConfig = {
  */
 const { auth } = NextAuth(authConfig);
 
-export default auth((req) => {
+export default auth(async (request: NextRequest) => {
 	// Get the response from NextAuth
 	const response = NextResponse.next();
 
@@ -59,12 +60,29 @@ export default auth((req) => {
     `.replace(/\s{2,}/g, ' ').trim()
 	);
 
+	const session = await getToken({ req: request, secret: process.env.AUTH_SECRET });
+	// Only check token for dashboard routes (protected paths)
+	if (request.nextUrl.pathname.startsWith('/dashboard')) {
+		if (!session?.id || !session.accessToken) {
+			// Invalid/missing token on protected route
+			return NextResponse.redirect(new URL('/login?expired=true', request.url));
+		}
+	}
+
 	return response;
 });
 
 /**
  * Middleware that protects all routes except API, static files, and images.
+ * 
+ * NOT DOING this anymore, it just checks paths that must be protected
  */
 export const config = {
-	matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)',], // this has changed a few times, it is working properly but on previous github versions there was a clearer execution of this regex
+	// matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)',], // this has changed a few times, it is working properly but on previous github versions there was a clearer execution of this regex
+
+	matcher: [
+		'/dashboard/:path*',
+		'/login',
+		'/onboarding',
+	],
 };
