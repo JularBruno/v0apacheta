@@ -103,7 +103,8 @@ export const { auth, signIn, signOut } = NextAuth({
 
 					const data = await response.json();
 
-					revalidateTag('user'); // get user from api!
+					// revalidateTag('user'); // get user from api!
+					// await fetchUser();
 
 					// Return a user object that NextAuth can use
 					return {
