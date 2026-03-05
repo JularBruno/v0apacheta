@@ -19,16 +19,27 @@ export const authConfig = {
 			const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
 			const publicPaths = ['/login', '/onboarding'];
 			const isPublic = publicPaths.includes(nextUrl.pathname);
-			// If on dashboard and not logged in, redirect to login
+
+			// // If on dashboard and not logged in, redirect to login
+			// if (isOnDashboard && !isLoggedIn) {
+			// 	const loginUrl = new URL('/login', nextUrl.origin);
+			// 	loginUrl.searchParams.set('callbackUrl', nextUrl.pathname);
+			// 	return NextResponse.redirect(loginUrl);
+			// }
+
+			// // If logged in and on login page, redirect to dashboard
+			// if (isPublic && isLoggedIn) {
+			// 	return NextResponse.redirect(new URL('/dashboard/inicio', nextUrl));
+			// }
+
+			// Protect dashboard
 			if (isOnDashboard && !isLoggedIn) {
-				const loginUrl = new URL('/login', nextUrl.origin);
-				loginUrl.searchParams.set('callbackUrl', nextUrl.pathname);
-				return NextResponse.redirect(loginUrl);
+				return false; // Let NextAuth handle redirect
 			}
 
-			// If logged in and on login page, redirect to dashboard
-			if (isPublic && isLoggedIn) {
-				return NextResponse.redirect(new URL('/dashboard/inicio', nextUrl));
+			// Redirect logged-in users away from login
+			if (nextUrl.pathname === '/login' && isLoggedIn) {
+				return Response.redirect(new URL('/dashboard/inicio', nextUrl));
 			}
 
 			// Allow everything else
@@ -60,14 +71,14 @@ export default auth(async (request: NextRequest) => {
     `.replace(/\s{2,}/g, ' ').trim()
 	);
 
-	const session = await getToken({ req: request, secret: process.env.AUTH_SECRET });
-	// Only check token for dashboard routes (protected paths)
-	if (request.nextUrl.pathname.startsWith('/dashboard')) {
-		if (!session?.id || !session.accessToken) {
-			// Invalid/missing token on protected route
-			return NextResponse.redirect(new URL('/login?expired=true', request.url));
-		}
-	}
+	// const session = await getToken({ req: request, secret: process.env.AUTH_SECRET });
+	// // Only check token for dashboard routes (protected paths)
+	// if (request.nextUrl.pathname.startsWith('/dashboard')) {
+	// 	if (!session?.id || !session.accessToken) {
+	// 		// Invalid/missing token on protected route
+	// 		return NextResponse.redirect(new URL('/login?expired=true', request.url));
+	// 	}
+	// }
 
 	return response;
 });
