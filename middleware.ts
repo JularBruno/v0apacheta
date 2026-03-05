@@ -72,7 +72,6 @@ export default auth(async (request: NextRequest) => {
 	// Get the response from NextAuth
 	const response = NextResponse.next();
 
-
 	// Add CSP headers
 	response.headers.set(
 		'Content-Security-Policy',
@@ -85,18 +84,19 @@ export default auth(async (request: NextRequest) => {
     `.replace(/\s{2,}/g, ' ').trim()
 	);
 
-	const session = await getToken({ req: request, secret: process.env.AUTH_SECRET });
-	console.log('🟡 Session exists:', !!session);
+	// const session = await getToken({ req: request, secret: process.env.AUTH_SECRET });
+
+	// console.log('🟡 Session exists:', !!session);
 
 	// Only check token for dashboard routes (protected paths)
-	if (request.nextUrl.pathname.startsWith('/dashboard')) {
-		if (!session?.id || !session.accessToken) {
-			console.log('🔴 No session on dashboard - redirecting');
+	// if (request.nextUrl.pathname.startsWith('/dashboard')) {
+	// 	if (!session?.id || !session.accessToken) {
+	// 		console.log('🔴 No session on dashboard - redirecting');
 
-			// Invalid/missing token on protected route
-			return NextResponse.redirect(new URL('/login?expired=true', request.url));
-		}
-	}
+	// 		// Invalid/missing token on protected route
+	// 		return NextResponse.redirect(new URL('/login?expired=true', request.url));
+	// 	}
+	// }
 
 	return response;
 });
