@@ -35,9 +35,10 @@ export const authConfig = {
 			}
 
 			// If logged in and on login page, redirect to dashboard
-			if (isPublic && isLoggedIn) {
+			// if (isPublic && isLoggedIn) {
+			if (nextUrl.pathname === '/login' && isLoggedIn) {
 				console.log('🟢 Redirecting to dashboard - logged in on public page');
-				return NextResponse.redirect(new URL('/dashboard/inicio', nextUrl));
+				return Response.redirect(new URL('/dashboard/inicio', nextUrl));
 			}
 
 			// // Protect dashboard
@@ -102,7 +103,7 @@ export default auth(async (request: NextRequest) => {
 
 /**
  * Middleware that protects all routes except API, static files, and images.
- * 
+ *
  * NOT DOING this anymore, it just checks paths that must be protected
  */
 export const config = {
