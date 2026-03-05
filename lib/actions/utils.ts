@@ -47,7 +47,9 @@ export async function getMethodWithoutSession<T>(
 	id?: string | number,
 ): Promise<T> {
 	const endpoint = id ? `${urlDev}/${url}/${id}` : `${urlDev}/${url}`;
-	console.log('about to fetch ', endpoint);
+
+	// super useful for testing cached endpoints
+	// console.log('about to fetch ', endpoint);
 
 	const response = await fetch(endpoint, {
 		method: 'GET',
