@@ -20,33 +20,43 @@ export const authConfig = {
 			const publicPaths = ['/login', '/onboarding'];
 			const isPublic = publicPaths.includes(nextUrl.pathname);
 
-			// // If on dashboard and not logged in, redirect to login
-			// if (isOnDashboard && !isLoggedIn) {
-			// 	const loginUrl = new URL('/login', nextUrl.origin);
-			// 	loginUrl.searchParams.set('callbackUrl', nextUrl.pathname);
-			// 	return NextResponse.redirect(loginUrl);
-			// }
+			console.log('🔵 AUTHORIZED CALLBACK:', {
+				pathname: nextUrl.pathname,
+				isLoggedIn: !!auth?.user,
+				hasAuth: !!auth,
+			});
 
-			// // If logged in and on login page, redirect to dashboard
-			// if (isPublic && isLoggedIn) {
-			// 	return NextResponse.redirect(new URL('/dashboard/inicio', nextUrl));
-			// }
-
-			// Protect dashboard
+			// If on dashboard and not logged in, redirect to login
 			if (isOnDashboard && !isLoggedIn) {
-				return false; // Let NextAuth handle redirect
+				console.log('🔴 Redirecting to login - no auth on dashboard');
+				const loginUrl = new URL('/login', nextUrl.origin);
+				loginUrl.searchParams.set('callbackUrl', nextUrl.pathname);
+				return NextResponse.redirect(loginUrl);
 			}
 
-			// Redirect logged-in users away from login
-			if (nextUrl.pathname === '/login' && isLoggedIn) {
-				return Response.redirect(new URL('/dashboard/inicio', nextUrl));
+			// If logged in and on login page, redirect to dashboard
+			if (isPublic && isLoggedIn) {
+				console.log('🟢 Redirecting to dashboard - logged in on public page');
+				return NextResponse.redirect(new URL('/dashboard/inicio', nextUrl));
 			}
+
+			// // Protect dashboard
+			// if (isOnDashboard && !isLoggedIn) {
+			// 	return false; // Let NextAuth handle redirect
+			// }
+
+			// // Redirect logged-in users away from login
+			// if (nextUrl.pathname === '/login' && isLoggedIn) {
+			// 	return Response.redirect(new URL('/dashboard/inicio', nextUrl));
+			// }
 
 			// Allow everything else
 			return true;
 		},
 	},
 	providers: [],
+	debug: true, // Enable NextAuth debug logs
+
 } satisfies NextAuthConfig;
 
 
@@ -56,8 +66,11 @@ export const authConfig = {
 const { auth } = NextAuth(authConfig);
 
 export default auth(async (request: NextRequest) => {
+	console.log('🟡 MIDDLEWARE:', request.nextUrl.pathname);
+
 	// Get the response from NextAuth
 	const response = NextResponse.next();
+
 
 	// Add CSP headers
 	response.headers.set(
@@ -71,14 +84,18 @@ export default auth(async (request: NextRequest) => {
     `.replace(/\s{2,}/g, ' ').trim()
 	);
 
-	// const session = await getToken({ req: request, secret: process.env.AUTH_SECRET });
-	// // Only check token for dashboard routes (protected paths)
-	// if (request.nextUrl.pathname.startsWith('/dashboard')) {
-	// 	if (!session?.id || !session.accessToken) {
-	// 		// Invalid/missing token on protected route
-	// 		return NextResponse.redirect(new URL('/login?expired=true', request.url));
-	// 	}
-	// }
+	const session = await getToken({ req: request, secret: process.env.AUTH_SECRET });
+	console.log('🟡 Session exists:', !!session);
+
+	// Only check token for dashboard routes (protected paths)
+	if (request.nextUrl.pathname.startsWith('/dashboard')) {
+		if (!session?.id || !session.accessToken) {
+			console.log('🔴 No session on dashboard - redirecting');
+
+			// Invalid/missing token on protected route
+			return NextResponse.redirect(new URL('/login?expired=true', request.url));
+		}
+	}
 
 	return response;
 });
