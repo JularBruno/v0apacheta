@@ -28,6 +28,7 @@ import { useToast } from '@/hooks/use-toast';
 import Loading from "../patrimonio/[id]/loading"
 import TransactionChart from "@/components/dashboard/transaction-chart"
 import { BudgetOverviewSkeleton } from "@/components/budget/budget-skeletons"
+import { TxType } from "@/lib/schemas/definitions"
 
 export default function PresupuestoPage() {
 	const { toast } = useToast();
@@ -41,6 +42,12 @@ export default function PresupuestoPage() {
 	const totalSpent = useMemo(() => {
 		return budgetedCats.reduce((sum, cat) => sum + cat.totalExpenses, 0)
 	}, [budgetedCats])
+
+	const totalBudgeted = useMemo(() => {
+		return budgetedCats.reduce((sum, item) =>
+			item.type === TxType.EXPENSE ? sum + item.budget : sum
+			, 0);
+	}, [budgetedCats]);
 
 	useEffect(() => {
 		setUserBudgetRemaining((user?.totalBudget || 0) - totalSpent)
@@ -123,7 +130,9 @@ export default function PresupuestoPage() {
 
 			<Card>
 				<CardHeader>
-					<CardTitle>Presupuesto por Categoría de {getMonthName()}</CardTitle>
+					<CardTitle>Presupuesto por Categoría de {getMonthName()}.
+						Total distribuido: {totalBudgeted}
+					</CardTitle>
 				</CardHeader>
 
 				<CardContent className="space-y-4">

@@ -59,10 +59,11 @@ export async function getMethodWithoutSession<T>(
 		},
 	});
 
-	// if (response.status === 401) {
-	// 	await signOut({ redirect: false });
-	// 	redirect('/login?expired=true');
-	// }
+	// not sure about this but middleware does weird validations
+	if (response.status === 401) {
+		await signOut({ redirect: false });
+		redirect('/login?expired=true');
+	}
 
 	if (!response.ok) {
 		throw new Error(`HTTP error! status: ${response.status}`);
