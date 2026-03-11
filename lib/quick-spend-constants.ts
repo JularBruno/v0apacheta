@@ -96,6 +96,15 @@ export function formatToBalance(balance: number) {
 		minimumFractionDigits: 0,
 	}).format(balance);
 
+	// if (!balance && balance !== 0) return '';
+	// const numValue = typeof balance === 'string' ? parseFloat(balance) : balance;
+	// if (isNaN(numValue)) return '';
+
+	// return numValue.toLocaleString('es-AR', { // toLocaleString with Spanish Argentina format (dots for thousands, comma for decimal)
+	// 	minimumFractionDigits: 0,
+	// 	maximumFractionDigits: 2,
+	// });
+
 	return formatted;
 }
 

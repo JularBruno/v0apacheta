@@ -171,9 +171,10 @@ export default function InicioPage() {
 						{loadingUser ? (
 							<Loading></Loading>
 						) : userBalance ? (
-							<div className="text-2xl font-bold">{formatToBalance(userBalance)} ARS</div>
+							// <div className="text-2xl font-bold">{formatToBalance(userBalance)} ARS</div>
+							<div className="text-2xl font-bold">{formatToBalance(userBalance)}</div>
 						) : (
-							<div className="text-2xl font-bold">$0 ARS</div>
+							<div className="text-2xl font-bold">$0</div>
 						)}
 						<p className="text-sm text-gray-500">{allMovements.length} transacciones en el último mes</p>
 					</CardContent>
@@ -190,7 +191,7 @@ export default function InicioPage() {
 						) : (
 							<div>
 								<div className="text-2xl font-bold mb-2">
-									${monthlyBudgetRemaining.toFixed(2)} restante de ${monthlyBudget.toFixed(2)}
+									{formatToBalance(monthlyBudgetRemaining)} restante de {formatToBalance(monthlyBudget)}
 								</div>
 								<Progress value={progressPercentage} className="h-2 mb-4" />
 
@@ -202,7 +203,7 @@ export default function InicioPage() {
 									<span>31 jul</span> {/* Mock end date */}
 								</div>
 								<p className="text-sm text-gray-500 mt-2">
-									Puede gastar ${dailySpendSuggestion.toFixed(2)}/día para {daysRemaining} más días.
+									Puede gastar {formatToBalance(dailySpendSuggestion)}/día para {daysRemaining} más días.
 								</p>
 							</div>
 						)}

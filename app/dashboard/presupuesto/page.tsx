@@ -123,15 +123,14 @@ export default function PresupuestoPage() {
 				</Card>
 			)}
 
-
+			{/* Horizontal chart */}
 			<TransactionChart />
 
 			{/* Category Budgeting */}
-
 			<Card>
 				<CardHeader>
 					<CardTitle>Presupuesto por Categoría de {getMonthName()}.
-						Total distribuido: {totalBudgeted}
+						Total distribuido: {formatToBalance(totalBudgeted)}
 					</CardTitle>
 				</CardHeader>
 

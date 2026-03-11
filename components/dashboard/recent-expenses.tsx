@@ -97,8 +97,9 @@ export default function RecentExpenses({
 													movement.type === TxType.INCOME ? "text-emerald-600" : "text-red-600",
 												)}
 											>
-												{movement.type === TxType.INCOME ? "+" : "-"}$
-												{movement.amount.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+												{movement.type === TxType.INCOME ? "+" : "-"}
+												{/* {movement.amount.toLocaleString("es-AR", { minimumFractionDigits: 2 })} */}
+												{formatToBalance(movement.amount)}
 											</span>
 										</div>
 

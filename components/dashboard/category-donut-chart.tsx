@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { TxType } from "@/lib/schemas/definitions"
 import { CategoryBudget } from "@/lib/schemas/category"
-import { availableColors } from "@/lib/quick-spend-constants"
+import { availableColors, formatToBalance } from "@/lib/quick-spend-constants"
 import { Button } from "../ui/button"
 import { ChevronDown, ChevronUp } from "lucide-react"
 
@@ -67,8 +67,7 @@ export default function CategoryDonutChart({ budgetedCategories }: { budgetedCat
 					<div className="flex rounded-lg border overflow-hidden">
 						<button
 							type="button"
-							// onClick={() => setViewType(TxType.EXPENSE)}
-							onClick={() => { setViewType(TxType.EXPENSE); console.log(filtered) }}
+							onClick={() => setViewType(TxType.EXPENSE)}
 
 							className={cn(
 								"px-3 py-1.5 text-xs font-medium transition-colors",
@@ -81,7 +80,7 @@ export default function CategoryDonutChart({ budgetedCategories }: { budgetedCat
 						</button>
 						<button
 							type="button"
-							onClick={() => { setViewType(TxType.INCOME); console.log(filtered) }}
+							onClick={() => setViewType(TxType.INCOME)}
 							className={cn(
 								"px-3 py-1.5 text-xs font-medium transition-colors",
 								viewType === TxType.INCOME
@@ -139,13 +138,13 @@ export default function CategoryDonutChart({ budgetedCategories }: { budgetedCat
 										{hoveredSeg ? (
 											<>
 												<p className="text-xs text-muted-foreground">{hoveredSeg.name}</p>
-												<p className="text-xl font-bold tabular-nums">${hoveredSeg.amount.toFixed(0)}</p>
-												<p className="text-xs text-muted-foreground">{hoveredSeg.percentage.toFixed(0)}%</p>
+												<p className="text-xl font-bold tabular-nums">{formatToBalance(hoveredSeg.amount)}</p>
+												<p className="text-xs text-muted-foreground">{formatToBalance(hoveredSeg.percentage)}%</p>
 											</>
 										) : (
 											<>
 												<p className="text-xs text-muted-foreground">Total</p>
-												<p className="text-xl font-bold tabular-nums">${total.toFixed(0)}</p>
+												<p className="text-xl font-bold tabular-nums">{formatToBalance(total)}</p>
 												<p className="text-xs text-muted-foreground">
 													{segments.length} {segments.length === 1 ? "categoria" : "categorias"}
 												</p>
@@ -160,7 +159,7 @@ export default function CategoryDonutChart({ budgetedCategories }: { budgetedCat
 						<div className="border-t pt-3">
 							<div className="grid grid-cols-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider pb-2 px-1">
 								<span>Categoria</span>
-								<span className="text-right">Gastado</span>
+								<span className="text-right">Total</span>
 								<span className="text-right">
 									{viewType === TxType.EXPENSE ? "Restante" : "% del Total"}
 								</span>
@@ -191,7 +190,7 @@ export default function CategoryDonutChart({ budgetedCategories }: { budgetedCat
 												<span className="text-sm font-medium truncate">{seg.name}</span>
 											</div>
 											<span className="text-sm tabular-nums text-right font-medium">
-												${seg.amount.toFixed(0)}
+												{formatToBalance(seg.amount)}
 											</span>
 											<span className={cn(
 												"text-sm tabular-nums text-right",
@@ -205,7 +204,7 @@ export default function CategoryDonutChart({ budgetedCategories }: { budgetedCat
 											)}>
 												{viewType === TxType.EXPENSE ? (
 													seg.budget > 0 ? (
-														isOver ? `-$${(seg.amount - seg.budget).toFixed(0)}` : `$${remaining.toFixed(0)}`
+														isOver ? `-${formatToBalance(seg.amount - seg.budget)}` : `${formatToBalance(remaining)}`
 													) : (
 														<span className="text-xs">--</span>
 													)
