@@ -29,7 +29,7 @@ export interface DashboardUserContextType {
 /**
  * Context to be called with the type returned by the provider
  */
-const DashboardUserContext = createContext<DashboardUserContextType | undefined>(undefined);
+export const DashboardUserContext = createContext<DashboardUserContextType | undefined>(undefined);
 
 /**
  * Actual information provider

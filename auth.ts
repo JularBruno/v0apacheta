@@ -1,4 +1,4 @@
-import NextAuth, { DefaultSession } from 'next-auth';
+import NextAuth, { AuthError, DefaultSession } from 'next-auth';
 import { authConfig } from './middleware';
 import Credentials from 'next-auth/providers/credentials';
 import { z } from 'zod';
@@ -59,16 +59,13 @@ export const { auth, signIn, signOut } = NextAuth({
 							email: z.string().email(),
 							password: z.string().min(6),
 						})
-						// .safeParse(credentials);
 						.safeParse({
 							email: credentials?.email,
 							password: credentials?.password,
 						});
 
 					if (!parsedCredentials.success) {
-						// TODO this can be done on form
 						const firstError = parsedCredentials.error.issues[0];
-
 						lastAuthError = `${firstError.path[0].toString().toUpperCase()}_VALIDATIONERROR`;
 						return null;
 					}
@@ -87,24 +84,35 @@ export const { auth, signIn, signOut } = NextAuth({
 					});
 
 					if (!response.ok) {
+						console.log('RESPONSE status', response.status);
 						const errorData = await response.json();
+
+						if (response.status >= 500) {
+
+							console.log('RESPONSE data', errorData);
+							lastAuthError = 'LOGIN_ERROR';
+							throw new AuthError('LOGIN_ERROR');
+							// return;
+						}
+
+						// const errorData = await response.json();
 						console.log('Login failed:', response.status, errorData);
+
 						switch (errorData.message) {
 							case 'Invalid username':
 								lastAuthError = 'LOGIN_EMAIL_ERROR';
+								// throw new AuthError('LOGIN_EMAIL_ERROR');
 								break;
 
 							default:
 								lastAuthError = 'LOGIN_PASSWORD_ERROR';
+								// throw new AuthError('LOGIN_PASSWORD_ERROR');
 								break;
 						}
 						return null;
 					}
 
 					const data = await response.json();
-
-					// revalidateTag('user'); // get user from api!
-					// await fetchUser();
 
 					// Return a user object that NextAuth can use
 					return {
@@ -114,10 +122,19 @@ export const { auth, signIn, signOut } = NextAuth({
 						// Store the token if you need it for other API calls
 						accessToken: data.accessToken,
 					};
-				} catch (error: any) {
-					console.error('Login error:', error);
+				}
+				//  catch (error: any) {
+				// 	throw new AuthError('LOGIN_ERROR');
+				// }
+				catch (error: any) {
+					console.log('error on catch ', error);
+					// return error
+					// if (error instanceof AuthError) throw error; // ← pass through your custom errors
 					lastAuthError = 'LOGIN_ERROR';
-					throw error;
+					// throw new AuthError('LOGIN_ERROR');
+					// throw error;
+					throw new AuthError('LOGIN_ERROR');
+
 				}
 			},
 		}),
