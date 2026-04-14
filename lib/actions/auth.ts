@@ -33,6 +33,8 @@ export async function authenticate(
 				default:
 					return 'Algo salió mal.';
 			}
+		} else { // error?.digest?.startsWith('NEXT_REDIRECT')
+			throw error
 		}
 	}
 }

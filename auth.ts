@@ -127,11 +127,8 @@ export const { auth, signIn, signOut } = NextAuth({
 				// 	throw new AuthError('LOGIN_ERROR');
 				// }
 				catch (error: any) {
-					console.log('error on catch ', error);
-					// return error
 					// if (error instanceof AuthError) throw error; // ← pass through your custom errors
 					lastAuthError = 'LOGIN_ERROR';
-					// throw new AuthError('LOGIN_ERROR');
 					// throw error;
 					throw new AuthError('LOGIN_ERROR');
 

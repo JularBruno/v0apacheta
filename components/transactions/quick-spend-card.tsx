@@ -336,6 +336,8 @@ export default function QuickSpendCard({
 	const onSubmitHandler = async (data: MovementFormData) => {
 		setMovementLoading(true);
 
+		// console.log("🔥 submit fired");
+
 		// Format the datetime to ISO string
 		const dateObj = new Date(`${customDate}T${customTime}`);
 		const isoString = dateObj.toISOString(); // "2026-01-05T13:36:50.121Z"
@@ -433,6 +435,7 @@ export default function QuickSpendCard({
 					<div className="grid grid-cols-2 gap-2" role="tablist" aria-label="Tipo de transacción">
 						<button
 							role="tab"
+							data-testid="quickspendcard-expense"
 							type="button"
 							aria-selected={type === TxType.EXPENSE}
 							onClick={() => switchType(TxType.EXPENSE)}
@@ -448,6 +451,7 @@ export default function QuickSpendCard({
 						<button
 							role="tab"
 							type="button"
+							data-testid="quickspendcard-income"
 							aria-selected={type === TxType.INCOME}
 							onClick={() => switchType(TxType.INCOME)}
 							className={cn(
@@ -527,7 +531,7 @@ export default function QuickSpendCard({
 					/>
 
 					{/* submit button */}
-					<Button type="submit" className="w-full h-12 text-base font-semibold"
+					<Button data-testid="submit-button" type="submit" className="w-full h-12 text-base font-semibold"
 						disabled={movementLoading}
 					>
 						{movementLoading

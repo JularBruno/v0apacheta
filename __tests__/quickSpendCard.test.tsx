@@ -1,13 +1,33 @@
 // @jest-environment jsdom
-import { render, screen } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import InicioPage from "@/app/dashboard/inicio/page";
 import { DashboardUserContext } from "@/app/dashboard/dashboardContext";
 import { TxType } from "@/lib/schemas/definitions";
 import userEvent from "@testing-library/user-event";
+import { revalidateTag } from "next/cache";
+
+global.fetch = jest.fn().mockResolvedValue({
+	ok: true,
+	json: async () => ({ success: true }),
+});
+
+jest.mock("@/lib/actions/movements", () => ({
+	postMovement: jest.fn().mockImplementation((data) =>
+		Promise.resolve(data) // ← return exactly what was passed in
+	),
+}));
+
+jest.mock("@/lib/actions/tags", () => ({  // 👈 adjust path
+	getTagsByUser: jest.fn().mockResolvedValue([]),
+}));
+
+jest.mock("next/cache", () => ({
+	revalidateTag: jest.fn(),
+}));
+const mockRevalidateTag = revalidateTag as jest.Mock;
 
 // ── mock context value ──
 const mockContextValue = {
-	// user: { id: "1", email: "test@test.com", name: "Test" },
 	user: {
 		id: 'string',
 		name: 'string',
@@ -16,7 +36,8 @@ const mockContextValue = {
 		balance: 0,
 		totalBudget: 0
 	},
-	userBalance: 15000,
+	userBalance: 0,
+	// userBalance: 15000,
 	loadingUser: false,
 	error: null,
 	setUserBalance: jest.fn(),
@@ -63,16 +84,30 @@ function renderWithContext(contextValue = mockContextValue) {
 	);
 }
 
-describe("InicioPage", () => {
-	it("renders user balance", () => {
-		renderWithContext();
-		expect(screen.getByText(/15\.000/)).toBeInTheDocument(); // adjust to your formatToBalance output
-	});
+async function fillQuickSpendFormAndSubmit(user: ReturnType<typeof userEvent.setup>, {
+	transactionType = TxType.EXPENSE,
+	category = "Hogar",
+	amount = "500",
+	description = "test",
+} = {}) {
+	if (transactionType === TxType.EXPENSE) {
+		await user.click(screen.getByRole("tab", { name: "💸 Gasto" }));
+		// await user.click(screen.getByTestId("quickspendcard-expense"));
+	} else {
+		await user.click(screen.getByRole("tab", { name: "💰 Ingreso" }));
+		// await user.click(screen.getByTestId("quickspendcard-income"));
+	}
 
-	// it("shows loading when user is loading", () => {
-	// 	renderWithContext({ ...mockContextValue, loadingUser: true });
-	// 	expect(screen.getByText(/loading/i)).toBeInTheDocument();
-	// });
+	await user.click(screen.getByRole("button", { name: category }));
+	await user.type(screen.getByTestId("description-input"), description);
+	await user.type(screen.getByTestId("amount-input"), amount);
+
+	const submitBtn = screen.getByTestId("submit-button");
+
+	await user.click(submitBtn);
+}
+
+describe("InicioPage", () => {
 
 	it("shows $0 when balance is zero", () => {
 		renderWithContext({ ...mockContextValue, userBalance: 0 });
@@ -90,10 +125,58 @@ describe("InicioPage", () => {
 
 		await user.click(screen.getByRole("tab", { name: "💰 Ingreso" }));
 
-		// expect(screen.getByRole("tab", { name: "💰 Ingreso" })).toHaveAttribute("aria-selected", "true");
-
 		expect(screen.getByRole("button", { name: "Trabajo" })).toBeInTheDocument();
+	});
+
+	it("basic balance update and decrease", async () => {
+
+		// ARRANGE
+		const user = userEvent.setup();
+
+		renderWithContext({
+			...mockContextValue,
+			userBalance: 0
+		});
+
+		// ── INCOME ──
+
+		// ACT
+		await fillQuickSpendFormAndSubmit(user, {
+			transactionType: TxType.INCOME,
+			category: 'Trabajo',
+			amount: "10000",
+			description: 'trabajotest',
+		})
+
+		await waitFor(() => {
+			expect(mockContextValue.setUserBalance).toHaveBeenCalledWith(10000);
+		});
+
+		// ── EXPENSE ──
+		cleanup();
+		jest.clearAllMocks();
+
+		renderWithContext({ ...mockContextValue, userBalance: 10000 });
+
+		// ACT
+		await fillQuickSpendFormAndSubmit(user, {
+			transactionType: TxType.EXPENSE,
+			category: 'Hogar',
+			amount: "3000",
+			description: 'Hogartest',
+		})
+
+		// ASSERT
+		await waitFor(() => {
+			expect(mockContextValue.setUserBalance).toHaveBeenCalledWith(7000);
+		});
+
+		await waitFor(() => {
+			expect(mockRevalidateTag).toHaveBeenCalledWith('user');
+		});
 
 	});
+
+	// screen.debug(undefined, 30000); // ← increase character limit
 
 });

@@ -88,6 +88,7 @@ export function BalanceInput({ errors, clearErrors, control, inputAmountRef }: B
 				<Input
 					type="text"
 					id="amount"
+					data-testid="amount-input"
 					aria-label="Monto"
 					inputMode="decimal"
 					enterKeyHint="done"

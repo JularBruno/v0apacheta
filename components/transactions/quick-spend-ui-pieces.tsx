@@ -182,14 +182,16 @@ export function TagRow({
 	return (
 		<>
 			<div className="space-y-2 py-4">
-				<Label className="text-sm text-gray-600 ">Descripción</Label>
+				<Label htmlFor="descripcion" className="text-sm text-gray-600 ">Descripción</Label>
 				<p id="tag-hint" className="sr-only">
 					Escribe una descripción, o selecciona un movimiento previo
 				</p>
 				<div className=" gap-2">
 					<Input
 						role="combobox"
+						id="descripcion"
 						// aria-autocomplete="list"
+						data-testid="description-input"
 						aria-controls={listId}
 						aria-describedby="tag-hint"
 						placeholder="Escribe una descripción, o selecciona un movimiento previo"
@@ -208,7 +210,7 @@ export function TagRow({
 
 					/>
 					{tagNameError && (
-						<p className="text-red-500 text-sm mt-1">{tagNameError}</p>
+						<p data-testid="tag-name-error" className="text-red-500 text-sm mt-1">{tagNameError}</p>
 					)}
 				</div>
 
