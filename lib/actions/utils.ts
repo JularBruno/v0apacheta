@@ -89,6 +89,8 @@ export async function getMethod<T>(
 
 	const endpoint = id ? `${urlDev}/${url}/${id}` : `${urlDev}/${url}`;
 
+	console.log('get method ', endpoint);
+
 	const response = await fetch(endpoint, {
 		method: 'GET',
 		headers: {
@@ -236,7 +238,7 @@ export async function putMethod<T>(
  * @param id - id to identify object
  * @returns response or error
  */
-export async function deleteMethod<T>(url: string, id: string): Promise<T> {
+export async function deleteMethod<T>(url: string, id: string): Promise<T | null> {
 	const session = await getSession();
 
 	if (!session?.user?.id || !session?.accessToken) {
@@ -258,10 +260,8 @@ export async function deleteMethod<T>(url: string, id: string): Promise<T> {
 			redirect('/login?expired=true');
 		}
 
-		const data = await response.json();
-		// console.log(data);
-
-		return data;
+		const text = await response.text();
+		return text ? JSON.parse(text) : null;
 	} catch (error) {
 		throw error;
 	}

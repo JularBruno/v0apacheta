@@ -44,11 +44,13 @@ import { getTagsByUser, revalidateTags } from "@/lib/actions/tags";
  */
 export default function QuickSpendCard({
 	onAdd,
-	// initialType,
+	initialType,
+	financialElementId,
 	onCancel,
 }: {
 	onAdd: (data: Movement) => void
-	// initialType?: TxType
+	initialType?: TxType
+	financialElementId?: string,
 	onCancel?: () => void
 }) {
 	const { toast } = useToast();
@@ -74,7 +76,7 @@ export default function QuickSpendCard({
 	 */
 	// type selection and useful for when opening modal with an already selected option
 	// const [type, setType] = useState<TxType>(initialType || TxType.EXPENSE)
-	const [type, setType] = useState<TxType>(TxType.EXPENSE)
+	const [type, setType] = useState<TxType>(initialType || TxType.EXPENSE)
 
 	// Switch between "gasto" (expense) and "ingreso" (income) types
 	// and make sure a valid category is selected for the new type
@@ -355,6 +357,10 @@ export default function QuickSpendCard({
 				createdAt: showDateTime ? isoString : undefined, // Only include if custom date selected
 			};
 
+			if (financialElementId) {
+				movementData.financialElementId = financialElementId;
+			}
+
 			/**
 			 * I wanted to write this since i was having a bad time understanding this properly
 			 * The flow:
@@ -421,12 +427,6 @@ export default function QuickSpendCard({
 			</CardHeader>
 			<CardContent className="space-y-4 p-4">
 				<form onSubmit={handleSubmit(onSubmitHandler, onInvalid)}>
-					{/* <form
-					onSubmit={(e) => {
-						e.preventDefault(); // block form submit
-						handleSubmit(onSubmitHandler, onInvalid)
-					}}
-				> */}
 
 					{/* A11y live region */}
 					<div ref={liveRegionRef} className="sr-only" aria-live="polite" aria-atomic="true"></div>

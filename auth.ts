@@ -84,29 +84,20 @@ export const { auth, signIn, signOut } = NextAuth({
 					});
 
 					if (!response.ok) {
-						console.log('RESPONSE status', response.status);
 						const errorData = await response.json();
 
 						if (response.status >= 500) {
-
-							console.log('RESPONSE data', errorData);
 							lastAuthError = 'LOGIN_ERROR';
 							throw new AuthError('LOGIN_ERROR');
-							// return;
 						}
-
-						// const errorData = await response.json();
-						console.log('Login failed:', response.status, errorData);
 
 						switch (errorData.message) {
 							case 'Invalid username':
 								lastAuthError = 'LOGIN_EMAIL_ERROR';
-								// throw new AuthError('LOGIN_EMAIL_ERROR');
 								break;
 
 							default:
 								lastAuthError = 'LOGIN_PASSWORD_ERROR';
-								// throw new AuthError('LOGIN_PASSWORD_ERROR');
 								break;
 						}
 						return null;
@@ -123,15 +114,9 @@ export const { auth, signIn, signOut } = NextAuth({
 						accessToken: data.accessToken,
 					};
 				}
-				//  catch (error: any) {
-				// 	throw new AuthError('LOGIN_ERROR');
-				// }
 				catch (error: any) {
-					// if (error instanceof AuthError) throw error; // ← pass through your custom errors
 					lastAuthError = 'LOGIN_ERROR';
-					// throw error;
 					throw new AuthError('LOGIN_ERROR');
-
 				}
 			},
 		}),

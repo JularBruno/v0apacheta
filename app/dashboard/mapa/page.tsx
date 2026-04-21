@@ -31,34 +31,36 @@ const mapSteps = [
 	{
 		id: "chapter-1",
 		level: 0,
-		title: "Fundamentos Financieros",
-		description: "Domina los conceptos básicos para construir tu futuro financiero.",
+		title: "Sigue el mapa...",
+		description: "Fundamentos Financieros: Vive con menos de lo que ganas.",
 		longDescription:
-			"Este capítulo establece las bases sólidas de tu educación financiera. Aprenderás los conceptos fundamentales del dinero, cómo funciona la economía personal, y desarrollarás la mentalidad correcta para tomar decisiones financieras inteligentes. Es el cimiento sobre el cual construirás toda tu estrategia financiera futura.",
+			// "Aprende la importancia de rastrear todos tus gastos. A planear los presupuestos para saber cuanto gastar el mes que viene. Pudiendo ahorrar o salir de deudas.",
+			"Aprende a rastrear tus gastos, planificar presupuestos y tomar control de tu dinero. Esto te permitirá ahorrar o salir de deudas. Solo seguir el camino te llevará a ello, sigue el mapa, sigue las apachetas.",
 		status: "completed" as const,
 		icon: BookOpen,
 		type: "chapter" as const,
 		image:
-			"/placeholder.svg?height=400&width=800&text=🏔️%20Fundamentos%20(Completado)%20→%20🗻%20Bienvenida%20→%20⚪%20Ingresos",
+			// "/map1.png?height=400&width=800&text=🏔️%20Fundamentos%20(Completado)%20→%20🗻%20Bienvenida%20→%20⚪%20Ingresos",
+			"/map1.png",
 		mobileImage:
-			"/placeholder.svg?height=600&width=400&text=🏔️%20Fundamentos%20(Completado)%20→%20🗻%20Bienvenida%20→%20⚪%20Ingresos",
+			"/map1.png",
 	},
 
 	// --- Major Goal 1: Bienvenida e Introducción ---
 	{
 		id: "major-1",
 		level: 1,
-		title: "Bienvenida a Apacheta",
-		description: "Tu punto de partida en el camino hacia la libertad financiera.",
+		title: "Primer Apacheta",
+		description: "Tu punto de partida en el camino",
 		longDescription:
-			"Este primer gran objetivo te sumerge en el universo de Apacheta. Aprenderás a navegar la plataforma, entenderás la filosofía detrás de nuestra educación financiera adaptada a Argentina y establecerás tus primeras intenciones. Es la base sobre la cual construirás todo tu conocimiento y progreso. Descubrirás cómo funciona nuestro sistema de aprendizaje gamificado y establecerás tus metas financieras iniciales.",
+			"Aparte de seguir el mapa, deberás anotar tus ingresos y tus gastos, todos los días, esto hará que seas mucho más consciente de tus movimientos. Cambiará tus hábitos de gasto, mejorará tu gestión de recursos y oportunidades.",
 		status: "completed" as const,
 		icon: Map,
 		type: "major" as const,
 		image:
-			"/placeholder.svg?height=400&width=800&text=🏔️%20Fundamentos%20→%20🗻%20Bienvenida%20(Completado)%20→%20⚪%20Ingresos",
+			"/map1.png",
 		mobileImage:
-			"/placeholder.svg?height=600&width=400&text=🏔️%20Fundamentos%20→%20🗻%20Bienvenida%20(Completado)%20→%20⚪%20Ingresos",
+			"/map1.png",
 	},
 
 	// --- Small Steps leading to Major Goal 2 ---
@@ -67,14 +69,14 @@ const mapSteps = [
 		level: 1.1,
 		title: "Conoce tus Ingresos",
 		description: "Identifica todas tus fuentes de dinero.",
-		longDescription: "Detalla cada ingreso, fijo o variable, para tener una visión clara de tu capacidad económica.",
+		longDescription: "Primera actividad, ve al inicio, lo ideal sería que anotes tu ingreso al principio del mes, luego anotaremos gastos. Si sientes que esto es mucho, puedes poner tu balance actual... Ve al inicio -> Agrega un Ingreso: con tu primer ingreso del mes (Recuerda que puedes especificar la fecha). Podrás continuar a la siguiente apacheta una vez hayas actualizado tu balance. ",
 		status: "completed" as const,
 		icon: DollarSign,
 		type: "minor" as const,
 		image:
-			"/placeholder.svg?height=400&width=800&text=🗻%20Bienvenida%20→%20⚪%20Ingresos%20(Completado)%20→%20⚪%20Gastos",
+			"/map2.png",
 		mobileImage:
-			"/placeholder.svg?height=600&width=400&text=🗻%20Bienvenida%20→%20⚪%20Ingresos%20(Completado)%20→%20⚪%20Gastos",
+			"/map2.png",
 	},
 
 	{
@@ -82,19 +84,19 @@ const mapSteps = [
 		level: 1.2,
 		title: "Registra tus Gastos",
 		description: "El primer paso para el control: saber dónde va tu dinero.",
-		longDescription: "Aprende a registrar y categorizar cada gasto, por pequeño que sea, para identificar patrones.",
+		longDescription: "Aprende a registrar y categorizar cada gasto, por pequeño que sea, para identificar patrones. Si anotaste tus ingresos desde el inicio del mes, ahora deberás anotar tus gastos. Puedes continuar a la siguiente apacheta cuando quieras. Recuerda crear nuevas categorías para acomodarse a tus gastos. Mientras más anotes más fácil te será ;) (Podrás ver referencias de cada gasto que crees).",
 		status: "unlocked" as const,
 		icon: HandCoins,
 		type: "minor" as const,
 		image:
-			"/placeholder.svg?height=400&width=800&text=⚪%20Ingresos%20→%20⚪%20Gastos%20(Actual)%20→%20🗻%20Presupuesto",
+			"/map3.png",
 		mobileImage:
-			"/placeholder.svg?height=600&width=400&text=⚪%20Ingresos%20→%20⚪%20Gastos%20(Actual)%20→%20🗻%20Presupuesto",
+			"/map3.png",
 	},
 
 	// --- Major Goal 2: Presupuesto Maestro ---
 	{
-		id: "major-2",
+		id: "chapter-2",
 		level: 2,
 		title: "Dominio del Presupuesto",
 		description: "Crea un presupuesto que funcione para ti y te dé control total.",
@@ -104,14 +106,14 @@ const mapSteps = [
 		icon: Wallet,
 		type: "major" as const,
 		image:
-			"/placeholder.svg?height=400&width=800&text=⚪%20Gastos%20→%20🗻%20Presupuesto%20(Actual)%20→%20🏔️%20Protección",
+			"/20250519_162612.jpg",
 		mobileImage:
-			"/placeholder.svg?height=600&width=400&text=⚪%20Gastos%20→%20🗻%20Presupuesto%20(Actual)%20→%20🏔️%20Protección",
+			"/20250519_162612.jpg",
 	},
 
 	// --- Chapter 2: Protección y Ahorro ---
 	{
-		id: "chapter-2",
+		id: "major-2-1",
 		level: 2.5,
 		title: "Protección y Ahorro",
 		description: "Construye tu escudo financiero y desarrolla el hábito del ahorro.",
@@ -244,29 +246,51 @@ export default function MapaPage() {
 	}
 
 	return (
+		// <div className="flex flex-col h-full bg-gray-50 overflow-hidden">
+		// 	{/* Image Section - Much bigger on mobile */}
+		// 	<div
+		// 		className={cn(
+		// 			"w-full bg-gray-200 flex items-center justify-center overflow-hidden relative",
+		// 			isMobile ? "h-80 sm:h-96" : "h-48 sm:h-64 md:h-80 lg:h-96",
+		// 		)}
+		// 	>
+		// 		<img
+		// 			key={displayedImage}
+		// 			src={displayedImage || "/placeholder.svg"}
+		// 			alt="Map Background"
+		// 			className="w-full h-full object-cover transition-opacity duration-500"
+		// 		/>
+		// 		<div className="absolute inset-0 bg-gradient-to-t from-gray-50/80 to-transparent"></div>
+		// 		<h2
+		// 			className={cn(
+		// 				"absolute font-bold text-gray-900 font-manrope text-center px-4",
+		// 				isMobile
+		// 					? "bottom-6 text-2xl sm:text-3xl"
+		// 					: "bottom-2 sm:bottom-4 text-xl sm:text-2xl md:text-3xl lg:text-4xl",
+		// 			)}
+		// 		>
+		// 			Tu Camino Financiero
+		// 		</h2>
+		// 	</div>
+
+
 		<div className="flex flex-col h-full bg-gray-50 overflow-hidden">
-			{/* Image Section - Much bigger on mobile */}
-			<div
-				className={cn(
-					"w-full bg-gray-200 flex items-center justify-center overflow-hidden relative",
-					isMobile ? "h-80 sm:h-96" : "h-48 sm:h-64 md:h-80 lg:h-96",
-				)}
-			>
+			{/* Image Section - 32rem height */}
+			<div className="w-full h-[32rem] bg-gray-200 flex items-center justify-center overflow-hidden relative">
+				{/* <div className="w-full h-[32rem] bg-gray-200 flex items-center justify-center overflow-hidden relative"> */}
 				<img
 					key={displayedImage}
 					src={displayedImage || "/placeholder.svg"}
 					alt="Map Background"
-					className="w-full h-full object-cover transition-opacity duration-500"
-				/>
-				<div className="absolute inset-0 bg-gradient-to-t from-gray-50/80 to-transparent"></div>
-				<h2
+					// className="w-full h-full object-cover transition-opacity duration-500 opacity-60"
+					// className="w-full h-full "
 					className={cn(
-						"absolute font-bold text-gray-900 font-manrope text-center px-4",
-						isMobile
-							? "bottom-6 text-2xl sm:text-3xl"
-							: "bottom-2 sm:bottom-4 text-xl sm:text-2xl md:text-3xl lg:text-4xl",
+						"h-full",
+						isMobile ? "w-[152%] max-w-[152%]" : "w-full",
 					)}
-				>
+				/>
+				{/* <div className="absolute inset-0 bg-gradient-to-b from-gray-50/40 via-transparent to-gray-50/80"></div> */}
+				<h2 className="absolute top-6 font-bold text-gray-100 font-manrope text-center px-4 text-2xl sm:text-3xl md:text-4xl">
 					Tu Camino Financiero
 				</h2>
 			</div>

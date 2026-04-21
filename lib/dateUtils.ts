@@ -110,5 +110,7 @@ export const getCurrentMonthRange = () => {
 	const now = getNow();
 	const month = now.getMonth(); // 0-indexed (Feb = 1)
 	const year = now.getFullYear();
+	console.log('getCurrentMonthRange ', getMonthRange(month, year));
+
 	return getMonthRange(month, year);
 };

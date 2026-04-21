@@ -7,3 +7,8 @@ export enum TxType {
 	EXPENSE = 'expense',
 	INCOME = 'income',
 }
+
+export enum FinancialElementType {
+	ASSET = 'asset',
+	LIABILITY = 'liability',
+}

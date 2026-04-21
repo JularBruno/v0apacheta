@@ -18,6 +18,7 @@ export type Movement = {
 	amount: number;
 	description: string;
 	createdAt?: string; // Optional, defaults to now if not provided
+	financialElementId?: string; // if financial element add its id for creation
 };
 
 
@@ -31,6 +32,7 @@ export type Movements = Movement & {
 	user: User;
 	tag: Tags;
 	category: Category;
+	financialElementId?: string;
 };
 
 /**
