@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import QuickSpendCard from "@/components/transactions/quick-spend-card"
+import QuickSpendCard from "@/components/movements/quick-spend-card"
 import {
 	Wallet,
 	Map,
@@ -18,7 +18,7 @@ import Link from "next/link"
 import { getDateStringsForFilter, getLastNMonths, getMonthName } from "@/lib/dateUtils"
 import { getBudgetByUserAndPeriod, putCategory } from "@/lib/actions/categories"
 import { CategoryBudget } from "@/lib/schemas/category"
-import IconComponent from "@/components/transactions/icon-component"
+import IconComponent from "@/components/movements/icon-component"
 import { formatToBalance } from "@/lib/quick-spend-constants"
 import { BalanceInput } from "@/components/balance-input/balance-input-mock"
 

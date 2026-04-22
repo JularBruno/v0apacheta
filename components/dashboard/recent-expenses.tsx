@@ -11,7 +11,7 @@ import { Loading } from "../ui/loading";
 import { TxType } from "@/lib/schemas/definitions";
 import { Badge } from "@/components/ui/badge"
 import { Utensils, ShoppingCart, Car, Gamepad2, TrendingUp } from "lucide-react"
-import IconComponent from "../transactions/icon-component";
+import IconComponent from "../movements/icon-component";
 
 /**
  * 

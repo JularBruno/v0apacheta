@@ -30,7 +30,6 @@ export async function getMovementsByUserAndFilterCache(
 	if (filters?.endDate) params.append('endDate', filters.endDate);
 
 	const url = `movement?${params.toString()}`;
-	// return await getMethodWithoutSession<Array<Movements>>(url, session);
 
 	const getMovementsCache = unstable_cache(async () => {
 		return await getMethodWithoutSession<Array<Movements>>(url, session);

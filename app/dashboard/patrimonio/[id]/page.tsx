@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Edit, Trash2, Filter, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import AssetFormModal from "@/components/assets/asset-form-modal"
-import QuickSpendCard from "@/components/transactions/quick-spend-card"
+import QuickSpendCard from "@/components/movements/quick-spend-card"
 import EditTransactionModal from "@/components/assets/edit-transaction-modal"
 import DeleteConfirmationModal from "@/components/assets/delete-confirmation-modal"
 import { FinancialElementType, TxType } from "@/lib/schemas/definitions";
@@ -16,7 +16,7 @@ import { deleteFinancialElementById, getFinancialElementById, revalidateFinancia
 import { FinancialElement, FinancialElements } from "@/lib/schemas/financialElement"
 import { toast } from "@/hooks/use-toast"
 import { Movement, Movements } from "@/lib/schemas/movement"
-import IconComponent from "@/components/transactions/icon-component";
+import IconComponent from "@/components/movements/icon-component";
 import { formatToBalance } from "@/lib/quick-spend-constants"
 import Loading from "./loading"
 

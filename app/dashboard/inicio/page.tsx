@@ -16,7 +16,7 @@ import { toast } from "@/hooks/use-toast"
 import { Progress } from "@/components/ui/progress" // Import Progress component
 import SpendingChart from "@/components/dashboard/spending-chart"
 import RecentExpenses from "@/components/dashboard/recent-expenses"
-import QuickSpendCard from "@/components/transactions/quick-spend-card"
+import QuickSpendCard from "@/components/movements/quick-spend-card"
 import { revalidateUser } from '@/lib/actions/user';
 
 export default function InicioPage() {

@@ -22,7 +22,7 @@ import { getBudgetByUserAndPeriod } from "@/lib/actions/categories";
 import { deleteMovement, getMovementsByUserAndFilter, postMovement } from "@/lib/actions/movements";
 import { quickFilters, formatNumberToInput, formatToBalance } from "@/lib/quick-spend-constants";
 import { formatDate, getDateStringsForFilter, formatDateNoYear, getLastNDays, getLastNMonths, getMonthRange, getMonthName } from "@/lib/dateUtils";
-import { PeriodSelector } from "@/components/transactions/period-selector"
+import { PeriodSelector } from "@/components/movements/period-selector"
 import { toast } from "@/hooks/use-toast"
 
 import {
@@ -32,7 +32,7 @@ import {
 	DropdownMenuItem
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
-import IconComponent from "@/components/transactions/icon-component"
+import IconComponent from "@/components/movements/icon-component"
 import { useDashboard } from "../dashboardContext"
 import CategoryBudgetList from "@/components/dashboard/category-budget-list"
 import CategoryDonutChart from "@/components/dashboard/category-donut-chart"

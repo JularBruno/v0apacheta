@@ -22,7 +22,7 @@ import { Tags } from "@/lib/schemas/tag";
 import { Movement, movementSchema, MovementFormData } from "@/lib/schemas/movement";
 import { TxType } from "@/lib/schemas/definitions";
 import { Category } from "@/lib/schemas/category";
-import { deleteCategoryById } from "@/lib/actions/categories";
+import { deleteCategoryById, revalidateCategories } from "@/lib/actions/categories";
 import { postMovement } from "@/lib/actions/movements";
 
 import { QuickSpendCategoryDialogs } from "./quick-spend-category-dialogs"
@@ -160,6 +160,8 @@ export default function QuickSpendCard({
 
 	// After submiting a category in dialog, add it to state
 	const categorySubmit = (cat: Category) => {
+		revalidateCategories();
+
 		setCats((prev: Category[]) => {
 			// Remove duplicates by ID
 			const filtered = prev.filter(filteredCat => filteredCat.id !== cat.id);
@@ -187,6 +189,7 @@ export default function QuickSpendCard({
 			setAllTags((prev) => prev.filter((t) => t.categoryId !== catId))
 		}
 
+		await revalidateCategories();
 		await deleteCategoryById(cat.id); // DELETION
 
 		setCats((prev) => prev.filter((c) => c.id !== catId))
