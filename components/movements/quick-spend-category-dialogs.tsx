@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils"
 
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Category, categorySchema } from "@/lib/schemas/category";
-import { postCategory, putCategory, revalidateCategories } from "@/lib/actions/categories";
+import { postCategory, putCategory, revalidateCategories, revalidateCategoriesBudget } from "@/lib/actions/categories";
 import { Tag } from "@/lib/schemas/tag";
 import { TxType } from "@/lib/schemas/definitions";
 
@@ -134,6 +134,7 @@ export function QuickSpendCategoryDialogs({
 			}
 
 			revalidateCategories(); // revalidate cached categories
+			revalidateCategoriesBudget(); // revalidate cached categories
 			console.log('about to toastr');
 
 			toast({

@@ -18,7 +18,7 @@ import { useEffect, useState } from "react";
 import { Movements } from "@/lib/schemas/movement";
 import { TxType } from "@/lib/schemas/definitions";
 import { Category, CategoryBudget } from "@/lib/schemas/category";
-import { getBudgetByUserAndPeriod } from "@/lib/actions/categories";
+import { getBudgetByUserAndPeriod, revalidateCategoriesBudget } from "@/lib/actions/categories";
 import { deleteMovement, getMovementsByUserAndFilter, postMovement } from "@/lib/actions/movements";
 import { quickFilters, formatNumberToInput, formatToBalance } from "@/lib/quick-spend-constants";
 import { formatDate, getDateStringsForFilter, formatDateNoYear, getLastNDays, getLastNMonths, getMonthRange, getMonthName } from "@/lib/dateUtils";
@@ -37,17 +37,22 @@ import { useDashboard } from "../dashboardContext"
 import CategoryBudgetList from "@/components/dashboard/category-budget-list"
 import CategoryDonutChart from "@/components/dashboard/category-donut-chart"
 
+import LoadingHistory from "./loading"
+import {
+	DonutChartSkeleton,
+	CategoryBudgetListSkeleton,
+	TransactionListSkeleton,
+	SummaryStatsSkeleton,
+	ChartCardSkeleton
+} from "@/components/history/skeletons"
+
+const allFilteredId = "all"; // this the id for when selecting all on a picker as a constant
 
 export default function HistorialPage() {
 
-	const [selectedType, setSelectedType] = useState("all")
-
-	const allFilteredId = "all"; // this the id for when selecting all on a picker as a constant
-
 	const [searchTerm, setSearchTerm] = useState("")
 	const [selectedCategory, setSelectedCategory] = useState("all")
-	// const [selectedType, setSelectedType] = useState("all")
-	const [selectedDateFilter, setSelectedDateFilter] = useState("month")
+	const [selectedType, setSelectedType] = useState("all")
 
 	const [showFilters, setShowFilters] = useState(false)
 
@@ -60,14 +65,19 @@ export default function HistorialPage() {
 	filters.startDate = result.startDate;
 	filters.endDate = result.endDate;
 
+	const [selectedDateFilter, setSelectedDateFilter] = useState("month")
+
 	/**
 	 * FILTERS
 	 */
 
 	const getFiltersForDateSelection = () => {
 		let filters: any = {};
+		console.log();
+
 		// Bring based on filter, since is the best option for pagination
-		switch (selectedDateFilter) { // default one is "month"
+		switch (selectedDateFilter) { // default one month
+
 			case quickFilters[0].id: { // last 24 hours (yesterday to now)
 
 				// For last 24 hours
@@ -91,6 +101,7 @@ export default function HistorialPage() {
 				const result = getDateStringsForFilter(start, end);
 				filters.startDate = result.startDate;
 				filters.endDate = result.endDate;
+
 				break;
 			}
 
@@ -137,6 +148,8 @@ export default function HistorialPage() {
 				break;
 
 		}
+		console.log(filters);
+
 		return filters;
 	}
 
@@ -146,16 +159,17 @@ export default function HistorialPage() {
 	 * 
 	 */
 
-	const { error, cats, setCats, loadingCats } = useDashboard();
+	const { error, cats, setCats, loadingCats, loadingBudgetedCats } = useDashboard();
 
 	const [budgetedCats, setBudgetedCats] = useState<CategoryBudget[]>([])
 
+	const getBudget = async () => {
+		let filters = getFiltersForDateSelection();
+		let budgetedCats = await getBudgetByUserAndPeriod(filters.startDate, filters.endDate);
+		setBudgetedCats(budgetedCats);
+	}
+
 	useEffect(() => {
-		const getBudget = async () => {
-			let filters = getFiltersForDateSelection();
-			let budgetedCats = await getBudgetByUserAndPeriod(filters.startDate, filters.endDate);
-			setBudgetedCats(budgetedCats);
-		}
 
 		getBudget();
 	}, [selectedDateFilter]);
@@ -198,11 +212,12 @@ export default function HistorialPage() {
 	const [loadingMovements, setLoadingMovements] = useState(true);
 
 	const deleteSelectedMovement = async (movement: Movements) => {
+		setLoadingMovements(true);
 		const ok = confirm(
 			`¿Seguro que querés borrar el movimiento "${movement.tag.name}"?`
 		);
 
-		if (!ok) return;
+		if (!ok) { setLoadingMovements(false); return; }
 
 		await deleteMovement(movement.id);
 
@@ -213,6 +228,10 @@ export default function HistorialPage() {
 		});
 
 		setRefreshTrigger(prev => prev + 1);
+		await revalidateCategoriesBudget();
+		await getBudget();
+		setLoadingMovements(false);
+
 	};
 
 	/**
@@ -323,6 +342,11 @@ export default function HistorialPage() {
 		if (selectedType !== allFilteredId) setSelectedCategory(allFilteredId);
 	}, [selectedType]);
 
+
+	// if (loadingMovements) return (
+	// 	<LoadingHistory />
+	// );
+
 	return (
 		<div className="space-y-6">
 			{/* 
@@ -332,10 +356,21 @@ export default function HistorialPage() {
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
 				{/* Category Budget Breakdown */}
-				<CategoryBudgetList budgetedCategories={budgetedCats} />
+				{loadingBudgetedCats ? (
+					<CategoryBudgetListSkeleton itemCount={5} />
+				) : (
+					<CategoryBudgetList budgetedCategories={budgetedCats} />
+				)}
 
 				{/* Donut Chart */}
-				<CategoryDonutChart budgetedCategories={budgetedCats} />
+				{loadingMovements ? (
+					<ChartCardSkeleton titleWidth="max-w-48">
+						<DonutChartSkeleton legendItems={4} />
+					</ChartCardSkeleton>
+				) : (
+					<CategoryDonutChart budgetedCategories={budgetedCats} />
+
+				)}
 
 				{/* 
 				* Movements List 
@@ -500,11 +535,6 @@ export default function HistorialPage() {
 							loadingMovements ? (
 								<Loading></Loading>
 							)
-								// : filteredMovements.length === 0 ? (
-								// 	<div className="text-center py-8 text-gray-500">
-								// 		<p>No se encontraron transacciones con los filtros aplicados</p>
-								// 	</div>
-								// ) 
 								: (
 									<div className="space-y-2">
 

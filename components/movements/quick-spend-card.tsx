@@ -22,7 +22,7 @@ import { Tags } from "@/lib/schemas/tag";
 import { Movement, movementSchema, MovementFormData } from "@/lib/schemas/movement";
 import { TxType } from "@/lib/schemas/definitions";
 import { Category } from "@/lib/schemas/category";
-import { deleteCategoryById, revalidateCategories } from "@/lib/actions/categories";
+import { deleteCategoryById, revalidateCategories, revalidateCategoriesBudget } from "@/lib/actions/categories";
 import { postMovement } from "@/lib/actions/movements";
 
 import { QuickSpendCategoryDialogs } from "./quick-spend-category-dialogs"
@@ -190,6 +190,7 @@ export default function QuickSpendCard({
 		}
 
 		await revalidateCategories();
+		await revalidateCategoriesBudget();
 		await deleteCategoryById(cat.id); // DELETION
 
 		setCats((prev) => prev.filter((c) => c.id !== catId))
@@ -222,6 +223,9 @@ export default function QuickSpendCard({
 	// Selected tag name to be used as selected reference
 	const [tagInput, setTagInput] = useState<string>("")
 
+	const [mobileTagsExpanded, setMobileTagsExpanded] = useState(false)
+
+
 	// Match the amount of tag pills to diplay and filter by category id when selected
 	const matchingSuggestions = useMemo(() => {
 		if (!categoryId) return allTags.slice(0, 12);
@@ -234,10 +238,13 @@ export default function QuickSpendCard({
 	const matchingSuggestionsMobile = useMemo(() => {
 		if (!categoryId) return allTags.slice(0, 4);
 
+		let sliceAmount = mobileTagsExpanded ? 12 : 4;
+
 		return allTags
 			.filter(t => t.categoryId === categoryId) // ← filter by selected category
-			.slice(0, 4);
-	}, [allTags, categoryId]);
+			.slice(0, sliceAmount);
+
+	}, [allTags, categoryId, mobileTagsExpanded]);
 
 	/**
 	 * 
@@ -504,6 +511,8 @@ export default function QuickSpendCard({
 						selectTag={selectTag}
 						tagNameError={errors.tagName?.message}
 						onInputKeyDown={handleTagKeyDown}
+						mobileTagsExpanded={mobileTagsExpanded}
+						setMobileTagsExpanded={setMobileTagsExpanded}
 
 						register={register}
 

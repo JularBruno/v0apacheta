@@ -11,6 +11,7 @@ import { getMonthName } from "@/lib/dateUtils"
 
 export default function CategoryBudgetList({ budgetedCategories }: { budgetedCategories: CategoryBudget[] }) {
 	const [expanded, setExpanded] = useState(false)
+	const [filteredDate, setFilteredDate] = useState('')
 	const VISIBLE_COUNT = 5
 
 	// const expenses = budgetedCategories.filter((t) => t.type === TxType.EXPENSE)
@@ -62,7 +63,7 @@ export default function CategoryBudgetList({ budgetedCategories }: { budgetedCat
 		<Card>
 			<CardHeader className="pb-3">
 				<div className="flex items-center justify-between">
-					<CardTitle className="text-base">Presupuesto por Categoria {getMonthName()}</CardTitle>
+					<CardTitle className="text-base">Presupuesto por Categoria {filteredDate}</CardTitle>
 					<div className="text-right">
 						<p className="text-lg font-bold tabular-nums">{formatToBalance(totalSpent)}</p>
 						<p className="text-xs text-muted-foreground">de {formatToBalance(totalBudget)}</p>
