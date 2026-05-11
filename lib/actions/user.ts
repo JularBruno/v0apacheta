@@ -20,7 +20,7 @@ const PostUserFormSchema = z.object({
 	password: z
 		.string()
 		.min(6, { message: 'La contraseña al menos debe tener 6 caracteres' })
-		.max(32, { message: 'La contraseña debe tener 32 caracteres o menos' }),
+		.max(50, { message: 'La contraseña debe tener 50 caracteres o menos' }),
 
 	// .regex(/[A-Z]/, { message: "Password must contain at least one uppercase letter" })
 	// .regex(/[a-z]/, { message: "Password must contain at least one lowercase letter" })
