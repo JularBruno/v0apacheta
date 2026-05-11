@@ -46,6 +46,21 @@ export async function getSubscriptionNotifications(): Promise<Array<Subscription
 	return await getMethod<Array<Subscriptions>>(url, session?.user.id);
 }
 
-export async function deleteSubscriptionNotifications(id: string) {
-	return await deleteMethod<Subscriptions>(url, id);
+
+//
+// export async function getSubscriptionNotificationsByEndpoint(endpoint: string): Promise<Array<Subscriptions>> {
+// 	const session = await getSession();
+
+// 	const url = 'endpoint/';
+
+// 	return await getMethod<Array<Subscriptions>>(url, session?.user.id);
+// }
+
+// export async function deleteSubscriptionNotifications(id: string) {
+export async function deleteSubscriptionNotifications(endpoint: string) {
+
+	const url = 'notifications/endpoint';
+	console.log(url);
+
+	return await deleteMethod<Subscriptions>(url, endpoint);
 }

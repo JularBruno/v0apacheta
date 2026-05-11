@@ -247,6 +247,8 @@ export async function deleteMethod<T>(url: string, id: string): Promise<T | null
 	}
 
 	try {
+		console.log(`${urlDev}/${url}/${id}`);
+
 		const response = await fetch(`${urlDev}/${url}/${id}`, {
 			method: 'DELETE',
 			headers: {

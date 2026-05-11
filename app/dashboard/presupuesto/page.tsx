@@ -16,7 +16,7 @@ import {
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { getDateStringsForFilter, getLastNMonths, getMonthName } from "@/lib/dateUtils"
-import { getBudgetByUserAndPeriod, putCategory } from "@/lib/actions/categories"
+import { getBudgetByUserAndPeriod, putCategory, revalidateCategoriesBudget } from "@/lib/actions/categories"
 import { CategoryBudget } from "@/lib/schemas/category"
 import IconComponent from "@/components/movements/icon-component"
 import { formatToBalance } from "@/lib/quick-spend-constants"
@@ -40,7 +40,7 @@ export default function PresupuestoPage() {
 	const [userBudgetRemaining, setUserBudgetRemaining] = useState<number>(0)
 	// const [loadingCats, setLoadingCats] = useState<boolean>(true)
 
-	const { user, loadingUser, error, budgetedCats, setBudgetedCats, loadingBudgetedCats } = useDashboard();
+	const { user, loadingUser, error, budgetedCats, setBudgetedCats, loadingBudgetedCats, setLoadingBudgetedCats } = useDashboard();
 
 	const totalSpent = useMemo(() => {
 		return budgetedCats.reduce((sum, cat) => sum + cat.totalExpenses, 0)
@@ -56,15 +56,32 @@ export default function PresupuestoPage() {
 		setUserBudgetRemaining((user?.totalBudget || 0) - totalSpent)
 	}, [user, totalSpent])
 
-	function updateCategoryBudget(id: any, budget: any) {
+	async function updateCategoryBudget(id: any, budget: any) {
+		setLoadingBudgetedCats(true);
 		let cat = budgetedCats.find(cat => cat.id === id)
+		if (budget == 0) {
+			toast({
+				title: `Intenta presupuestar todo`,
+				description: `Debes poner un presupuesto mayor a cero`,
+				variant: "default",
+			})
+			// this should revert the value to the previous one 
+			setLoadingBudgetedCats(false);
+
+			return;
+		}
 		if (cat?.budget !== budget) {
+
 			setBudgetedCats(prev =>
 				prev.map(cat =>
 					cat.id === id ? { ...cat, budget: budget } : cat
 				)
 			);
+
 			putCategory(id, { budget: budget });
+			revalidateCategoriesBudget();
+			setLoadingBudgetedCats(false);
+
 			toast({
 				title: `Presupuesto actualizado`,
 				description: `Se actualizó el presupuesto`,
@@ -187,9 +204,10 @@ export default function PresupuestoPage() {
 			{/* Category Budgeting Expenses */}
 			<Card>
 				<CardHeader>
-					<CardTitle>
+					<CardTitle className="flex items-center gap-2">
 						<TrendingDown className="w-5 h-5 text-red-600" />
 						Presupuesto por Categoría de {getMonthName()}.
+						<br />
 						Total distribuido: {formatToBalance(totalBudgeted)}
 					</CardTitle>
 				</CardHeader>

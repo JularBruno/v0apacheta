@@ -191,7 +191,7 @@ export default function InicioPage() {
 
 						{loadingBudgetedCats ? (
 							<Loading></Loading>
-						) : (
+						) : monthlyBudget ? (
 							<div>
 								<div className="text-2xl font-bold mb-2">
 									{formatToBalance(monthlyBudgetRemaining)} restante de {formatToBalance(monthlyBudget)}
@@ -208,6 +208,12 @@ export default function InicioPage() {
 								<p className="text-sm text-gray-500 mt-2">
 									Puede gastar {formatToBalance(dailySpendSuggestion)}/día para {daysRemaining} más días.
 								</p>
+							</div>
+						) : (
+							<div>
+								<div className="text-2xl font-bold mb-2">
+									Presupuesto mensual sin definir
+								</div>
 							</div>
 						)}
 					</CardContent>

@@ -24,22 +24,6 @@ export default function TransactionChart() {
 		.filter(cat => cat.totalExpenses > 0)
 		.map(cat => {
 			const percentage = (cat.totalExpenses / totalExpensesAllCats) * 100
-
-			if (cat.type == TxType.INCOME) {
-				console.log('cat.color ', cat.color);
-
-				console.log({
-
-					id: cat.id,
-					name: cat.name,
-					amount: cat.totalExpenses,
-					percentage,
-					color: availableColors.find(c => c.id === cat.color)?.hex
-				});
-
-
-			}
-
 			return {
 				id: cat.id,
 				name: cat.name,
