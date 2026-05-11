@@ -4,19 +4,21 @@ import { useState, useMemo, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import QuickSpendCard from "@/components/transactions/quick-spend-card"
+import QuickSpendCard from "@/components/movements/quick-spend-card"
 import {
 	Wallet,
 	Map,
 	CalendarDays,
 	MoreHorizontal,
+	TrendingUp,
+	TrendingDown,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { getDateStringsForFilter, getLastNMonths, getMonthName } from "@/lib/dateUtils"
-import { getBudgetByUserAndPeriod, putCategory } from "@/lib/actions/categories"
+import { getBudgetByUserAndPeriod, putCategory, revalidateCategoriesBudget } from "@/lib/actions/categories"
 import { CategoryBudget } from "@/lib/schemas/category"
-import IconComponent from "@/components/transactions/icon-component"
+import IconComponent from "@/components/movements/icon-component"
 import { formatToBalance } from "@/lib/quick-spend-constants"
 import { BalanceInput } from "@/components/balance-input/balance-input-mock"
 
@@ -28,6 +30,8 @@ import { useToast } from '@/hooks/use-toast';
 import Loading from "../patrimonio/[id]/loading"
 import TransactionChart from "@/components/dashboard/transaction-chart"
 import { BudgetOverviewSkeleton } from "@/components/budget/budget-skeletons"
+import CategoryCard from "@/components/budget/category-card"
+import { TxType } from "@/lib/schemas/definitions"
 
 export default function PresupuestoPage() {
 	const { toast } = useToast();
@@ -36,25 +40,53 @@ export default function PresupuestoPage() {
 	const [userBudgetRemaining, setUserBudgetRemaining] = useState<number>(0)
 	// const [loadingCats, setLoadingCats] = useState<boolean>(true)
 
-	const { user, loadingUser, error, budgetedCats, setBudgetedCats, loadingBudgetedCats } = useDashboard();
+	const { user, loadingUser, error, budgetedCats, setBudgetedCats, loadingBudgetedCats, setLoadingBudgetedCats } = useDashboard();
 
 	const totalSpent = useMemo(() => {
 		return budgetedCats.reduce((sum, cat) => sum + cat.totalExpenses, 0)
 	}, [budgetedCats])
 
+	const totalBudgeted = useMemo(() => {
+		return budgetedCats.reduce((sum, item) =>
+			item.type === TxType.EXPENSE ? sum + item.budget : sum
+			, 0);
+	}, [budgetedCats]);
+
 	useEffect(() => {
 		setUserBudgetRemaining((user?.totalBudget || 0) - totalSpent)
 	}, [user, totalSpent])
 
-	function updateCategoryBudget(id: any, budget: any) {
+	async function updateCategoryBudget(id: any, budget: any) {
+		setLoadingBudgetedCats(true);
 		let cat = budgetedCats.find(cat => cat.id === id)
+		if (budget == 0) {
+			toast({
+				title: `Intenta presupuestar todo`,
+				description: `Debes poner un presupuesto mayor a cero`,
+				variant: "default",
+			})
+			// this should revert the value to the previous one 
+			setLoadingBudgetedCats(false);
+
+			return;
+		}
 		if (cat?.budget !== budget) {
+
 			setBudgetedCats(prev =>
 				prev.map(cat =>
 					cat.id === id ? { ...cat, budget: budget } : cat
 				)
 			);
+
 			putCategory(id, { budget: budget });
+			revalidateCategoriesBudget();
+			setLoadingBudgetedCats(false);
+
+			toast({
+				title: `Presupuesto actualizado`,
+				description: `Se actualizó el presupuesto`,
+				variant: "success",
+			})
 		}
 	}
 
@@ -116,14 +148,68 @@ export default function PresupuestoPage() {
 				</Card>
 			)}
 
-
+			{/* 
+				Horizontal chart 
+			*/}
 			<TransactionChart />
 
-			{/* Category Budgeting */}
-
+			{/* Category Budgeting Incomes */}
 			<Card>
 				<CardHeader>
-					<CardTitle>Presupuesto por Categoría de {getMonthName()}</CardTitle>
+					<CardTitle className="flex items-center gap-2">
+						<TrendingUp className="w-5 h-5 text-emerald-600" /> Fuentes de Ingreso
+					</CardTitle>
+				</CardHeader>
+				<CardContent className="space-y-4">
+					{loadingBudgetedCats ? (
+						// Show loading state once
+						<div className="space-y-4">
+							{[1, 2, 3].map(i => (
+								<div key={i} className="h-20 bg-gray-300 rounded-lg animate-pulse" />
+							))}
+						</div>
+					) : (
+						budgetedCats
+							.filter(c => c.type === TxType.INCOME)
+							.sort((a, b) => b.budget - a.budget)
+							.map((category) => {
+								const percentageUsed =
+									category.budget > 0 ? (category.totalExpenses / category.budget) * 100 : 0
+								const isOverBudget = category.totalExpenses > category.budget
+
+								const getProgressColor = (pct: number) => {
+									if (pct > 100) return "[&>div]:bg-red-600"
+									if (pct > 90) return "[&>div]:bg-red-500"
+									if (pct > 75) return "[&>div]:bg-orange-500"
+									if (pct > 50) return "[&>div]:bg-amber-500"
+									if (pct > 25) return "[&>div]:bg-emerald-500"
+									return "[&>div]:bg-green-500"
+								}
+
+								return (
+									<CategoryCard
+										key={category.id}
+										category={category}
+										updateCategoryBudget={updateCategoryBudget}
+										percentageUsed={percentageUsed}
+										isOverBudget={isOverBudget}
+										getProgressColor={getProgressColor}
+									/>
+								)
+							})
+					)}
+				</CardContent>
+			</Card>
+
+			{/* Category Budgeting Expenses */}
+			<Card>
+				<CardHeader>
+					<CardTitle className="flex items-center gap-2">
+						<TrendingDown className="w-5 h-5 text-red-600" />
+						Presupuesto por Categoría de {getMonthName()}.
+						<br />
+						Total distribuido: {formatToBalance(totalBudgeted)}
+					</CardTitle>
 				</CardHeader>
 
 				<CardContent className="space-y-4">
@@ -135,75 +221,35 @@ export default function PresupuestoPage() {
 							))}
 						</div>
 					) : (
-						budgetedCats.map((category) => {
-							const percentageUsed =
-								category.budget > 0 ? (category.totalExpenses / category.budget) * 100 : 0
-							const isOverBudget = category.totalExpenses > category.budget
+						budgetedCats
+							.filter(c => c.type === TxType.EXPENSE)
+							.sort((a, b) => b.budget - a.budget)
+							.map((category) => {
+								const percentageUsed =
+									category.budget > 0 ? (category.totalExpenses / category.budget) * 100 : 0
+								const isOverBudget = category.totalExpenses > category.budget
 
-							const getProgressColor = (pct: number) => {
-								if (pct > 100) return "[&>div]:bg-red-600"
-								if (pct > 90) return "[&>div]:bg-red-500"
-								if (pct > 75) return "[&>div]:bg-orange-500"
-								if (pct > 50) return "[&>div]:bg-amber-500"
-								if (pct > 25) return "[&>div]:bg-emerald-500"
-								return "[&>div]:bg-green-500"
-							}
+								const getProgressColor = (pct: number) => {
+									if (pct > 100) return "[&>div]:bg-red-600"
+									if (pct > 90) return "[&>div]:bg-red-500"
+									if (pct > 75) return "[&>div]:bg-orange-500"
+									if (pct > 50) return "[&>div]:bg-amber-500"
+									if (pct > 25) return "[&>div]:bg-emerald-500"
+									return "[&>div]:bg-green-500"
+								}
 
-							return (
-								<div key={category.id} className="space-y-2">
-
-									<div className="flex-col gap-2 md:flex-row md:items-center md:justify-between">
-										<div className="flex items-center gap-3">
-											<div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", category.color)}>
-												<IconComponent icon={category?.icon} className="w-4 h-4 text-white" />
-											</div>
-
-											<div className="min-w-0">
-												<p className="font-medium text-sm truncate">{category.name}</p>
-												<p className="text-xs text-gray-500">
-													{formatToBalance(category.totalExpenses)} de {formatToBalance(category.budget)}
-												</p>
-											</div>
-											<div className="ml-auto">
-												<BalanceInput
-													defaultValue={category.budget}
-													id={category.id}
-													onBlur={(value) => updateCategoryBudget(category.id, value)}
-												/>
-											</div>
-										</div>
-
-										{/* Row 2: Percentage */}
-										<div className="flex items-center justify-between px-1">
-											<span className={cn(
-												"text-xs font-semibold",
-												percentageUsed > 100 ? "text-red-600" :
-													percentageUsed > 75 ? "text-orange-600" :
-														percentageUsed > 50 ? "text-amber-600" :
-															"text-emerald-600"
-											)}>
-												{percentageUsed.toFixed(0)}% usado
-											</span>
-											<span className="text-xs text-gray-400">
-												{isOverBudget
-													? `-$${(category.totalExpenses - category.budget).toFixed(2)} excedido`
-													: `$${(category.budget - category.totalExpenses).toFixed(2)} restante`
-												}
-											</span>
-										</div>
-
-										{/* Row 3: Progress bar */}
-										<Progress
-											value={Math.min(100, percentageUsed)}
-											className={cn("h-2.5 rounded-full", getProgressColor(percentageUsed))}
-										/>
-									</div>
-								</div>
-							)
-						})
+								return (
+									<CategoryCard
+										key={category.id}
+										category={category}
+										updateCategoryBudget={updateCategoryBudget}
+										percentageUsed={percentageUsed}
+										isOverBudget={isOverBudget}
+										getProgressColor={getProgressColor}
+									/>
+								)
+							})
 					)}
-
-
 				</CardContent>
 			</Card>
 
@@ -251,3 +297,4 @@ export default function PresupuestoPage() {
 		</div>
 	)
 }
+

@@ -16,7 +16,8 @@ import { toast } from "@/hooks/use-toast"
 import { Progress } from "@/components/ui/progress" // Import Progress component
 import SpendingChart from "@/components/dashboard/spending-chart"
 import RecentExpenses from "@/components/dashboard/recent-expenses"
-import QuickSpendCard from "@/components/transactions/quick-spend-card"
+import QuickSpendCard from "@/components/movements/quick-spend-card"
+import { revalidateUser } from '@/lib/actions/user';
 
 export default function InicioPage() {
 
@@ -116,6 +117,8 @@ export default function InicioPage() {
 				: userBalance - data.amount;
 		}
 
+		revalidateUser();
+
 		setUserBalance(newBalance);
 	}
 
@@ -171,9 +174,10 @@ export default function InicioPage() {
 						{loadingUser ? (
 							<Loading></Loading>
 						) : userBalance ? (
-							<div className="text-2xl font-bold">{formatToBalance(userBalance)} ARS</div>
+							// <div className="text-2xl font-bold">{formatToBalance(userBalance)} ARS</div>
+							<div data-testid="user-balance" className="text-2xl font-bold">{formatToBalance(userBalance)}</div>
 						) : (
-							<div className="text-2xl font-bold">$0 ARS</div>
+							<div data-testid="user-balance" className="text-2xl font-bold">$0</div>
 						)}
 						<p className="text-sm text-gray-500">{allMovements.length} transacciones en el último mes</p>
 					</CardContent>
@@ -187,10 +191,10 @@ export default function InicioPage() {
 
 						{loadingBudgetedCats ? (
 							<Loading></Loading>
-						) : (
+						) : monthlyBudget ? (
 							<div>
 								<div className="text-2xl font-bold mb-2">
-									${monthlyBudgetRemaining.toFixed(2)} restante de ${monthlyBudget.toFixed(2)}
+									{formatToBalance(monthlyBudgetRemaining)} restante de {formatToBalance(monthlyBudget)}
 								</div>
 								<Progress value={progressPercentage} className="h-2 mb-4" />
 
@@ -202,8 +206,14 @@ export default function InicioPage() {
 									<span>31 jul</span> {/* Mock end date */}
 								</div>
 								<p className="text-sm text-gray-500 mt-2">
-									Puede gastar ${dailySpendSuggestion.toFixed(2)}/día para {daysRemaining} más días.
+									Puede gastar {formatToBalance(dailySpendSuggestion)}/día para {daysRemaining} más días.
 								</p>
+							</div>
+						) : (
+							<div>
+								<div className="text-2xl font-bold mb-2">
+									Presupuesto mensual sin definir
+								</div>
 							</div>
 						)}
 					</CardContent>

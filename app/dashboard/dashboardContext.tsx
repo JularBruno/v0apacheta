@@ -25,11 +25,12 @@ export interface DashboardUserContextType {
 	budgetedCats: CategoryBudget[];
 	setBudgetedCats: Dispatch<SetStateAction<CategoryBudget[]>>;
 	loadingBudgetedCats: boolean;
+	setLoadingBudgetedCats: (loading: boolean) => void;
 }
 /**
  * Context to be called with the type returned by the provider
  */
-const DashboardUserContext = createContext<DashboardUserContextType | undefined>(undefined);
+export const DashboardUserContext = createContext<DashboardUserContextType | undefined>(undefined);
 
 /**
  * Actual information provider
@@ -157,7 +158,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 		loadingTags,
 		budgetedCats,
 		setBudgetedCats,
-		loadingBudgetedCats
+		loadingBudgetedCats,
+		setLoadingBudgetedCats
 	};
 
 	return (

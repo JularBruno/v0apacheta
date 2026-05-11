@@ -48,11 +48,15 @@ function LoginForm() {
 		password: "",
 	})
 
+	// disabel input on pristyne
+	const isFormEmpty = !formData.email || !formData.password;
+
 	/** handles input values on change **/
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target
 		setFormData((prev) => ({ ...prev, [name]: value }))
 	}
+
 
 	/**
 	 * @title Authentication form state management
@@ -79,7 +83,7 @@ function LoginForm() {
 					</p>
 				</div>
 
-				<form action={formAction} className="mt-8 space-y-6">
+				<form noValidate action={formAction} className="mt-8 space-y-6">
 
 					<div>
 						<Label htmlFor="email">Email</Label>
@@ -124,7 +128,7 @@ function LoginForm() {
 						<Button
 							type="submit"
 							className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
-							disabled={isPending}
+							disabled={isPending || isFormEmpty}
 						>
 							{isPending ? "Ingresando..." : "Ingresar"}
 						</Button>

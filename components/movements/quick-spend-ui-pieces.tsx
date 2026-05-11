@@ -24,6 +24,7 @@ import { getCurrentDateTimeInfo } from "@/lib/dateUtils"
 import { Movement, movementSchema, MovementFormData } from "@/lib/schemas/movement";
 import IconComponent from "./icon-component";
 import { TxType } from "@/lib/schemas/definitions";
+import { useState } from "react";
 
 
 type CategoryHeaderProps = {
@@ -158,6 +159,8 @@ type TagRowProps = {
 	selectTag: (id?: string) => void,
 	tagNameError?: string,
 	onInputKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void,
+	mobileTagsExpanded: boolean,
+	setMobileTagsExpanded: (expanded: boolean) => void,
 	register: UseFormRegister<MovementFormData>,
 	loading: boolean
 }
@@ -172,6 +175,8 @@ export function TagRow({
 	selectTag,
 	tagNameError,
 	onInputKeyDown,
+	mobileTagsExpanded,
+	setMobileTagsExpanded,
 	register,
 	loading
 }: TagRowProps
@@ -182,14 +187,16 @@ export function TagRow({
 	return (
 		<>
 			<div className="space-y-2 py-4">
-				<Label className="text-sm text-gray-600 ">Descripción</Label>
+				<Label htmlFor="descripcion" className="text-sm text-gray-600 ">Descripción</Label>
 				<p id="tag-hint" className="sr-only">
 					Escribe una descripción, o selecciona un movimiento previo
 				</p>
 				<div className=" gap-2">
 					<Input
 						role="combobox"
+						id="descripcion"
 						// aria-autocomplete="list"
+						data-testid="description-input"
 						aria-controls={listId}
 						aria-describedby="tag-hint"
 						placeholder="Escribe una descripción, o selecciona un movimiento previo"
@@ -208,7 +215,7 @@ export function TagRow({
 
 					/>
 					{tagNameError && (
-						<p className="text-red-500 text-sm mt-1">{tagNameError}</p>
+						<p data-testid="tag-name-error" className="text-red-500 text-sm mt-1">{tagNameError}</p>
 					)}
 				</div>
 
@@ -268,23 +275,44 @@ export function TagRow({
 						>
 							Nuevo +
 						</button>
-						{matchingSuggestionsMobile.map((t) => (
+						{
+							matchingSuggestionsMobile.map((t) => (
+								<button
+									key={t.id}
+									role="option"
+									type="button"
+									aria-selected={t.id === tagId}
+									onClick={() => selectTag(t.id)}
+									className={cn(
+										"shrink-0 px-3 py-1.5 rounded-full border text-sm transition-all whitespace-nowrap",
+										t.id === tagId
+											? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-200 shadow-md"
+											: "border-gray-200 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm",
+									)}
+								>
+									{t.name} <span className="text-xs text-gray-500 ml-1" hidden={categoryType == TxType.INCOME}>{formatToBalance(t.amount)}</span>
+								</button>
+							))}
+
+						{matchingSuggestions.length > 4 && (
 							<button
-								key={t.id}
-								role="option"
 								type="button"
-								aria-selected={t.id === tagId}
-								onClick={() => selectTag(t.id)}
-								className={cn(
-									"shrink-0 px-3 py-1.5 rounded-full border text-sm transition-all whitespace-nowrap",
-									t.id === tagId
-										? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-200 shadow-md"
-										: "border-gray-200 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm",
-								)}
+								onClick={() => setMobileTagsExpanded(!mobileTagsExpanded)}
+								className="shrink-0 px-3 py-1.5 rounded-full border border-gray-300 bg-gray-100 text-sm transition-all whitespace-nowrap flex items-center gap-1 text-gray-600 hover:bg-gray-200"
+								aria-expanded={mobileTagsExpanded}
+								aria-label={mobileTagsExpanded ? "Ver menos tags" : "Ver más tags"}
 							>
-								{t.name} <span className="text-xs text-gray-500 ml-1" hidden={categoryType == TxType.INCOME}>{formatToBalance(t.amount)}</span>
+								{mobileTagsExpanded ? (
+									<>
+										Menos <ChevronUp className="w-3 h-3" />
+									</>
+								) : (
+									<>
+										Más <ChevronDown className="w-3 h-3" />
+									</>
+								)}
 							</button>
-						))}
+						)}
 					</div>
 				</div>
 			</div>

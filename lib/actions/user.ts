@@ -19,7 +19,9 @@ const PostUserFormSchema = z.object({
 	email: z.string().email({ message: 'Formato de email incorrecto' }),
 	password: z
 		.string()
-		.min(6, { message: 'La contraseña al menos debe tener 6 caracteres' }),
+		.min(6, { message: 'La contraseña al menos debe tener 6 caracteres' })
+		.max(32, { message: 'La contraseña debe tener 32 caracteres o menos' }),
+
 	// .regex(/[A-Z]/, { message: "Password must contain at least one uppercase letter" })
 	// .regex(/[a-z]/, { message: "Password must contain at least one lowercase letter" })
 	// .regex(/[0-9]/, { message: "Password must contain at least one number" })
@@ -78,9 +80,12 @@ export async function register(prevState: UserState, formData: FormData) {
 			}
 		}
 	} catch (registrationError: any) {
+		console.log('registrationError ', registrationError);
+
 		if (
 			registrationError.statusCode === 401 &&
 			registrationError.message === 'Invalid username'
+			|| registrationError.message === 'NEXT_REDIRECT'
 		) {
 			return {
 				errors: { email: ['Este email está en uso'] },
@@ -96,7 +101,7 @@ export async function register(prevState: UserState, formData: FormData) {
 		// Handle other registration errors
 		return {
 			errors: { email: ['Algo salió mal.'] },
-			message: 'Something went wrong.',
+			message: 'Something went wrong. ',
 			formData: {
 				name: formData.get('name') as string,
 				email: formData.get('email') as string,

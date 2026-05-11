@@ -18,6 +18,7 @@ export type Movement = {
 	amount: number;
 	description: string;
 	createdAt?: string; // Optional, defaults to now if not provided
+	financialElementId?: string; // if financial element add its id for creation
 };
 
 
@@ -31,6 +32,7 @@ export type Movements = Movement & {
 	user: User;
 	tag: Tags;
 	category: Category;
+	financialElementId?: string;
 };
 
 /**
@@ -44,11 +46,13 @@ export const movementSchema = z.object({
 	tagId: z.string().optional(), // Tag id is optional when creating new
 	tagName: z
 		.string()
+		.trim()
 		.min(1, 'Ingresa una descripción, o selecciona una debajo'),
 	amount: z.coerce
 		.number({ invalid_type_error: 'Ingresa un monto mayor a $0' })
 		.gt(0, { message: 'El monto debe ser mayor a $0' }),
-	description: z.string().optional(),
+	description: z.string().trim().optional(),
 });
+
 
 export type MovementFormData = z.infer<typeof movementSchema>;

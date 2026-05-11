@@ -7,13 +7,12 @@ import { Movement, Movements } from "@/lib/schemas/movement"
 import { useDashboard } from '@/app/dashboard/dashboardContext';
 import { TxType } from "@/lib/schemas/definitions"
 import { CategoryBudget } from "@/lib/schemas/category"
-import { availableColors } from "@/lib/quick-spend-constants"
+import { availableColors, formatToBalance } from "@/lib/quick-spend-constants"
 import { ExpenseChartSkeleton } from "./transaction-chart-skeleton"
 import { getMonthName } from "@/lib/dateUtils"
 
 export default function TransactionChart() {
 	const { user, loadingUser, error, budgetedCats, setBudgetedCats, loadingBudgetedCats } = useDashboard();
-
 
 	const [hoveredCategory, setHoveredCategory] = useState<string | null>(null)
 
@@ -45,7 +44,7 @@ export default function TransactionChart() {
 						<div className="flex items-center justify-between">
 							<CardTitle className="text-base">Resumen de Gastos {getMonthName()}</CardTitle>
 							<div className="text-right">
-								<p className="text-lg font-bold tabular-nums">${totalExpensesAllCats.toFixed(0)}</p>
+								<p className="text-lg font-bold tabular-nums">{formatToBalance(totalExpensesAllCats)}</p>
 								<p className="text-xs text-muted-foreground">gastado</p>
 							</div>
 						</div>
@@ -76,14 +75,14 @@ export default function TransactionChart() {
 
 								{/* Hovered detail */}
 								{/* {hoveredCategory && (
-							<div className="text-center text-sm text-muted-foreground">
-								{segments.find((s) => s.id === hoveredCategory)?.name}:{" "}
-								<span className="font-semibold text-foreground">
-									${segments.find((s) => s.id === hoveredCategory)?.amount.toFixed(0)}
-								</span>{" "}
-								({segments.find((s) => s.id === hoveredCategory)?.percentage.toFixed(0)}%)
-							</div>
-						)} */}
+									<div className="text-center text-sm text-muted-foreground">
+										{segments.find((s) => s.id === hoveredCategory)?.name}:{" "}
+										<span className="font-semibold text-foreground">
+											${segments.find((s) => s.id === hoveredCategory)?.amount.toFixed(0)}
+										</span>{" "}
+										({segments.find((s) => s.id === hoveredCategory)?.percentage.toFixed(0)}%)
+									</div>
+								)} */}
 
 								{/* Legend */}
 								<div className="flex flex-wrap gap-x-4 gap-y-1.5">
@@ -103,7 +102,7 @@ export default function TransactionChart() {
 												style={{ backgroundColor: seg.color }}
 											/>
 											<span className="text-muted-foreground">{seg.name}</span>
-											<span className="font-medium tabular-nums">${seg.amount.toFixed(0)}</span>
+											<span className="font-medium tabular-nums">{formatToBalance(seg.amount)}</span>
 										</button>
 									))}
 								</div>

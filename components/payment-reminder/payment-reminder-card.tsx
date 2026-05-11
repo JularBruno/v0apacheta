@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { PaymentReminderModal } from "@/components/payment-reminder/payment-reminder-dialog"
-import QuickSpendCard from "@/components/transactions/quick-spend-card"
+import QuickSpendCard from "@/components/movements/quick-spend-card"
 import {
 	Utensils,
 	ShoppingCart,
@@ -30,7 +30,7 @@ import Link from "next/link"
 import { getDateStringsForFilter, getLastNMonths } from "@/lib/dateUtils"
 import { getBudgetByUserAndPeriod, putCategory } from "@/lib/actions/categories"
 import { Category, CategoryBudget } from "@/lib/schemas/category"
-import IconComponent from "@/components/transactions/icon-component"
+import IconComponent from "@/components/movements/icon-component"
 import { formatToBalance } from "@/lib/quick-spend-constants"
 import { BalanceInput } from "@/components/balance-input/balance-input-mock"
 

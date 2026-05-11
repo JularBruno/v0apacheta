@@ -6,11 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { CategoryBudget } from "@/lib/schemas/category"
-import { availableColors } from "@/lib/quick-spend-constants"
+import { availableColors, formatToBalance } from "@/lib/quick-spend-constants"
 import { getMonthName } from "@/lib/dateUtils"
 
 export default function CategoryBudgetList({ budgetedCategories }: { budgetedCategories: CategoryBudget[] }) {
 	const [expanded, setExpanded] = useState(false)
+	const [filteredDate, setFilteredDate] = useState('')
 	const VISIBLE_COUNT = 5
 
 	// const expenses = budgetedCategories.filter((t) => t.type === TxType.EXPENSE)
@@ -62,10 +63,10 @@ export default function CategoryBudgetList({ budgetedCategories }: { budgetedCat
 		<Card>
 			<CardHeader className="pb-3">
 				<div className="flex items-center justify-between">
-					<CardTitle className="text-base">Presupuesto por Categoria {getMonthName()}</CardTitle>
+					<CardTitle className="text-base">Presupuesto por Categoria {filteredDate}</CardTitle>
 					<div className="text-right">
-						<p className="text-lg font-bold tabular-nums">${totalSpent.toFixed(0)}</p>
-						<p className="text-xs text-muted-foreground">de ${totalBudget.toFixed(0)}</p>
+						<p className="text-lg font-bold tabular-nums">{formatToBalance(totalSpent)}</p>
+						<p className="text-xs text-muted-foreground">de {formatToBalance(totalBudget)}</p>
 					</div>
 				</div>
 			</CardHeader>
@@ -85,9 +86,9 @@ export default function CategoryBudgetList({ budgetedCategories }: { budgetedCat
 									<div className="flex items-center justify-between mb-1">
 										<span className="text-sm font-medium truncate">{item.name}</span>
 										<div className="flex items-center gap-2 shrink-0 ml-2">
-											<span className="text-sm tabular-nums font-semibold">${item.spent.toFixed(0)}</span>
+											<span className="text-sm tabular-nums font-semibold">{formatToBalance(item.spent)}</span>
 											{item.budget > 0 && (
-												<span className="text-xs text-muted-foreground tabular-nums">/ ${item.budget.toFixed(0)}</span>
+												<span className="text-xs text-muted-foreground tabular-nums">/ {formatToBalance(item.budget)}</span>
 											)}
 										</div>
 									</div>
@@ -128,8 +129,8 @@ export default function CategoryBudgetList({ budgetedCategories }: { budgetedCat
 												)}
 											>
 												{item.spent > item.budget
-													? `-$${(item.spent - item.budget).toFixed(0)} excedido`
-													: `$${(item.budget - item.spent).toFixed(0)} restante`}
+													? `${formatToBalance(item.spent - item.budget)} excedido`
+													: `${formatToBalance(item.budget - item.spent)} restante`}
 											</span>
 										)}
 									</div>

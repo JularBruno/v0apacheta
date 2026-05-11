@@ -1,4 +1,4 @@
-import NextAuth, { DefaultSession } from 'next-auth';
+import NextAuth, { AuthError, DefaultSession } from 'next-auth';
 import { authConfig } from './middleware';
 import Credentials from 'next-auth/providers/credentials';
 import { z } from 'zod';
@@ -59,16 +59,13 @@ export const { auth, signIn, signOut } = NextAuth({
 							email: z.string().email(),
 							password: z.string().min(6),
 						})
-						// .safeParse(credentials);
 						.safeParse({
 							email: credentials?.email,
 							password: credentials?.password,
 						});
 
 					if (!parsedCredentials.success) {
-						// TODO this can be done on form
 						const firstError = parsedCredentials.error.issues[0];
-
 						lastAuthError = `${firstError.path[0].toString().toUpperCase()}_VALIDATIONERROR`;
 						return null;
 					}
@@ -88,7 +85,12 @@ export const { auth, signIn, signOut } = NextAuth({
 
 					if (!response.ok) {
 						const errorData = await response.json();
-						console.log('Login failed:', response.status, errorData);
+
+						if (response.status >= 500) {
+							lastAuthError = 'LOGIN_ERROR';
+							throw new AuthError('LOGIN_ERROR');
+						}
+
 						switch (errorData.message) {
 							case 'Invalid username':
 								lastAuthError = 'LOGIN_EMAIL_ERROR';
@@ -103,9 +105,6 @@ export const { auth, signIn, signOut } = NextAuth({
 
 					const data = await response.json();
 
-					// revalidateTag('user'); // get user from api!
-					// await fetchUser();
-
 					// Return a user object that NextAuth can use
 					return {
 						id: data.user.id,
@@ -114,10 +113,10 @@ export const { auth, signIn, signOut } = NextAuth({
 						// Store the token if you need it for other API calls
 						accessToken: data.accessToken,
 					};
-				} catch (error: any) {
-					console.error('Login error:', error);
+				}
+				catch (error: any) {
 					lastAuthError = 'LOGIN_ERROR';
-					throw error;
+					throw new AuthError('LOGIN_ERROR');
 				}
 			},
 		}),

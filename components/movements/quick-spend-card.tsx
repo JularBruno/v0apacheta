@@ -22,7 +22,7 @@ import { Tags } from "@/lib/schemas/tag";
 import { Movement, movementSchema, MovementFormData } from "@/lib/schemas/movement";
 import { TxType } from "@/lib/schemas/definitions";
 import { Category } from "@/lib/schemas/category";
-import { deleteCategoryById } from "@/lib/actions/categories";
+import { deleteCategoryById, revalidateCategories, revalidateCategoriesBudget } from "@/lib/actions/categories";
 import { postMovement } from "@/lib/actions/movements";
 
 import { QuickSpendCategoryDialogs } from "./quick-spend-category-dialogs"
@@ -44,11 +44,13 @@ import { getTagsByUser, revalidateTags } from "@/lib/actions/tags";
  */
 export default function QuickSpendCard({
 	onAdd,
-	// initialType,
+	initialType,
+	financialElementId,
 	onCancel,
 }: {
 	onAdd: (data: Movement) => void
-	// initialType?: TxType
+	initialType?: TxType
+	financialElementId?: string,
 	onCancel?: () => void
 }) {
 	const { toast } = useToast();
@@ -74,7 +76,7 @@ export default function QuickSpendCard({
 	 */
 	// type selection and useful for when opening modal with an already selected option
 	// const [type, setType] = useState<TxType>(initialType || TxType.EXPENSE)
-	const [type, setType] = useState<TxType>(TxType.EXPENSE)
+	const [type, setType] = useState<TxType>(initialType || TxType.EXPENSE)
 
 	// Switch between "gasto" (expense) and "ingreso" (income) types
 	// and make sure a valid category is selected for the new type
@@ -158,6 +160,8 @@ export default function QuickSpendCard({
 
 	// After submiting a category in dialog, add it to state
 	const categorySubmit = (cat: Category) => {
+		revalidateCategories();
+
 		setCats((prev: Category[]) => {
 			// Remove duplicates by ID
 			const filtered = prev.filter(filteredCat => filteredCat.id !== cat.id);
@@ -185,6 +189,8 @@ export default function QuickSpendCard({
 			setAllTags((prev) => prev.filter((t) => t.categoryId !== catId))
 		}
 
+		await revalidateCategories();
+		await revalidateCategoriesBudget();
 		await deleteCategoryById(cat.id); // DELETION
 
 		setCats((prev) => prev.filter((c) => c.id !== catId))
@@ -217,6 +223,9 @@ export default function QuickSpendCard({
 	// Selected tag name to be used as selected reference
 	const [tagInput, setTagInput] = useState<string>("")
 
+	const [mobileTagsExpanded, setMobileTagsExpanded] = useState(false)
+
+
 	// Match the amount of tag pills to diplay and filter by category id when selected
 	const matchingSuggestions = useMemo(() => {
 		if (!categoryId) return allTags.slice(0, 12);
@@ -229,10 +238,13 @@ export default function QuickSpendCard({
 	const matchingSuggestionsMobile = useMemo(() => {
 		if (!categoryId) return allTags.slice(0, 4);
 
+		let sliceAmount = mobileTagsExpanded ? 12 : 4;
+
 		return allTags
 			.filter(t => t.categoryId === categoryId) // ← filter by selected category
-			.slice(0, 4);
-	}, [allTags, categoryId]);
+			.slice(0, sliceAmount);
+
+	}, [allTags, categoryId, mobileTagsExpanded]);
 
 	/**
 	 * 
@@ -336,6 +348,8 @@ export default function QuickSpendCard({
 	const onSubmitHandler = async (data: MovementFormData) => {
 		setMovementLoading(true);
 
+		// console.log("🔥 submit fired");
+
 		// Format the datetime to ISO string
 		const dateObj = new Date(`${customDate}T${customTime}`);
 		const isoString = dateObj.toISOString(); // "2026-01-05T13:36:50.121Z"
@@ -352,6 +366,10 @@ export default function QuickSpendCard({
 				description: data.tagName,
 				createdAt: showDateTime ? isoString : undefined, // Only include if custom date selected
 			};
+
+			if (financialElementId) {
+				movementData.financialElementId = financialElementId;
+			}
 
 			/**
 			 * I wanted to write this since i was having a bad time understanding this properly
@@ -419,12 +437,6 @@ export default function QuickSpendCard({
 			</CardHeader>
 			<CardContent className="space-y-4 p-4">
 				<form onSubmit={handleSubmit(onSubmitHandler, onInvalid)}>
-					{/* <form
-					onSubmit={(e) => {
-						e.preventDefault(); // block form submit
-						handleSubmit(onSubmitHandler, onInvalid)
-					}}
-				> */}
 
 					{/* A11y live region */}
 					<div ref={liveRegionRef} className="sr-only" aria-live="polite" aria-atomic="true"></div>
@@ -433,6 +445,7 @@ export default function QuickSpendCard({
 					<div className="grid grid-cols-2 gap-2" role="tablist" aria-label="Tipo de transacción">
 						<button
 							role="tab"
+							data-testid="quickspendcard-expense"
 							type="button"
 							aria-selected={type === TxType.EXPENSE}
 							onClick={() => switchType(TxType.EXPENSE)}
@@ -448,6 +461,7 @@ export default function QuickSpendCard({
 						<button
 							role="tab"
 							type="button"
+							data-testid="quickspendcard-income"
 							aria-selected={type === TxType.INCOME}
 							onClick={() => switchType(TxType.INCOME)}
 							className={cn(
@@ -497,6 +511,8 @@ export default function QuickSpendCard({
 						selectTag={selectTag}
 						tagNameError={errors.tagName?.message}
 						onInputKeyDown={handleTagKeyDown}
+						mobileTagsExpanded={mobileTagsExpanded}
+						setMobileTagsExpanded={setMobileTagsExpanded}
 
 						register={register}
 
@@ -527,7 +543,7 @@ export default function QuickSpendCard({
 					/>
 
 					{/* submit button */}
-					<Button type="submit" className="w-full h-12 text-base font-semibold"
+					<Button data-testid="submit-button" type="submit" className="w-full h-12 text-base font-semibold"
 						disabled={movementLoading}
 					>
 						{movementLoading

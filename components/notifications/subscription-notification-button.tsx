@@ -65,23 +65,32 @@ export default function SubscriptionButtonNotification() {
 				registerServiceWorker() // get browser subscription
 			])
 
-			// if first time useffect is used sinnce it runs 2
+			// if first time useffect is used since it runs 2 times
 			if (mounted) {
+
 				setUserSubscriptions(userSubscriptions) // set geted user already suscribed devices
 				setSubscription(sub) // set the device information from registering service worker, with like endpoint and required things to save on db and use to send nots
+
 				if (!userSubscriptions.length) {
 					setIsRegistered(false);
 				}
 
-				const subJSON = sub?.toJSON()
+				setIsRegistered(!!sub);
+
+				// const subJSON = sub?.toJSON();
+
+				console.log('userSubscriptions ', userSubscriptions);
+				console.log('sub ', sub);
+
 				// COMPARE SUBSCRIPTIONS TO GET IF USER SUBSCRIBED
-				for (let index = 0; index < userSubscriptions.length; index++) {
-					const element = userSubscriptions[index];
-					if (element.endpoint === subJSON?.endpoint) {
-						setIsRegistered(true);
-					}
-				}
+				// for (let index = 0; index < userSubscriptions.length; index++) {
+				// 	const element = userSubscriptions[index];
+				// 	if (element.endpoint === subJSON?.endpoint) {
+				// 		setIsRegistered(true);
+				// 	}
+				// }
 			}
+
 		} catch (error) {
 			console.error('Failed:', error)
 		} finally {
@@ -145,7 +154,8 @@ export default function SubscriptionButtonNotification() {
 			/**
 			 * Register to DB the actual subscritption information to send notifications to
 			 */
-			postSubscriptionNotification(subJSON);
+			await postSubscriptionNotification(subJSON);
+			setSubscription(sub);
 			setIsRegistered(true);
 		} catch (error) {
 			console.error('Push subscription failed:', error);
@@ -158,6 +168,8 @@ export default function SubscriptionButtonNotification() {
 				endpoint: subJSON.endpoint || '',
 				p256dh: subJSON.keys?.p256dh || '',
 				auth: subJSON.keys?.auth || ''
+			}).then((res: Subscriptions) => {
+				setUserSubscriptions(prev => [...prev, res])
 			})
 		} catch (error) {
 			console.error('Failed:', error);
@@ -165,30 +177,46 @@ export default function SubscriptionButtonNotification() {
 	};
 
 	async function unsubscribeFromPush() {
+		setIsNotificationsLoading(true);
 
 		try {
+			console.log(0);
 			// check here quickly
 			if (isRegistered) {
 
-				// find id for db
-				const subscriptionOfThisDevice = userSubscriptions ? userSubscriptions.find(sub => sub.endpoint === subscription?.endpoint) : null;
-				if (subscriptionOfThisDevice) {
+				// console.log(userSubscriptions.find(sub => sub.endpoint === subscription?.endpoint));
 
+				// find id for db
+				// const subscriptionOfThisDevice = userSubscriptions ? userSubscriptions.find(sub => sub.endpoint === subscription?.endpoint) : null;
+
+				// console.log('subscriptionOfThisDevice ', subscriptionOfThisDevice);
+				// console.log('subscription ', subscription);
+
+				console.log(1);
+				if (subscription) {
 					// delete
-					await deleteSubscriptionNotifications(subscriptionOfThisDevice.id);
+					console.log(2);
+
+					await deleteSubscriptionNotifications(subscription.endpoint);
+
+					await subscription.unsubscribe();
 					// remove from state array
-					setUserSubscriptions(prev => prev ? prev.filter(item => item.id === subscriptionOfThisDevice.id) : [])
+					// setUserSubscriptions(prev => prev ? prev.filter(item => item.id === subscription.id) : [])
 				}
 
 				setIsRegistered(false);
 				toast({
 					title: "Notificaciones Desactivadas",
-					description: "Acctivalas para recibir nuevamente notificaciones.",
-					variant: "destructive",
+					description: "Activalas para recibir nuevamente notificaciones.",
+					variant: "default",
 				})
+
 			}
 		} catch (error) {
 			console.error('Failed:', error);
+		} finally {
+			setIsNotificationsLoading(false);
+
 		}
 
 	}
@@ -199,13 +227,16 @@ export default function SubscriptionButtonNotification() {
 	 * @returns 
 	 */
 	const requestNotificationPermission = async () => {
+		setIsNotificationsLoading(true);
+
 		if (!("Notification" in window)) {
 			toast({
 				title: "No soportado",
 				description: "Tu navegador no soporta notificaciones.",
 				variant: "destructive",
 			})
-			return
+			setIsNotificationsLoading(false);
+			return;
 		}
 
 		if (Notification.permission === "granted") {
@@ -217,7 +248,8 @@ export default function SubscriptionButtonNotification() {
 				title: "Ya activadas",
 				description: "Las notificaciones ya están habilitadas.",
 			})
-			return
+			setIsNotificationsLoading(false);
+			return;
 		}
 
 		if (Notification.permission === "denied") {
@@ -226,7 +258,8 @@ export default function SubscriptionButtonNotification() {
 				description: "Las notificaciones están bloqueadas. Habilítalas desde la configuración del navegador.",
 				variant: "destructive",
 			})
-			return
+			setIsNotificationsLoading(false);
+			return;
 		}
 
 		// Request permission first
@@ -247,6 +280,8 @@ export default function SubscriptionButtonNotification() {
 					description: "Las notificaciones están bloqueadas. Habilítalas desde la configuración del navegador.",
 					variant: "destructive",
 				})
+			} finally {
+				setIsNotificationsLoading(false);
 			}
 		}
 

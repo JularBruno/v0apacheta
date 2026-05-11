@@ -33,8 +33,9 @@ export async function authenticate(
 				default:
 					return 'Algo salió mal.';
 			}
+		} else { // error?.digest?.startsWith('NEXT_REDIRECT')
+			throw error
 		}
-		throw error;
 	}
 }
 
@@ -45,9 +46,11 @@ export async function authenticate(
 export async function logOut() {
 	try {
 		revalidatePath('/', 'layout'); // Clears all cached data
-
 		await signOut({ redirectTo: '/' });
 	} catch (error: any) {
+		if (error?.digest?.startsWith('NEXT_REDIRECT')) {
+			throw error
+		}
 		console.error('Logout error:', error);
 		throw error;
 	}

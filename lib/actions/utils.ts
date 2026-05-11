@@ -59,10 +59,11 @@ export async function getMethodWithoutSession<T>(
 		},
 	});
 
-	// if (response.status === 401) {
-	// 	await signOut({ redirect: false });
-	// 	redirect('/login?expired=true');
-	// }
+	// not sure about this but middleware does weird validations
+	if (response.status === 401) {
+		await signOut({ redirect: false });
+		redirect('/login?expired=true');
+	}
 
 	if (!response.ok) {
 		throw new Error(`HTTP error! status: ${response.status}`);
@@ -87,6 +88,8 @@ export async function getMethod<T>(
 	const session = await getSession();
 
 	const endpoint = id ? `${urlDev}/${url}/${id}` : `${urlDev}/${url}`;
+
+	console.log('get method ', endpoint);
 
 	const response = await fetch(endpoint, {
 		method: 'GET',
@@ -235,7 +238,7 @@ export async function putMethod<T>(
  * @param id - id to identify object
  * @returns response or error
  */
-export async function deleteMethod<T>(url: string, id: string): Promise<T> {
+export async function deleteMethod<T>(url: string, id: string): Promise<T | null> {
 	const session = await getSession();
 
 	if (!session?.user?.id || !session?.accessToken) {
@@ -244,6 +247,8 @@ export async function deleteMethod<T>(url: string, id: string): Promise<T> {
 	}
 
 	try {
+		console.log(`${urlDev}/${url}/${id}`);
+
 		const response = await fetch(`${urlDev}/${url}/${id}`, {
 			method: 'DELETE',
 			headers: {
@@ -257,10 +262,8 @@ export async function deleteMethod<T>(url: string, id: string): Promise<T> {
 			redirect('/login?expired=true');
 		}
 
-		const data = await response.json();
-		// console.log(data);
-
-		return data;
+		const text = await response.text();
+		return text ? JSON.parse(text) : null;
 	} catch (error) {
 		throw error;
 	}

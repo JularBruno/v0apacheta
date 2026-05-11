@@ -1,7 +1,7 @@
 "use client"
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import QuickSpendCard from "@/components/transactions/quick-spend-card"
+import QuickSpendCard from "@/components/movements/quick-spend-card"
 import { TxType } from "@/lib/schemas/definitions"
 import { useEffect, useState } from "react"
 import { Category } from "@/lib/schemas/category"

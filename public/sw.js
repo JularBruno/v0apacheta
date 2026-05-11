@@ -1,22 +1,45 @@
 self.addEventListener('push', function (event) {
-	if (event.data) {
-		const data = event.data.json()
-		const options = {
-			body: data.body,
-			icon: data.icon || './public/icon-192x192.png',
-			badge: './public/icon-192x192.png',
-			vibrate: [100, 50, 100],
-			data: {
-				dateOfArrival: Date.now(),
-				primaryKey: '2',
-			},
-		}
-		event.waitUntil(self.registration.showNotification(data.title, options))
+	let data = {}
+
+	try {
+		data = event.data ? event.data.json() : {}
+	} catch {
+		data = { body: event.data?.text() }
 	}
+
+	const title = data.title || 'Apacheta'
+
+	const options = {
+		body: data.body,
+		// icon: data.icon || '/icon-192x192.png',
+		icon: '/iconwbg-192x192.png',
+		badge: '/icon-192x192.png',
+		image: '/icon-512x512.png',
+
+		data: {
+			url: data.url || 'https://apacheta.ar/dashboard/mapa' // Add this for dynamic routing
+		},
+
+		tag: 'apacheta', // Replaces old notifications with same tag
+		renotify: true,
+		requireInteraction: false,
+		timestamp: Date.now(),
+
+		actions: [
+			{ action: 'view', title: 'Ver detalles', icon: '/icons/view.png' },
+			{ action: 'dismiss', title: 'Descartar', icon: '/icons/close.png' }
+		],
+
+	}
+
+	event.waitUntil(
+		self.registration.showNotification(title, options)
+	);
+
 })
 
 self.addEventListener('notificationclick', function (event) {
 	console.log('Notification click received.')
 	event.notification.close()
-	event.waitUntil(clients.openWindow('https://v0apacheta-production.up.railway.app/dashboard/inicio'))
+	event.waitUntil(clients.openWindow('https://apacheta.ar/dashboard/inicio'))
 })

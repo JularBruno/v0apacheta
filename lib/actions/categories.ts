@@ -78,8 +78,8 @@ export async function getBudgetByUserAndPeriodCached(
 	const getBudgetCache = unstable_cache(async () => {
 		return await getMethodWithoutSession<Array<CategoryBudget>>(url, session);
 	},
-		['categoryBudget-api'],
-		{ revalidate: 3600, tags: ['categoryBudget'] }
+		['category-budget'],
+		{ revalidate: 3600, tags: ['category-budget'] }
 	);
 
 	return await getBudgetCache();
@@ -132,4 +132,8 @@ export async function putCategory(
 
 export async function revalidateCategories() {
 	revalidateTag('categories'); // get categories from api! revalidate cache
+}
+
+export async function revalidateCategoriesBudget() {
+	revalidateTag('category-budget'); // get categories from api! revalidate cache
 }

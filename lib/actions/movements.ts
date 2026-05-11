@@ -30,7 +30,6 @@ export async function getMovementsByUserAndFilterCache(
 	if (filters?.endDate) params.append('endDate', filters.endDate);
 
 	const url = `movement?${params.toString()}`;
-	// return await getMethodWithoutSession<Array<Movements>>(url, session);
 
 	const getMovementsCache = unstable_cache(async () => {
 		return await getMethodWithoutSession<Array<Movements>>(url, session);
@@ -70,7 +69,6 @@ export async function postMovement(data: Movement): Promise<Movement> {
 	const session = await getSession();
 	console.log('data ', data);
 
-
 	const result = await postMethod<Movement>(url, {
 		...data,
 		userId: session!.user.id,
@@ -82,7 +80,7 @@ export async function postMovement(data: Movement): Promise<Movement> {
 	// if (!data.tagId) {
 	// }
 
-	// i didnt want to di because it might be expensive, /dashobard/inicio updates balance
+	// i didnt want to do because it might be expensive, /dashobard/inicio updates balance
 	// revalidateTag('user'); // get user from api! to acutally update context balance
 
 	return result;
