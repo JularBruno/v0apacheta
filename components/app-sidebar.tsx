@@ -2,7 +2,6 @@
 import type * as React from "react"
 import { Home, Settings, HelpCircle, PiggyBank, Heart, Split, FileSpreadsheet, DollarSign, Map, History, Package, Wallet, LogOut } from "lucide-react" // Added Map, History, Package
 import { usePathname } from "next/navigation"
-import { logOut } from '@/lib/actions/auth';
 import { useTransition } from 'react';
 
 import {
@@ -16,6 +15,7 @@ import {
 	SidebarMenuItem,
 	SidebarRail,
 } from "@/components/ui/sidebar"
+import { useLogout } from "@/lib/hooks/use-logout";
 
 // Menu items for the sidebar
 const mainMenuItems = [
@@ -92,6 +92,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
 	const [isPending, startTransition] = useTransition();
 
+	const logout = useLogout();
+
 	/**
 	 * @title Handles logout with proper error handling
 	 * @returns Logs out user and redirects
@@ -99,7 +101,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 	const handleLogout = () => {
 		startTransition(async () => {
 			try {
-				await logOut();
+				await logout();
 			} catch (error) {
 				console.error('Logout failed:', error);
 				// Handle error if needed

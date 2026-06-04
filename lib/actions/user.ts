@@ -12,6 +12,7 @@ import { unstable_cache } from 'next/cache'
 import { revalidateTag } from 'next/cache'
 import { headers } from 'next/headers'
 import { cacheTag } from 'next/dist/server/use-cache/cache-tag';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 /* FormSchemas for validating each form parameter with an specific error before post on actual server */
 const PostUserFormSchema = z.object({
@@ -119,18 +120,29 @@ export async function register(prevState: UserState, formData: FormData) {
  * @title Get user profile including Balance
  * @returns User obejct
  */
+// export async function getProfile(): Promise<User> {
+// 	const url = 'user/profile';
+// 	const session = await getSession();
+
+// 	if (!session?.user?.id) {
+// 		throw new Error('Unauthorized');
+// 	}
+
+// 	const getProfile = unstable_cache(async () => {
+// 		return await getMethodWithoutSession<User>(url, session);
+// 	},
+// 		['user-profile', session.user.id],
+// 		{ revalidate: 3600, tags: ['user'] }
+// 	);
+
+// 	return await getProfile();
+// }
+
 export async function getProfile(): Promise<User> {
-	const url = 'user/profile';
 	const session = await getSession();
+	if (!session?.user?.id) throw new Error('Unauthorized');
 
-	const getProfile = unstable_cache(async () => {
-		return await getMethodWithoutSession<User>(url, session);
-	},
-		['user-profile'],
-		{ revalidate: 3600, tags: ['user'] }
-	);
-
-	return await getProfile();
+	return await getMethodWithoutSession<User>('user/profile', session);
 }
 
 
@@ -152,7 +164,6 @@ export async function putUser(
 
 	return result;
 }
-
 
 // Rule: Revalidate immediately after mutations that change the data, not "when you need it later."
 // the user cannot be mutated yet

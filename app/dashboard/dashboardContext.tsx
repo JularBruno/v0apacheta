@@ -9,6 +9,8 @@ import { Tag, Tags } from '@/lib/schemas/tag';
 import { getBudgetByUserAndPeriod, getBudgetByUserAndPeriodCached, getCategoriesByUser } from '@/lib/actions/categories';
 import { getTagsByUser } from '@/lib/actions/tags';
 
+import { useProfile } from '@/lib/hooks/use-profile';
+
 export interface DashboardUserContextType {
 	user: User | undefined;
 	userBalance: number;
@@ -42,9 +44,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 	 */
 	const [loading, setLoading] = useState(true);
 
-	const [user, setUser] = useState<User>();
+	// const [user, setUser] = useState<User>();
 	const [userBalance, setUserBalance] = useState<number>(0);
-	const [loadingUser, setLoadingUser] = useState(true);
+	// const [loadingUser, setLoadingUser] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
 	const [cats, setCats] = useState<Category[]>([]);
@@ -56,22 +58,27 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 	const [budgetedCats, setBudgetedCats] = useState<CategoryBudget[]>([]);
 	const [loadingBudgetedCats, setLoadingBudgetedCats] = useState(true);
 
-	const fetchProfile = async () => {
-		try {
-			setLoadingUser(true);
-			// Guess this should be the first get that will catch 401
-			const profile = await getProfile();
-			setUser(profile);
-			setUserBalance(profile.balance);
-		}
-		catch (error: any) {
-			// I guess any error would be related to api call, and instead of just catching redirect, I will show toast
-			setError(error);
-			return;
-		} finally {
-			setLoadingUser(false);
-		}
-	}
+	const { data: profile, isLoading
+		// , error
+	} = useProfile();
+
+
+	// const fetchProfile = async () => {
+	// 	try {
+	// 		setLoadingUser(true);
+	// 		// Guess this should be the first get that will catch 401
+	// 		const profile = await getProfile();
+	// 		setUser(profile);
+	// 		setUserBalance(profile.balance);
+	// 	}
+	// 	catch (error: any) {
+	// 		// I guess any error would be related to api call, and instead of just catching redirect, I will show toast
+	// 		setError(error);
+	// 		return;
+	// 	} finally {
+	// 		setLoadingUser(false);
+	// 	}
+	// }
 
 	const fetchCategories = async () => {
 		try {
@@ -127,7 +134,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 			// const [categories, user] = 
 			await Promise.all([
 				fetchCategories(),
-				fetchProfile(),
+				// fetchProfile(),
 				fetchTags(),
 				fetchBudgetForThisMonth()
 			]);
@@ -144,12 +151,22 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 	}, []);
 
 	const value: DashboardUserContextType = {
-		user,
-		userBalance,
-		loadingUser,
-		error,
-		// refetchUser: fetchUserData,
+		// user,
+		// userBalance,
+		// loadingUser,
+		// // refetchUser: fetchUserData,
+		// error,
+		// setUserBalance,
+
+		user: profile,
+		userBalance: profile?.balance || 0,
+		loadingUser: isLoading,
+		// error: error?.message || null,
 		setUserBalance,
+
+		error,
+
+
 		cats,
 		setCats,
 		loadingCats,
