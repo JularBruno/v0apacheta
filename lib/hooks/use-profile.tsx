@@ -6,6 +6,6 @@ export function useProfile() {
 	return useQuery({
 		queryKey: ['user-profile'],
 		queryFn: () => getProfile(),
-		staleTime: 3600000, // 1 hour
+		staleTime: Infinity
 	});
 }

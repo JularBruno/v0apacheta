@@ -6,12 +6,15 @@ import { cn } from "@/lib/utils";
 import { Movements } from "@/lib/schemas/movement";
 import { Category } from "@/lib/schemas/category";
 import { formatToBalance } from "@/lib/quick-spend-constants";
-import { formatDateNoYear } from "@/lib/dateUtils";
+import { formatDateNoYear, getDateStringsForFilter, getLastNMonths } from "@/lib/dateUtils";
 import { Loading } from "../ui/loading";
 import { TxType } from "@/lib/schemas/definitions";
 import { Badge } from "@/components/ui/badge"
 import { Utensils, ShoppingCart, Car, Gamepad2, TrendingUp } from "lucide-react"
 import IconComponent from "../movements/icon-component";
+import { useMovements } from '@/lib/hooks/use-movements';
+import { useMemo } from "react";
+import { useDeleteMovement } from "@/lib/hooks/use-delete-movement";
 
 /**
  * 
@@ -19,18 +22,44 @@ import IconComponent from "../movements/icon-component";
  * 
  */
 export default function RecentExpenses({
-	cats,
-	movements,
-	lastFiveAmount,
-	deleteLatestMovement,
-	loading
+	onDeleteLatestMovement
 }: {
-	cats: Category[],
-	movements: Movements[],
-	lastFiveAmount: number,
-	deleteLatestMovement: () => void
-	loading: boolean
+	onDeleteLatestMovement: () => void
 }) {
+	const { mutateAsync: deleteMutation } = useDeleteMovement();
+
+	const movementsFilters = useMemo(() => {
+		const { start, end } = getLastNMonths(1);
+		return getDateStringsForFilter(start, end);
+	}, []);
+
+	const { data: rawMovements = [], isLoading: loading } = useMovements(movementsFilters);
+
+	const allMovements = useMemo(() =>
+		[...rawMovements].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+		, [rawMovements]);
+
+	const movements = useMemo(() => allMovements.slice(0, 5), [allMovements]);
+
+	const lastFiveAmount = useMemo(() =>
+		movements.reduce((sum, item) => item.type === TxType.EXPENSE ? sum + item.amount : sum, 0),
+		[movements]
+	);
+
+	const deleteLatestMovement = async () => {
+		const last = movements[0];
+		if (!last) return;
+
+		try {
+			await deleteMutation({ id: last.id, type: last.type, amount: last.amount });
+			onDeleteLatestMovement();
+		} catch (error) {
+			console.log('error ', error);
+			// setLoadingMovements(false);
+		}
+	};
+
+
 	return (
 		<Card>
 			<CardHeader>

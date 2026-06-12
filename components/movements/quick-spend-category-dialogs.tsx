@@ -19,7 +19,6 @@ import { cn } from "@/lib/utils"
 
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Category, categorySchema } from "@/lib/schemas/category";
-import { postCategory, putCategory, revalidateCategories, revalidateCategoriesBudget } from "@/lib/actions/categories";
 import { Tag } from "@/lib/schemas/tag";
 import { TxType } from "@/lib/schemas/definitions";
 
@@ -27,6 +26,8 @@ import { availableColors, availableIcons } from "../../lib/quick-spend-constants
 import IconComponent from "./icon-component";
 import { useDashboard } from "@/app/dashboard/dashboardContext";
 import { useToast } from '@/hooks/use-toast';
+import { useCreateCategory } from "@/lib/hooks/use-create-category";
+import { useUpdateCategory } from "@/lib/hooks/use-update-category";
 
 type CategoryFormData = z.infer<typeof categorySchema>;
 
@@ -40,7 +41,7 @@ type Props = {
 	setShowManageCategories: (open: boolean) => void,
 	deleteCategory: (id: string) => void,
 	//
-	onSubmit: (data: Category) => void,
+	// onSubmit: (data: Category) => void,
 }
 
 /**
@@ -64,11 +65,14 @@ export function QuickSpendCategoryDialogs({
 	showManageCategories,
 	setShowManageCategories,
 	deleteCategory,
-	onSubmit,
+	// onSubmit,
 }: Props) {
 	const { toast } = useToast();
 
-	const { user, userBalance, loadingUser, error, cats, setCats, loadingCats } = useDashboard();
+	const { user, userBalance, loadingUser, error, cats, loadingCats } = useDashboard();
+
+	const createCategory = useCreateCategory();
+	const updateCategory = useUpdateCategory();
 
 	// values to use in selectors and in the form
 	const [newCatIconId, setNewCatIconId] = useState(availableIcons[0].id)
@@ -117,25 +121,19 @@ export function QuickSpendCategoryDialogs({
 
 
 	const onSubmitHandler = async (data: CategoryFormData) => {
+
 		try {
 			data.color = newCatColorId;
 			data.icon = newCatIconId;
 			data.type = newCatType;
 
 			if (editingCategory?.id) {
-				// Editing existing category
-				const cat = await putCategory(editingCategory.id, data);
-				onSubmit(cat); // Call parent's submit handler
-				setShowManageCategories(false); // Close dialog of categories
+				await updateCategory.mutateAsync({ id: editingCategory.id, data });
+				setShowManageCategories(false);
 
 			} else {
-				const cat = await postCategory(data);
-				onSubmit(cat); // Call parent's submit handler
+				await createCategory.mutateAsync(data);
 			}
-
-			revalidateCategories(); // revalidate cached categories
-			revalidateCategoriesBudget(); // revalidate cached categories
-			console.log('about to toastr');
 
 			toast({
 				title: `Categoría ${editingCategory?.id ? "editada" : "creada"}!`,

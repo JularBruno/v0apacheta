@@ -36,3 +36,5 @@ export const categorySchema = z.object({
 	color: z.string().min(1, 'color is required'),
 	type: z.enum([TxType.EXPENSE, TxType.INCOME]),
 });
+
+export type UpdateCategoryData = Partial<z.infer<typeof categorySchema>> & { budget?: number };

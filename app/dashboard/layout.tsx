@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { useState } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
@@ -49,7 +50,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 		}
 	}
 
-	const queryClient = new QueryClient();
+	const [queryClient] = useState(() => new QueryClient());
 
 	return (
 		<QueryClientProvider client={queryClient}>
