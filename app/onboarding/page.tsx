@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useActionState, useEffect } from "react"
 import { register } from '@/lib/actions/user';
-import { initialUserState } from '@/lib/schemas/user';
+import { initialUserState, type NotificationFrequency } from '@/lib/schemas/user';
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -106,16 +106,11 @@ export default function OnboardingPage() {
 	/** get image to display on each step **/
 	const getImageSrc = () => {
 		switch (currentStep) {
-			case 1:
-				return "/step1.svg"
-			case 2:
-				return "/step2.svg"
-			case 3:
-				return "/step3.svg"
-			case 4:
-				return "/step4.svg"
-			default:
-				return "/step4.svg"
+			case 1: return "/step1.svg"
+			case 2: return "/step2.svg"
+			case 3: return "/step3.svg"
+			case 4: return "/step4.svg"
+			default: return "/step4.svg"
 		}
 	}
 
@@ -125,21 +120,27 @@ export default function OnboardingPage() {
 
 	const [question1Value, setQuestion1Value] = useState<number | null>(null);
 	const [question2Value, setQuestion2Value] = useState<number | null>(null);
+	const [question3Value, setQuestion3Value] = useState<number | null>(null);
 
 	const handleQuestion1Change = (value: number) => setQuestion1Value(value);
 	const handleQuestion2Change = (value: number) => setQuestion2Value(value);
+	const handleQuestion3Change = (value: number) => setQuestion3Value(value);
 
-	const totalScore = (question1Value ?? 0) + (question2Value ?? 0);
+	const totalScore = (question1Value ?? 0) + (question2Value ?? 0) + (question3Value ?? 0);
+
+	const getNotificationFrequency = (): NotificationFrequency => {
+		if (totalScore <= 5) return 'daily';
+		if (totalScore <= 9) return 'weekly';
+		return 'monthly';
+	};
 
 	const getPersonalizedMessage = () => {
-		if (totalScore >= 1 && totalScore <= 3) {
+		if (totalScore >= 3 && totalScore <= 5) {
 			return "Estás dando tus primeros pasos. Te ayudaremos a empezar con bases sólidas 💪";
 		}
-
-		if (totalScore >= 4 && totalScore <= 7) {
+		if (totalScore >= 6 && totalScore <= 9) {
 			return "Vas por buen camino. Un poco de estructura te va a llevar lejos 🚀";
 		}
-
 		return "Tenés un perfil avanzado. Es momento de optimizar y escalar 📈";
 	};
 
@@ -182,9 +183,10 @@ export default function OnboardingPage() {
 					<p className="mt-2 text-center text-sm text-muted-foreground">
 						{currentStep === 1 && "Cuentanos sobre ti."}
 						{currentStep === 2 && "Unas preguntas rápidas para guiarte mejor."}
-						{currentStep === 3 && "Casi listos, última pregunta."}
-						{currentStep === 4 && "El mapa"}
-						{currentStep === 5 && "Crea tu cuenta."}
+						{currentStep === 3 && "Seguimos conociendonos."}
+						{currentStep === 4 && "Casi listos, última pregunta."}
+						{currentStep === 5 && "El mapa"}
+						{currentStep === 6 && "Crea tu cuenta."}
 					</p>
 				</div>
 
@@ -328,8 +330,56 @@ export default function OnboardingPage() {
 						</div>
 					)}
 
-					{/* Step 4: Personalized Message */}
+					{/* Step 4: Question 3 */}
 					{currentStep === 4 && (
+						<div className="space-y-6">
+							<div>
+								<Label className="text-base font-semibold mb-2 block">
+									3. ¿Con qué frecuencia revisás tus finanzas personales?
+								</Label>
+
+								<div className="space-y-2">
+									{[
+										{ id: 'q3-a1', score: 1, label: 'Casi nunca o nunca' },
+										{ id: 'q3-a2', score: 2, label: 'Una vez al mes' },
+										{ id: 'q3-a3', score: 3, label: 'Semanalmente' },
+										{ id: 'q3-a4', score: 4, label: 'Todos los días' },
+									].map(option => (
+										<div key={option.id} className="flex items-center">
+											<input
+												type="radio"
+												id={option.id}
+												checked={question3Value === option.score}
+												onChange={() => handleQuestion3Change(option.score)}
+												disabled={isPending}
+												className="h-4 w-4 accent-primary border-border focus:ring-primary"
+											/>
+											<Label htmlFor={option.id} className="ml-2 text-sm text-foreground">
+												{option.label}
+											</Label>
+										</div>
+									))}
+								</div>
+							</div>
+
+							<div className="flex justify-between gap-4">
+								<Button type="button" onClick={handleBack} variant="outline" className="w-1/2">
+									Atrás
+								</Button>
+								<Button
+									type="button"
+									onClick={handleNext}
+									disabled={!question3Value}
+									className="w-1/2"
+								>
+									Siguiente
+								</Button>
+							</div>
+						</div>
+					)}
+
+					{/* Step 5: Personalized Message */}
+					{currentStep === 5 && (
 						<div className="space-y-6">
 							<div className="bg-secondary border border-border rounded-lg p-6">
 								<div className="flex items-start space-x-3">
@@ -354,7 +404,6 @@ export default function OnboardingPage() {
 								<Button
 									type="button"
 									onClick={handleNext}
-									disabled={!question2Value}
 									className="w-1/2"
 								>
 									Siguiente
@@ -363,11 +412,13 @@ export default function OnboardingPage() {
 						</div>
 					)}
 
-					{/* Step 5: Email & Password */}
-					{currentStep === 5 && (
+					{/* Step 6: Email & Password */}
+					{currentStep === 6 && (
 						<div className="space-y-6">
-							{/* Hidden input to carry forward name from Step 1 */}
+							{/* Hidden inputs to carry forward data from previous steps */}
 							<input type="hidden" name="name" value={localFormData.name} />
+							<input type="hidden" name="notificationFrequency" value={getNotificationFrequency()} />
+							<input type="hidden" name="mapLevel" value="1.0" />
 							<div>
 								<Label htmlFor="email">Email</Label>
 								<Input
@@ -437,7 +488,7 @@ export default function OnboardingPage() {
 
 				</form>
 				<div className="text-center text-sm text-muted-foreground">
-					{currentStep < 4 && (
+					{currentStep < 5 && (
 						<>
 							Ya tenés una cuenta?{" "}
 							<Link href="/login" className="font-medium text-primary hover:text-primary-600">

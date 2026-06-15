@@ -35,16 +35,19 @@
 		--ring: 171 25% 58%;
 		--radius: 0.75rem;
 
-		--sidebar-background: 337 32% 8%;
-		/* #1b0e13 coffee bean */
-		--sidebar-foreground: 178 17% 88%;
-		--sidebar-primary: 171 25% 65%;
-		/* lighter muted teal on dark sidebar */
+		--sidebar-background: 178 15% 97%;
+		/* matches --background */
+		--sidebar-foreground: 337 32% 8%;
+		/* coffee bean */
+		--sidebar-primary: 171 25% 58%;
+		/* muted teal */
 		--sidebar-primary-foreground: 337 32% 8%;
-		--sidebar-accent: 337 25% 15%;
-		--sidebar-accent-foreground: 178 17% 88%;
-		--sidebar-border: 337 25% 14%;
-		--sidebar-ring: 171 25% 65%;
+		--sidebar-accent: 178 17% 92%;
+		/* pale surface for hover */
+		--sidebar-accent-foreground: 337 25% 20%;
+		--sidebar-border: 178 17% 82%;
+		/* matches --border */
+		--sidebar-ring: 171 25% 58%;
 
 		--chart-1: 171 25% 58%;
 		/* muted teal — income / primary */

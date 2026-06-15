@@ -1,11 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { putUser } from '@/lib/actions/user';
-import { User } from '@/lib/schemas/user';
+import { User, NotificationFrequency } from '@/lib/schemas/user';
 
 type UpdateUserData = {
 	name?: string;
 	totalBudget?: number;
 	balance?: number;
+	notificationFrequency?: NotificationFrequency;
+	mapLevel?: string;
 };
 
 export function useUpdateUser() {

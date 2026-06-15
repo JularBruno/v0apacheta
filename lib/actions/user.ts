@@ -2,9 +2,8 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { revalidateTag } from 'next/cache';
 import { signIn } from '@/auth';
-import { User, UserState } from '../schemas/user';
+import { User, UserState, NotificationFrequency } from '../schemas/user';
 import { z } from 'zod';
 import { getSession, getMethodWithoutSession, postMethod, putMethod } from './utils';
 
@@ -38,8 +37,11 @@ export async function register(prevState: UserState, formData: FormData) {
 		};
 	}
 
+	const notificationFrequency = (formData.get('notificationFrequency') as NotificationFrequency) ?? 'daily';
+	const mapLevel = (formData.get('mapLevel') as string) ?? '1.0';
+
 	try {
-		await postMethod<User>(url, validatedData.data, false);
+		await postMethod<User>(url, { ...validatedData.data, notificationFrequency, mapLevel }, false);
 
 		try {
 			await signIn('credentials', {
@@ -63,7 +65,7 @@ export async function register(prevState: UserState, formData: FormData) {
 		console.log('registrationError ', registrationError);
 
 		if (
-			registrationError.statusCode === 401 && registrationError.message === 'Invalid username'
+			registrationError.statusCode === 409
 			|| registrationError.message === 'NEXT_REDIRECT'
 		) {
 			return {
@@ -104,6 +106,8 @@ export async function putUser(
 		name?: string;
 		totalBudget?: number;
 		balance?: number;
+		notificationFrequency?: NotificationFrequency;
+		mapLevel?: string;
 	},
 ): Promise<User> {
 	const session = await getSession();

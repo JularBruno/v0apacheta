@@ -1,8 +1,5 @@
 "use client"
 
-import { cn } from "@/lib/utils"
-import { useState, useMemo } from "react"
-import MapStep from "@/components/map/map-step"
 import {
 	Map,
 	Wallet,
@@ -14,8 +11,6 @@ import {
 	HandCoins,
 	Scale,
 	BarChart,
-	ChevronLeft,
-	ChevronRight,
 	BookOpen,
 	Target,
 	Shield,
@@ -24,8 +19,8 @@ import {
 	Rocket,
 	Lightbulb,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { useDashboard } from "@/app/dashboard/dashboardContext"
+import MapView from "@/components/map/map-view"
 
 // All steps derived 1:1 from map-context.json
 // status is hardcoded for now — will be driven by validation logic in next iteration
@@ -492,116 +487,8 @@ const mapSteps = [
 	},
 ]
 
-const stages = [
-	{ id: 1, label: "Cimientos" },
-	{ id: 2, label: "Presupuesto" },
-	{ id: 3, label: "Protección" },
-	{ id: 4, label: "Crecimiento" },
-	{ id: 5, label: "Libertad" },
-]
 
 export default function MapaPage() {
-	const [currentStepIndex, setCurrentStepIndex] = useState(0)
 	useDashboard()
-
-	const currentStep = mapSteps[currentStepIndex]
-
-	const currentStage = useMemo(() => {
-		return stages.find((s) => s.id === (currentStep as any).stage) ?? stages[0]
-	}, [currentStep])
-
-	const stageProgress = useMemo(() => {
-		const totalCompleted = mapSteps.filter((s) => s.status === "completed").length
-		return Math.round((totalCompleted / mapSteps.length) * 100)
-	}, [])
-
-	const handlePrev = () => setCurrentStepIndex((i) => Math.max(0, i - 1))
-	const handleNext = () => setCurrentStepIndex((i) => Math.min(mapSteps.length - 1, i + 1))
-
-	return (
-		<div className="flex flex-col h-full bg-background overflow-hidden">
-
-			{/* Trail header */}
-			<div className="bg-coffee-bean-800 px-4 pt-5 pb-4 shrink-0">
-				<p className="text-xs font-semibold tracking-widest text-primary uppercase mb-1">Tu camino</p>
-				<h1 className="text-lg font-bold text-white mb-3">{currentStage.label}</h1>
-
-				<div className="flex items-center gap-2">
-					{stages.map((s) => {
-						const stepsInStage = mapSteps.filter((step) => (step as any).stage === s.id)
-						const completedInStage = stepsInStage.filter((step) => step.status === "completed").length
-						const isCurrentStage = s.id === (currentStep as any).stage
-						const isDone = completedInStage === stepsInStage.length
-
-						return (
-							<div key={s.id} className={cn(
-								"w-2.5 h-2.5 rounded-full transition-all shrink-0",
-								isDone && "bg-primary",
-								isCurrentStage && !isDone && "bg-primary/60 ring-2 ring-primary/40 ring-offset-1 ring-offset-coffee-bean-800",
-								!isDone && !isCurrentStage && "bg-white/20",
-							)} />
-						)
-					})}
-					<div className="flex-1 h-px bg-white/10 mx-1 relative">
-						<div
-							className="absolute inset-y-0 left-0 bg-primary/50 transition-all duration-500"
-							style={{ width: `${stageProgress}%` }}
-						/>
-					</div>
-					<span className="text-xs text-white/40">{stageProgress}%</span>
-				</div>
-			</div>
-
-			{/* Card area */}
-			<div className="flex-1 flex flex-col items-center justify-center px-3 py-4 min-h-0 overflow-hidden">
-				<div className="flex items-center w-full max-w-sm md:max-w-2xl gap-1">
-					<Button
-						variant="ghost"
-						size="icon"
-						onClick={handlePrev}
-						disabled={currentStepIndex === 0}
-						className="shrink-0 h-8 w-8 text-muted-foreground hover:text-foreground"
-						aria-label="Paso anterior"
-					>
-						<ChevronLeft className="w-5 h-5" />
-					</Button>
-
-					<div className="flex-1 overflow-hidden">
-						<MapStep key={currentStep.id} {...currentStep} />
-					</div>
-
-					<Button
-						variant="ghost"
-						size="icon"
-						onClick={handleNext}
-						disabled={currentStepIndex === mapSteps.length - 1}
-						className="shrink-0 h-8 w-8 text-muted-foreground hover:text-foreground"
-						aria-label="Siguiente paso"
-					>
-						<ChevronRight className="w-5 h-5" />
-					</Button>
-				</div>
-
-				{/* Step dots */}
-				<div className="flex gap-1.5 mt-4 flex-wrap justify-center max-w-xs">
-					{mapSteps.map((step, index) => (
-						<button
-							key={index}
-							onClick={() => setCurrentStepIndex(index)}
-							aria-label={`Ir a ${step.title}`}
-							className={cn(
-								"rounded-full transition-all duration-200 shrink-0",
-								step.type === "chapter" ? "w-3 h-3 rounded-sm" : step.type === "major" ? "w-2.5 h-2.5" : "w-2 h-2",
-								index === currentStepIndex
-									? "bg-primary"
-									: step.status === "completed"
-										? "bg-primary/40"
-										: "bg-border",
-							)}
-						/>
-					))}
-				</div>
-			</div>
-		</div>
-	)
+	return <MapView steps={mapSteps} />
 }
