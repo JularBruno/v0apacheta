@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
@@ -16,7 +16,7 @@ import {
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { getDateStringsForFilter, getLastNMonths, getMonthName } from "@/lib/dateUtils"
-import { getBudgetByUserAndPeriod, putCategory, revalidateCategoriesBudget } from "@/lib/actions/categories"
+import { getBudgetByUserAndPeriod, putCategory } from "@/lib/actions/categories"
 import { CategoryBudget } from "@/lib/schemas/category"
 import IconComponent from "@/components/movements/icon-component"
 import { formatToBalance } from "@/lib/quick-spend-constants"
@@ -25,39 +25,56 @@ import { BalanceInput } from "@/components/balance-input/balance-input-mock"
 import React, { useRef } from "react";
 import PaymentReminder from "@/components/payment-reminder/payment-reminder-card"
 import { useDashboard } from '@/app/dashboard/dashboardContext';
-import { putUser, revalidateUser } from "@/lib/actions/user"
+import { putUser } from "@/lib/actions/user"
 import { useToast } from '@/hooks/use-toast';
 import Loading from "../patrimonio/[id]/loading"
 import TransactionChart from "@/components/dashboard/transaction-chart"
 import { BudgetOverviewSkeleton } from "@/components/budget/budget-skeletons"
 import CategoryCard from "@/components/budget/category-card"
 import { TxType } from "@/lib/schemas/definitions"
+import { useUpdateCategory } from "@/lib/hooks/use-update-category"
+import { useUpdateUser } from "@/lib/hooks/use-update-user"
 
 export default function PresupuestoPage() {
 	const { toast } = useToast();
+	const updateCategory = useUpdateCategory();
+	const updateUser = useUpdateUser();
 
-	// const [cats, setCats] = useState<CategoryBudget[]>([])
-	const [userBudgetRemaining, setUserBudgetRemaining] = useState<number>(0)
-	// const [loadingCats, setLoadingCats] = useState<boolean>(true)
+	const { user, loadingUser, error, budgetedCats, budgetLoading } = useDashboard();
 
-	const { user, loadingUser, error, budgetedCats, setBudgetedCats, loadingBudgetedCats, setLoadingBudgetedCats } = useDashboard();
+	const totalSpent = useMemo(() =>
+		budgetedCats.reduce((sum, cat) => sum + cat.totalExpenses, 0),
+		[budgetedCats]);
 
-	const totalSpent = useMemo(() => {
-		return budgetedCats.reduce((sum, cat) => sum + cat.totalExpenses, 0)
-	}, [budgetedCats])
+	const totalBudgeted = useMemo(() =>
+		budgetedCats.reduce((sum, item) => item.type === TxType.EXPENSE ? sum + item.budget : sum, 0),
+		[budgetedCats]);
 
-	const totalBudgeted = useMemo(() => {
-		return budgetedCats.reduce((sum, item) =>
-			item.type === TxType.EXPENSE ? sum + item.budget : sum
-			, 0);
+	const userBudgetRemaining = (user?.totalBudget || 0) - totalSpent;
+
+	const incomeOrderRef = useRef<string[] | null>(null);
+	const expenseOrderRef = useRef<string[] | null>(null);
+
+	const sortedIncomeCats = useMemo(() => {
+		const income = budgetedCats.filter(c => c.type === TxType.INCOME);
+
+		if (!incomeOrderRef.current && income.length > 0)
+			incomeOrderRef.current = [...income].sort((a, b) => b.budget - a.budget).map(c => c.id);
+
+		if (!incomeOrderRef.current) return income;
+		return incomeOrderRef.current.map(id => income.find(c => c.id === id)).filter(Boolean) as typeof income;
+
 	}, [budgetedCats]);
 
-	useEffect(() => {
-		setUserBudgetRemaining((user?.totalBudget || 0) - totalSpent)
-	}, [user, totalSpent])
+	const sortedExpenseCats = useMemo(() => {
+		const expense = budgetedCats.filter(c => c.type === TxType.EXPENSE);
+		if (!expenseOrderRef.current && expense.length > 0)
+			expenseOrderRef.current = [...expense].sort((a, b) => b.budget - a.budget).map(c => c.id);
+		if (!expenseOrderRef.current) return expense;
+		return expenseOrderRef.current.map(id => expense.find(c => c.id === id)).filter(Boolean) as typeof expense;
+	}, [budgetedCats]);
 
 	async function updateCategoryBudget(id: any, budget: any) {
-		setLoadingBudgetedCats(true);
 		let cat = budgetedCats.find(cat => cat.id === id)
 		if (budget == 0) {
 			toast({
@@ -66,21 +83,11 @@ export default function PresupuestoPage() {
 				variant: "default",
 			})
 			// this should revert the value to the previous one 
-			setLoadingBudgetedCats(false);
 
 			return;
 		}
 		if (cat?.budget !== budget) {
-
-			setBudgetedCats(prev =>
-				prev.map(cat =>
-					cat.id === id ? { ...cat, budget: budget } : cat
-				)
-			);
-
-			putCategory(id, { budget: budget });
-			revalidateCategoriesBudget();
-			setLoadingBudgetedCats(false);
+			await updateCategory.mutateAsync({ id, data: { budget } });
 
 			toast({
 				title: `Presupuesto actualizado`,
@@ -90,14 +97,10 @@ export default function PresupuestoPage() {
 		}
 	}
 
-	function setUserBudget(number: number) {
+	async function setUserBudget(number: number) {
 		if (user?.totalBudget !== number) {
 			try {
-				putUser({ totalBudget: number });
-				revalidateUser(); // get user from api!
-
-				setUserBudgetRemaining((number) - totalSpent);
-
+				await updateUser.mutateAsync({ totalBudget: number });
 				toast({
 					title: `Presupuesto actualizado`,
 					description: `Se actualizó tu presupuesto personal`,
@@ -161,7 +164,7 @@ export default function PresupuestoPage() {
 					</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-4">
-					{loadingBudgetedCats ? (
+					{budgetLoading ? (
 						// Show loading state once
 						<div className="space-y-4">
 							{[1, 2, 3].map(i => (
@@ -169,9 +172,7 @@ export default function PresupuestoPage() {
 							))}
 						</div>
 					) : (
-						budgetedCats
-							.filter(c => c.type === TxType.INCOME)
-							.sort((a, b) => b.budget - a.budget)
+						sortedIncomeCats
 							.map((category) => {
 								const percentageUsed =
 									category.budget > 0 ? (category.totalExpenses / category.budget) * 100 : 0
@@ -213,7 +214,7 @@ export default function PresupuestoPage() {
 				</CardHeader>
 
 				<CardContent className="space-y-4">
-					{loadingBudgetedCats ? (
+					{budgetLoading ? (
 						// Show loading state once
 						<div className="space-y-4">
 							{[1, 2, 3].map(i => (
@@ -221,9 +222,7 @@ export default function PresupuestoPage() {
 							))}
 						</div>
 					) : (
-						budgetedCats
-							.filter(c => c.type === TxType.EXPENSE)
-							.sort((a, b) => b.budget - a.budget)
+						sortedExpenseCats
 							.map((category) => {
 								const percentageUsed =
 									category.budget > 0 ? (category.totalExpenses / category.budget) * 100 : 0

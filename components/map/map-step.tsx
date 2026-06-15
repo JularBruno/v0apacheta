@@ -1,19 +1,31 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
-import { ChevronDown, ChevronUp, CheckCircle, Lock, PlayCircle, Star, Check } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+	ChevronDown,
+	ChevronUp,
+	CheckCircle2,
+	Lock,
+	CircleDot,
+	MapPin,
+	BookOpen,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 import { useMediaQuery } from "@/hooks/use-media-query"
+import SubscriptionButtonNotification from "@/components/notifications/subscription-notification-button"
 
 interface MapStepProps {
 	id: string
-	level: number
+	level: string
 	title: string
 	description: string
 	longDescription: string
+	appInstruction?: string
+	validationButton?: string
+	validationFallback?: string
+	customComponent?: "notification-button"
 	status: "completed" | "unlocked" | "locked"
 	icon: React.ElementType
 	type: "major" | "minor" | "chapter"
@@ -21,275 +33,254 @@ interface MapStepProps {
 
 export default function MapStep({
 	id,
-	level,
 	title,
 	description,
 	longDescription,
+	appInstruction,
+	validationButton,
+	validationFallback,
+	customComponent,
 	status,
 	icon: Icon,
 	type,
 }: MapStepProps) {
-	const [isOpen, setIsOpen] = useState(false)
 	const isMobile = useMediaQuery("(max-width: 767px)")
+	const [isOpen, setIsOpen] = useState(false)
 
-	const statusColors = {
-		completed: "bg-primary-600 text-white",
-		unlocked: "bg-primary-500 text-white",
-		locked: "bg-gray-300 text-gray-600",
-	}
-
-	const iconStatus = {
-		completed: <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6" />,
-		unlocked: <PlayCircle className="w-5 h-5 sm:w-6 sm:h-6" />,
-		locked: <Lock className="w-5 h-5 sm:w-6 sm:h-6" />,
-	}
-
-	const isMajor = type === "major"
 	const isChapter = type === "chapter"
+	const isMajor = type === "major"
+	const isLocked = status === "locked"
+	const isCompleted = status === "completed"
+	const isActive = status === "unlocked"
 
-	// Mobile layout - Much bigger and more accessible
-	if (isMobile) {
+	// Minor cards: open on desktop by default, collapsed on mobile
+	const showContent = isMajor || isChapter || (!isMobile) || isOpen
+
+	// ─── Chapter card — burnt-peach ─────────────────────────────────────────
+	if (isChapter) {
 		return (
-			<div id={id} className="w-full h-full">
-				<Card
-					className={cn(
-						"w-full flex flex-col shadow-lg transition-all duration-300 relative",
-						isChapter
-							? "border-4 border-amber-600 bg-gradient-to-br from-amber-50 to-orange-50 min-h-[400px]"
-							: isMajor
-								? "border-2 border-primary-400 bg-white/90 min-h-[380px]"
-								: "border border-gray-200 bg-white min-h-[320px]",
-						status === "locked" ? "cursor-not-allowed opacity-70" : "hover:shadow-xl cursor-pointer",
-					)}
-					onClick={() => status !== "locked" && !isMajor && !isChapter && setIsOpen(!isOpen)}
-					role="article"
-					aria-labelledby={`${id}-title`}
-					aria-describedby={`${id}-description`}
-				>
-					{/* Mobile Header - Rearranged elements */}
-					<CardHeader className="flex flex-col space-y-3 p-6 pb-4">
-						{/* Top row: Level and Completado check */}
-						<div className="flex items-center justify-between">
-							<div className="flex items-center gap-3">
-								{isChapter && (
-									<span className="px-3 py-1 bg-amber-500 text-amber-900 text-sm font-bold rounded-full">CAPÍTULO</span>
-								)}
-								<p className="text-sm text-gray-500 font-medium">Nivel {level}</p>
-							</div>
-							{status === "completed" && (
-								<div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 rounded-full">
-									<Check className="w-4 h-4" />
-									<span className="text-sm font-medium">Completado</span>
+			<div
+				id={id}
+				className={cn(
+					"w-full rounded-xl overflow-hidden border shadow-sm transition-all duration-200",
+					"bg-burnt-peach-50 border-burnt-peach-200",
+					isActive && "shadow-md border-burnt-peach-300",
+					isLocked && "opacity-50",
+				)}
+			>
+				{/* Label bar */}
+				<div className={cn(
+					"px-4 py-2.5 flex items-center gap-2",
+					isCompleted || isActive ? "bg-burnt-peach-500" : "bg-burnt-peach-400/70",
+				)}>
+					<div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+						<BookOpen className="w-3.5 h-3.5 text-white" />
+					</div>
+					<span className="text-[10px] font-bold tracking-widest text-white uppercase flex-1">Capítulo</span>
+					{isCompleted && <CheckCircle2 className="w-3.5 h-3.5 text-white/80" />}
+					{isLocked && <Lock className="w-3.5 h-3.5 text-white/40" />}
+				</div>
+
+				{/* Body */}
+				<div className="px-5 py-4">
+					<h3 className="text-base font-bold text-burnt-peach-900 leading-snug mb-1">{title}</h3>
+					<p className="text-sm text-burnt-peach-700 leading-relaxed">{description}</p>
+
+					{isActive && (
+						<>
+							<p className="mt-3 text-sm text-burnt-peach-800 leading-relaxed border-t border-burnt-peach-200 pt-3">
+								{longDescription}
+							</p>
+							{appInstruction && (
+								<div className="mt-4 flex gap-2 bg-burnt-peach-100 rounded-lg p-3 border-l-2 border-l-burnt-peach-400">
+									<MapPin className="w-4 h-4 text-burnt-peach-600 shrink-0 mt-0.5" />
+									<p className="text-xs text-burnt-peach-800 leading-relaxed whitespace-pre-line">{appInstruction}</p>
 								</div>
 							)}
-						</div>
-
-						{/* Second row: Icon and Title */}
-						<div className="flex items-start space-x-4">
-							<div
-								className={cn(
-									"rounded-full flex items-center justify-center shrink-0",
-									isChapter
-										? "w-16 h-16 bg-gradient-to-br from-amber-500 to-amber-700 text-white"
-										: isMajor
-											? `w-14 h-14 ${statusColors[status]}`
-											: `w-12 h-12 ${statusColors[status]}`,
+							<div className="mt-4 flex flex-col gap-2">
+								{customComponent === "notification-button" && (
+									<SubscriptionButtonNotification />
 								)}
-								aria-hidden="true"
-							>
-								{isChapter ? <Star className="w-8 h-8" /> : isMajor ? <Icon className="w-7 h-7" /> : iconStatus[status]}
-							</div>
-							<div className="min-w-0 flex-1">
-								<CardTitle
-									id={`${id}-title`}
-									className={cn(
-										"font-bold text-gray-900 leading-tight",
-										isChapter ? "text-xl" : isMajor ? "text-lg" : "text-base",
-									)}
-								>
-									{title}
-								</CardTitle>
-							</div>
-							{!isMajor &&
-								!isChapter &&
-								status !== "locked" &&
-								(isOpen ? (
-									<ChevronUp className="w-6 h-6 text-gray-600 shrink-0" aria-hidden="true" />
-								) : (
-									<ChevronDown className="w-6 h-6 text-gray-600 shrink-0" aria-hidden="true" />
-								))}
-						</div>
-					</CardHeader>
-
-					{/* Mobile Content - Much bigger and more readable */}
-					<CardContent className="p-6 pt-2 flex-grow flex flex-col min-h-0">
-						<p id={`${id}-description`} className="text-base text-gray-600 mb-4 leading-relaxed">
-							{description}
-						</p>
-
-						{/* For major and chapter cards - always show scrollable content */}
-						{(isMajor || isChapter) && (
-							<div className="flex-grow overflow-hidden">
-								<div className="border-t border-gray-200 pt-4 h-full">
-									<div className="h-full overflow-y-auto pr-2">
-										<p className="text-sm text-gray-700 leading-relaxed">{longDescription}</p>
-									</div>
-								</div>
-							</div>
-						)}
-
-						{/* For minor cards - expandable content */}
-						{/* {!isMajor && !isChapter && isOpen && (
-							<div className="border-t border-gray-200 pt-4">
-								<p className="text-sm text-gray-700 leading-relaxed">{longDescription}</p>
-							</div>
-						)} */}
-
-						{/* For minor cards, show expandable content */}
-						{!isMajor && !isChapter && (
-							<>
-								{isOpen ? (
-									<div className="mt-3 sm:mt-4 border-t border-gray-200 pt-3 sm:pt-4">
-										<p className="text-xs sm:text-sm text-gray-700 leading-relaxed">{longDescription}</p>
-									</div>
-								) : (
-									status !== "locked" && (
-										<div className="flex items-center gap-1 text-primary-600 text-xs sm:text-sm font-medium mt-2">
-											<span>Ver más</span>
-											<ChevronDown className="w-3 h-3 sm:w-4 sm:h-4" />
-										</div>
-									)
+								{validationButton && (
+									<Button size="sm" className="w-full bg-burnt-peach-500 hover:bg-burnt-peach-600 text-white border-0">
+										{validationButton}
+									</Button>
 								)}
-							</>
-						)}
-
-						{/* Status indicator for accessibility */}
-						<div className="sr-only">
-							Estado: {status === "completed" ? "Completado" : status === "unlocked" ? "Disponible" : "Bloqueado"}
-						</div>
-					</CardContent>
-				</Card>
+								{validationFallback && (
+									<Button size="sm" variant="ghost" className="w-full text-burnt-peach-600 hover:text-burnt-peach-700 text-xs">
+										{validationFallback}
+									</Button>
+								)}
+							</div>
+						</>
+					)}
+				</div>
 			</div>
 		)
 	}
 
-	// Desktop layout - with completado check and brownish chapters
-	const getCardStyles = () => {
-		if (isChapter) {
-			return "border-4 border-amber-600 bg-gradient-to-br from-amber-50 to-orange-50 min-h-[320px] sm:min-h-[380px]"
-		}
-		if (isMajor) {
-			return "border-2 border-primary-400 bg-white/90 min-h-[280px] sm:min-h-[320px]"
-		}
-		return "border border-gray-200 bg-white min-h-[240px] sm:min-h-[280px]"
-	}
-
-	const getIconContainer = () => {
-		if (isChapter) {
-			return "w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-amber-500 to-amber-700 text-white"
-		}
-		if (isMajor) {
-			return `w-10 h-10 sm:w-12 sm:h-12 ${statusColors[status]}`
-		}
-		return `w-8 h-8 sm:w-10 sm:h-10 ${statusColors[status]}`
-	}
-
-	return (
-		<div id={id} className="w-full h-full">
-			<Card
+	// ─── Major step card ──────────────────────────────────────────────────────
+	if (isMajor) {
+		return (
+			<div
+				id={id}
 				className={cn(
-					"w-full h-full flex flex-col shadow-lg transition-all duration-300 relative",
-					getCardStyles(),
-					status === "locked" ? "cursor-not-allowed opacity-70" : "hover:shadow-xl cursor-pointer",
+					"w-full rounded-xl bg-card border overflow-hidden shadow-sm transition-all duration-200",
+					isActive && "border-primary/50 shadow-md ring-1 ring-primary/10",
+					isCompleted && "border-border opacity-60",
+					isLocked && "border-border opacity-40 cursor-not-allowed",
 				)}
-				onClick={() => status !== "locked" && !isMajor && !isChapter && setIsOpen(!isOpen)}
-				role="article"
-				aria-labelledby={`${id}-title`}
-				aria-describedby={`${id}-description`}
 			>
-				<CardHeader className="flex flex-row items-start justify-between p-3 sm:p-4 pb-2">
-					<div className="flex items-start space-x-2 sm:space-x-3 min-w-0 flex-1">
-						<div
-							className={cn("rounded-full flex items-center justify-center shrink-0", getIconContainer())}
-							aria-hidden="true"
-						>
-							{isChapter ? (
-								<Star className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8" />
-							) : isMajor ? (
-								<Icon className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" />
-							) : (
-								iconStatus[status]
+				{/* Accent stripe */}
+				<div className={cn(
+					"h-1 w-full",
+					isCompleted && "bg-primary/40",
+					isActive && "bg-primary",
+					isLocked && "bg-muted",
+				)} />
+
+				<div className="p-5">
+					{/* Header */}
+					<div className="flex items-start gap-3 mb-3">
+						<div className={cn(
+							"w-10 h-10 rounded-full flex items-center justify-center shrink-0",
+							isCompleted && "bg-primary/15",
+							isActive && "bg-primary",
+							isLocked && "bg-muted",
+						)}>
+							{isCompleted
+								? <CheckCircle2 className="w-5 h-5 text-primary" />
+								: isLocked
+									? <Lock className="w-5 h-5 text-muted-foreground" />
+									: <Icon className="w-5 h-5 text-primary-foreground" />
+							}
+						</div>
+						<div className="flex-1 min-w-0">
+							<span className={cn(
+								"text-[10px] font-bold tracking-widest uppercase",
+								isCompleted && "text-primary",
+								isActive && "text-primary",
+								isLocked && "text-muted-foreground",
+							)}>
+								{isCompleted ? "Completado" : isActive ? "En curso" : "Bloqueado"}
+							</span>
+							<h3 className="text-base font-bold text-foreground leading-snug">{title}</h3>
+						</div>
+					</div>
+
+					<p className="text-sm text-muted-foreground leading-relaxed mb-3">{description}</p>
+
+					{!isLocked && (
+						<>
+							<p className="text-sm text-foreground/80 leading-relaxed">{longDescription}</p>
+							{appInstruction && (
+								<div className="mt-4 flex gap-2 bg-secondary rounded-lg p-3 border-l-2 border-l-primary">
+									<MapPin className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+									<p className="text-xs text-foreground/70 leading-relaxed whitespace-pre-line">{appInstruction}</p>
+								</div>
+							)}
+							{isActive && (
+								<div className="mt-4 flex flex-col gap-2">
+									{customComponent === "notification-button" && (
+										<SubscriptionButtonNotification />
+									)}
+									{validationButton && (
+										<Button size="sm" className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+											{validationButton}
+										</Button>
+									)}
+									{validationFallback && (
+										<Button size="sm" variant="ghost" className="w-full text-muted-foreground text-xs">
+											{validationFallback}
+										</Button>
+									)}
+								</div>
+							)}
+						</>
+					)}
+				</div>
+			</div>
+		)
+	}
+
+	// --- Minor step card ---
+	return (
+		<div
+			id={id}
+			className={cn(
+				"w-full rounded-xl bg-card border transition-all duration-200",
+				isActive && "border-primary/40 shadow-sm",
+				isCompleted && "border-border opacity-55",
+				isLocked && "border-border opacity-35 cursor-not-allowed",
+				isActive && isMobile && "cursor-pointer",
+			)}
+			onClick={() => isActive && isMobile && setIsOpen(!isOpen)}
+			role={isActive && isMobile ? "button" : undefined}
+			aria-expanded={isActive && isMobile ? isOpen : undefined}
+		>
+			<div className="px-4 py-3 flex items-center gap-3">
+				<div className={cn(
+					"w-7 h-7 rounded-full flex items-center justify-center shrink-0",
+					isCompleted && "bg-primary/15",
+					isActive && "bg-primary/10",
+					isLocked && "bg-muted",
+				)}>
+					{isCompleted
+						? <CheckCircle2 className="w-4 h-4 text-primary" />
+						: isLocked
+							? <Lock className="w-3.5 h-3.5 text-muted-foreground" />
+							: <CircleDot className="w-4 h-4 text-primary" />
+					}
+				</div>
+
+				<div className="flex-1 min-w-0">
+					<p className={cn(
+						"text-sm font-semibold leading-snug",
+						isActive ? "text-foreground" : "text-foreground/70",
+					)}>{title}</p>
+					{/* On desktop always show, on mobile show when collapsed */}
+					{(!showContent || !isActive) && (
+						<p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{description}</p>
+					)}
+				</div>
+
+				{/* Chevron only on mobile for active steps */}
+				{isActive && isMobile && (
+					isOpen
+						? <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" />
+						: <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
+				)}
+			</div>
+
+			{/* Expandable body */}
+			{isActive && showContent && (
+				<div className="px-4 pb-4 border-t border-border">
+					<p className="text-sm text-foreground/80 leading-relaxed pt-3 mb-3">{longDescription}</p>
+					{appInstruction && (
+						<div className="flex gap-2 bg-secondary rounded-lg p-3 border-l-2 border-l-primary">
+							<MapPin className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+							<p className="text-xs text-foreground/70 leading-relaxed whitespace-pre-line">{appInstruction}</p>
+						</div>
+					)}
+					{(customComponent || validationButton || validationFallback) && (
+						<div className="mt-4 flex flex-col gap-2">
+							{customComponent === "notification-button" && (
+								<SubscriptionButtonNotification />
+							)}
+							{validationButton && (
+								<Button size="sm" className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+									{validationButton}
+								</Button>
+							)}
+							{validationFallback && (
+								<Button size="sm" variant="ghost" className="w-full text-muted-foreground text-xs">
+									{validationFallback}
+								</Button>
 							)}
 						</div>
-						<div className="min-w-0 flex-1">
-							<div className="flex items-center gap-2 mb-1">
-								{isChapter && (
-									<span className="px-2 py-1 bg-amber-500 text-amber-900 text-xs font-semibold rounded-full">
-										CAPÍTULO
-									</span>
-								)}
-								<p className="text-xs sm:text-sm text-gray-500">Nivel {level}</p>
-								{status === "completed" && (
-									<div className="flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-800 rounded-full">
-										<Check className="w-3 h-3" />
-										<span className="text-xs font-medium">Completado</span>
-									</div>
-								)}
-							</div>
-							<CardTitle
-								id={`${id}-title`}
-								className={cn(
-									"font-semibold text-gray-900",
-									isChapter
-										? "text-lg sm:text-xl md:text-2xl"
-										: isMajor
-											? "text-base sm:text-lg md:text-xl"
-											: "text-sm sm:text-base md:text-lg",
-								)}
-							>
-								{title}
-							</CardTitle>
-						</div>
-					</div>
-					{!isMajor &&
-						!isChapter &&
-						status !== "locked" &&
-						(isOpen ? (
-							<ChevronUp className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 shrink-0" aria-hidden="true" />
-						) : (
-							<ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 shrink-0" aria-hidden="true" />
-						))}
-				</CardHeader>
-
-				<CardContent className="p-3 sm:p-4 pt-2 flex-grow flex flex-col min-h-0">
-					<p id={`${id}-description`} className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-2">
-						{description}
-					</p>
-
-					{/* For major and chapter cards on desktop, make content scrollable */}
-					{(isMajor || isChapter) && (
-						<div className="flex-grow overflow-hidden">
-							<div className="mt-3 sm:mt-4 border-t border-gray-200 pt-3 sm:pt-4 h-full">
-								<div className="h-full overflow-y-auto pr-2">
-									<p className="text-xs sm:text-sm text-gray-700 leading-relaxed">{longDescription}</p>
-								</div>
-							</div>
-						</div>
 					)}
-
-					{/* For minor cards, show expandable content */}
-					{!isMajor && !isChapter && isOpen && (
-						<div className="mt-3 sm:mt-4 border-t border-gray-200 pt-3 sm:pt-4">
-							<p className="text-xs sm:text-sm text-gray-700 leading-relaxed">{longDescription}</p>
-						</div>
-					)}
-
-					{/* Status indicator for accessibility */}
-					<div className="sr-only">
-						Estado: {status === "completed" ? "Completado" : status === "unlocked" ? "Disponible" : "Bloqueado"}
-					</div>
-				</CardContent>
-			</Card>
+				</div>
+			)}
 		</div>
 	)
 }

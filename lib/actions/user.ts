@@ -3,17 +3,10 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { signIn } from '@/auth';
-import { AuthError } from 'next-auth';
-import { User, UserState } from '../schemas/user';
+import { User, UserState, NotificationFrequency } from '../schemas/user';
 import { z } from 'zod';
-import { getSession, getMethodWithoutSession, getMethod, postMethod, putMethod } from './utils';
-import { errorMonitor } from 'events';
-import { unstable_cache } from 'next/cache'
-import { revalidateTag } from 'next/cache'
-import { headers } from 'next/headers'
-import { cacheTag } from 'next/dist/server/use-cache/cache-tag';
+import { getSession, getMethodWithoutSession, postMethod, putMethod } from './utils';
 
-/* FormSchemas for validating each form parameter with an specific error before post on actual server */
 const PostUserFormSchema = z.object({
 	name: z.string().nonempty({ message: 'Ingresa un nombre' }),
 	email: z.string().email({ message: 'Formato de email incorrecto' }),
@@ -21,19 +14,8 @@ const PostUserFormSchema = z.object({
 		.string()
 		.min(6, { message: 'La contraseña al menos debe tener 6 caracteres' })
 		.max(50, { message: 'La contraseña debe tener 50 caracteres o menos' }),
-
-	// .regex(/[A-Z]/, { message: "Password must contain at least one uppercase letter" })
-	// .regex(/[a-z]/, { message: "Password must contain at least one lowercase letter" })
-	// .regex(/[0-9]/, { message: "Password must contain at least one number" })
-	// .regex(/[\W_]/, { message: "Password must contain at least one special character" }),
 });
 
-/**
- * @title Register user! Posting to api user/register
- * @param prevState - Previous state of the form, useful for setting state
- * @param formData - Form data for registering
- * @returns error messages based on the failing form, otherwise return data, and redirects to dashboard/mapa
- */
 export async function register(prevState: UserState, formData: FormData) {
 	const url = 'user/register';
 
@@ -47,7 +29,6 @@ export async function register(prevState: UserState, formData: FormData) {
 		return {
 			errors: validatedData.error.flatten().fieldErrors,
 			message: 'Missing fields.',
-			// Preserve the submitted values
 			formData: {
 				name: formData.get('name') as string,
 				email: formData.get('email') as string,
@@ -56,16 +37,17 @@ export async function register(prevState: UserState, formData: FormData) {
 		};
 	}
 
+	const notificationFrequency = (formData.get('notificationFrequency') as NotificationFrequency) ?? 'daily';
+	const mapLevel = (formData.get('mapLevel') as string) ?? '1.0';
+
 	try {
-		await postMethod<User>(url, validatedData.data, false);
+		await postMethod<User>(url, { ...validatedData.data, notificationFrequency, mapLevel }, false);
 
 		try {
-			const signInData = {
+			await signIn('credentials', {
 				email: formData.get('email'),
 				password: formData.get('password'),
-			};
-
-			await signIn('credentials', signInData);
+			});
 		} catch (error: any) {
 			if (error.statusCode === 401 && error.message === 'Invalid username') {
 				return {
@@ -83,8 +65,7 @@ export async function register(prevState: UserState, formData: FormData) {
 		console.log('registrationError ', registrationError);
 
 		if (
-			registrationError.statusCode === 401 &&
-			registrationError.message === 'Invalid username'
+			registrationError.statusCode === 409
 			|| registrationError.message === 'NEXT_REDIRECT'
 		) {
 			return {
@@ -98,7 +79,6 @@ export async function register(prevState: UserState, formData: FormData) {
 			};
 		}
 
-		// Handle other registration errors
 		return {
 			errors: { email: ['Algo salió mal.'] },
 			message: 'Something went wrong. ',
@@ -110,52 +90,28 @@ export async function register(prevState: UserState, formData: FormData) {
 		};
 	}
 
-	// Only redirect if everything succeeded
 	revalidatePath('/dashboard/mapa');
 	redirect('/dashboard/mapa');
 }
 
-/**
- * @title Get user profile including Balance
- * @returns User obejct
- */
 export async function getProfile(): Promise<User> {
-	const url = 'user/profile';
 	const session = await getSession();
+	if (!session?.user?.id) throw new Error('Unauthorized');
 
-	const getProfile = unstable_cache(async () => {
-		return await getMethodWithoutSession<User>(url, session);
-	},
-		['user-profile'],
-		{ revalidate: 3600, tags: ['user'] }
-	);
-
-	return await getProfile();
+	return await getMethodWithoutSession<User>('user/profile', session);
 }
-
 
 export async function putUser(
 	data: {
 		name?: string;
 		totalBudget?: number;
 		balance?: number;
+		notificationFrequency?: NotificationFrequency;
+		mapLevel?: string;
 	},
 ): Promise<User> {
 	const session = await getSession();
-	const url = 'user';
-
 	if (!session?.user.id) throw new Error('User ID is missing');
 
-	const result = await putMethod<User>(url, session.user?.id, {
-		...data
-	});
-
-	return result;
-}
-
-
-// Rule: Revalidate immediately after mutations that change the data, not "when you need it later."
-// the user cannot be mutated yet
-export async function revalidateUser() {
-	revalidateTag('user'); // get user from api!
+	return await putMethod<User>('user', session.user?.id, { ...data });
 }

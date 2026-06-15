@@ -11,12 +11,6 @@ export function BalanceInput({
 	id, onBlur, defaultValue
 }: BalanceInputProps) {
 
-	const field = {
-		name: 'amount',
-		defaultValue: { defaultValue },
-		value: 0
-	};
-
 	const [displayValue, setDisplayValue] = useState('');
 
 	// formatForDisplay — Takes a number and makes it pretty for the user:
@@ -77,7 +71,7 @@ export function BalanceInput({
 			const displayVal = formatForDisplay(defaultValue);
 			setDisplayValue(displayVal);
 		}
-	}, [field.value]);
+	}, [defaultValue]);
 
 	return (
 		<div className="space-y-2 pb-4">

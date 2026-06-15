@@ -7,39 +7,40 @@ self.addEventListener('push', function (event) {
 		data = { body: event.data?.text() }
 	}
 
-	const title = data.title || 'Apacheta'
-
 	const options = {
 		body: data.body,
-		// icon: data.icon || '/icon-192x192.png',
-		icon: '/iconwbg-192x192.png',
-		badge: '/icon-192x192.png',
-		image: '/icon-512x512.png',
-
+		icon: '/iconwbg-192x192.png',  // 192x192 ✓
+		badge: '/iconwbg-192x192.png', // used as monochrome badge on Android
 		data: {
-			url: data.url || 'https://apacheta.ar/dashboard/mapa' // Add this for dynamic routing
+			url: data.url || 'https://apacheta.ar/dashboard/mapa'
 		},
-
-		tag: 'apacheta', // Replaces old notifications with same tag
+		tag: 'apacheta',       // replaces previous notification with same tag
 		renotify: true,
 		requireInteraction: false,
 		timestamp: Date.now(),
-
-		actions: [
-			{ action: 'view', title: 'Ver detalles', icon: '/icons/view.png' },
-			{ action: 'dismiss', title: 'Descartar', icon: '/icons/close.png' }
-		],
-
 	}
 
 	event.waitUntil(
-		self.registration.showNotification(title, options)
-	);
-
+		self.registration.showNotification(data.title || 'Apacheta', options)
+	)
 })
 
 self.addEventListener('notificationclick', function (event) {
-	console.log('Notification click received.')
 	event.notification.close()
-	event.waitUntil(clients.openWindow('https://apacheta.ar/dashboard/inicio'))
+
+	if (event.action === 'dismiss') return
+
+	const url = event.notification.data?.url || 'https://apacheta.ar/dashboard/mapa'
+
+	event.waitUntil(
+		clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (clientList) {
+			// Focus existing tab if already open
+			for (const client of clientList) {
+				if (client.url === url && 'focus' in client) {
+					return client.focus()
+				}
+			}
+			return clients.openWindow(url)
+		})
+	)
 })

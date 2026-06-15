@@ -22,7 +22,6 @@ import { Tags } from "@/lib/schemas/tag";
 import { Movement, movementSchema, MovementFormData } from "@/lib/schemas/movement";
 import { TxType } from "@/lib/schemas/definitions";
 import { Category } from "@/lib/schemas/category";
-import { deleteCategoryById, revalidateCategories, revalidateCategoriesBudget } from "@/lib/actions/categories";
 import { postMovement } from "@/lib/actions/movements";
 
 import { QuickSpendCategoryDialogs } from "./quick-spend-category-dialogs"
@@ -33,14 +32,17 @@ import { Loading } from "@/components/ui/loading"
 import { BalanceInput } from "../balance-input/balance-input-form";
 import { useDashboard } from "@/app/dashboard/dashboardContext";
 import { useToast } from '@/hooks/use-toast';
-import { getTagsByUser, revalidateTags } from "@/lib/actions/tags";
+
+import { useDeleteCategory } from "@/lib/hooks/use-delete-category";
+import { useTags } from "@/lib/hooks/use-tags";
+import { useCreateMovement } from "@/lib/hooks/use-create-movements";
 
 /**
  * @title Quick Spend Card used in home and asset
  * @param onAdd Callback with the data of MOVEMENT when added
  * @param initialType Initial type to use when opening asset (gasto/ingreso) TODO
  * @param onCancel Callback on cancel used on asset (TODO is this required? it could be good to clean anyform on asset)
- * @returns 
+ * @returns
  */
 export default function QuickSpendCard({
 	onAdd,
@@ -55,6 +57,9 @@ export default function QuickSpendCard({
 }) {
 	const { toast } = useToast();
 
+	const { mutate: deleteCategory } = useDeleteCategory();
+	const createMovement = useCreateMovement();
+
 	/** By using an ARIA live region, you make your app accessible (A11y = accessibility). */
 	// A11y live region
 	const liveRegionRef = useRef<HTMLDivElement>(null)
@@ -67,12 +72,12 @@ export default function QuickSpendCard({
 		}, 800)
 	}
 
-	const { error, cats, setCats, allTags, setAllTags, loadingTags } = useDashboard();
+	const { error, cats, allTags, loadingTags } = useDashboard();
 
 	/**
-	 * 
+	 *
 	 * TYPE
-	 * 
+	 *
 	 */
 	// type selection and useful for when opening modal with an already selected option
 	// const [type, setType] = useState<TxType>(initialType || TxType.EXPENSE)
@@ -114,7 +119,7 @@ export default function QuickSpendCard({
 
 	/**
 	 * Set selected Category
-	 * @param id 
+	 * @param id
 	 */
 	const setCategory = (id: string) => {
 		const c = cats.find((x) => x.id === id)
@@ -149,31 +154,32 @@ export default function QuickSpendCard({
 	const shownCategories = type === TxType.EXPENSE ? expenseCats : incomeCats
 
 	/**
-	 * 
+	 *
 	 * CATEGORY dialog handlers and functions
-	 * 
+	 *
 	 */
 
 	// Create Category dialog state and handlers
 	const [showCreateCategory, setShowCreateCategory] = useState(false)
 	const [newCatType, setNewCatType] = useState<TxType>(type)
 
-	// After submiting a category in dialog, add it to state
-	const categorySubmit = (cat: Category) => {
-		revalidateCategories();
+	// // After submiting a category in dialog, add it to state
+	// const categorySubmit = (cat: Category) => {
+	// 	// revalidateCategories();
 
-		setCats((prev: Category[]) => {
-			// Remove duplicates by ID
-			const filtered = prev.filter(filteredCat => filteredCat.id !== cat.id);
-			return [...filtered, cat];
-		});
-	}
+	// 	// setCats((prev: Category[]) => {
+	// 	// 	// Remove duplicates by ID
+	// 	// 	const filtered = prev.filter(filteredCat => filteredCat.id !== cat.id);
+	// 	// 	return [...filtered, cat];
+	// 	// });
+	// }
 
 	// Manage Categories dialog state and handlers
 	const [showManageCategories, setShowManageCategories] = useState(false)
 
+
 	/* deletion of a category */
-	const deleteCategory = async (catId: string) => {
+	const deleteCategoryORI = async (catId: string) => {
 		const cat = cats.find((c) => c.id === catId)
 		if (!cat) return
 
@@ -186,36 +192,48 @@ export default function QuickSpendCard({
 			if (!confirmDelete) return
 
 			// Remove related tags
-			setAllTags((prev) => prev.filter((t) => t.categoryId !== catId))
+			// setAllTags((prev) => prev.filter((t) => t.categoryId !== catId))
 		}
 
-		await revalidateCategories();
-		await revalidateCategoriesBudget();
-		await deleteCategoryById(cat.id); // DELETION
+		deleteCategory(catId, {
+			onSuccess: () => {
+				// Handle UI updates only
+				console.log('success ', catId);
 
-		setCats((prev) => prev.filter((c) => c.id !== catId))
+				if (categoryId === catId) {
+					const remaining = cats.filter((c) => c.id !== catId && c.type === type);
+					if (remaining.length > 0) {
+						setSelectedExpenseCat(remaining[0].id);
+					}
+				}
+
+				announce(`Categoría ${cat.name} eliminada`);
+				toast({ title: 'Categoría eliminada', variant: 'success' });
+			},
+		});
 
 		// Reset selection if deleted category was selected
-		if (categoryId === catId) {
-			const remaining = cats.filter((c) => c.id !== catId && c.type === type)
-			if (remaining.length > 0) {
-				if (type === TxType.EXPENSE) setSelectedExpenseCat(remaining[0].id)
-				else setSelectedIncomeCat(remaining[0].id)
-			}
-		}
+		// 	if (categoryId === catId) {
+		// 		const remaining = cats.filter((c) => c.id !== catId && c.type === type)
+		// 		if (remaining.length > 0) {
+		// 			if (type === TxType.EXPENSE) setSelectedExpenseCat(remaining[0].id)
+		// 			else setSelectedIncomeCat(remaining[0].id)
+		// 		}
+		// 	}
 
-		announce(`Categoría ${cat.name} eliminada`)
-		toast({
-			title: `Categoría eliminada`,
-			description: `Se eliminó la categoría`,
-			variant: "success",
-		})
+		// 	announce(`Categoría ${cat.name} eliminada`)
+
+		// 	toast({
+		// 		title: `Categoría eliminada`,
+		// 		description: `Se eliminó la categoría`,
+		// 		variant: "success",
+		// 	})
 	}
 
 	/**
-	 * 
+	 *
 	 * Tags
-	 * 
+	 *
 	 */
 
 	// Selected tag to be used in form
@@ -226,30 +244,27 @@ export default function QuickSpendCard({
 	const [mobileTagsExpanded, setMobileTagsExpanded] = useState(false)
 
 
+	const tagsByType = useMemo(() =>
+		allTags.filter(t => cats.find(c => c.id === t.categoryId)?.type === type),
+		[allTags, cats, type]
+	);
+
 	// Match the amount of tag pills to diplay and filter by category id when selected
 	const matchingSuggestions = useMemo(() => {
-		if (!categoryId) return allTags.slice(0, 12);
-
-		return allTags
-			.filter(t => t.categoryId === categoryId) // ← filter by selected category
-			.slice(0, 12);
-	}, [allTags, categoryId]);
+		if (!categoryId) return tagsByType.slice(0, 12);
+		return allTags.filter(t => t.categoryId === categoryId).slice(0, 12);
+	}, [allTags, tagsByType, categoryId]);
 
 	const matchingSuggestionsMobile = useMemo(() => {
-		if (!categoryId) return allTags.slice(0, 4);
-
-		let sliceAmount = mobileTagsExpanded ? 12 : 4;
-
-		return allTags
-			.filter(t => t.categoryId === categoryId) // ← filter by selected category
-			.slice(0, sliceAmount);
-
-	}, [allTags, categoryId, mobileTagsExpanded]);
+		const sliceAmount = mobileTagsExpanded ? 12 : 4;
+		if (!categoryId) return tagsByType.slice(0, sliceAmount);
+		return allTags.filter(t => t.categoryId === categoryId).slice(0, sliceAmount);
+	}, [allTags, tagsByType, categoryId, mobileTagsExpanded]);
 
 	/**
-	 * 
+	 *
 	 * MOVEMENT
-	 * 
+	 *
 	 */
 
 	/**
@@ -348,8 +363,6 @@ export default function QuickSpendCard({
 	const onSubmitHandler = async (data: MovementFormData) => {
 		setMovementLoading(true);
 
-		// console.log("🔥 submit fired");
-
 		// Format the datetime to ISO string
 		const dateObj = new Date(`${customDate}T${customTime}`);
 		const isoString = dateObj.toISOString(); // "2026-01-05T13:36:50.121Z"
@@ -370,27 +383,7 @@ export default function QuickSpendCard({
 			if (financialElementId) {
 				movementData.financialElementId = financialElementId;
 			}
-
-			/**
-			 * I wanted to write this since i was having a bad time understanding this properly
-			 * The flow:
-			 * postMovement() → saves to DB → revalidateTag('tags') → cache is marked stale
-			 * getTagsByUser() → sees cache is stale → fetches fresh data → updates cache
-			 * setAllTags(freshTags) → updates React state
-			 */
-			const movement = await postMovement(movementData);
-
-			let currentTag = allTags.find((t) => t.id === tagId)
-
-			// Always update tag default amount to last used as done in api
-			// console.log(currentTag);
-			if (currentTag) {
-				const updated = { ...currentTag, amount: data.amount }
-				setAllTags((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
-			}
-			else {
-				setAllTags(await getTagsByUser()); // revalidate cached tags
-			}
+			const movement = await createMovement.mutateAsync(movementData);
 
 			// AFTER SUBMITING reset form and states
 			// reset form values
@@ -415,9 +408,9 @@ export default function QuickSpendCard({
 
 
 	/**
-	 * 
+	 *
 	 * ADD TRANSACTION
-	 * 
+	 *
 	 */
 	if (loadingTags) {
 		return <QuickSpendSkeleton />;
@@ -452,8 +445,8 @@ export default function QuickSpendCard({
 							className={cn(
 								"py-3 px-4 rounded-lg text-base font-semibold transition-all border-2 md:py-4 md:px-6 md:text-lg",
 								type === TxType.EXPENSE
-									? "bg-red-50 border-red-500 text-red-700 shadow-md ring-2 ring-red-200"
-									: "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100",
+									? "bg-burnt-peach-100 border-burnt-peach-400 text-coffee-bean-800 shadow-md ring-2 ring-burnt-peach-200"
+									: "bg-secondary border-border text-muted-foreground hover:bg-muted",
 							)}
 						>
 							<span className="block sm:inline">💸</span> Gasto
@@ -467,8 +460,8 @@ export default function QuickSpendCard({
 							className={cn(
 								"py-3 px-4 rounded-lg text-base font-semibold transition-all border-2 md:py-4 md:px-6 md:text-lg",
 								type === TxType.INCOME
-									? "bg-green-50 border-green-500 text-green-700 shadow-md ring-2 ring-green-200"
-									: "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100",
+									? "bg-primary-100 border-primary-400 text-coffee-bean-800 shadow-md ring-2 ring-primary-200"
+									: "bg-secondary border-border text-muted-foreground hover:bg-muted",
 							)}
 						>
 							<span className="block sm:inline">💰</span> Ingreso
@@ -521,7 +514,7 @@ export default function QuickSpendCard({
 
 					{/* Amount */}
 					<div className="space-y-2 pb-4">
-						<Label htmlFor="amount" className="text-sm text-gray-600">Monto</Label>
+						<Label htmlFor="amount" className="text-sm text-muted-foreground">Monto</Label>
 						<div className="relative gap-2 ">
 							<BalanceInput
 								errors={errors}
@@ -571,8 +564,8 @@ export default function QuickSpendCard({
 				setNewCatType={setNewCatType}
 				newCatType={newCatType}
 
-				deleteCategory={deleteCategory}
-				onSubmit={categorySubmit}
+				deleteCategory={deleteCategoryORI}
+			// onSubmit={categorySubmit}
 			/>
 		</Card>
 	)

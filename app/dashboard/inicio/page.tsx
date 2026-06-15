@@ -1,27 +1,36 @@
 "use client"
 
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 
-import { getMovementsByUserAndFilter, deleteMovement } from "@/lib/actions/movements"
+import { useEffect, useState } from 'react';
+import { getMovementsByUserAndFilter } from "@/lib/actions/movements"
+
 import { Movement, Movements } from "@/lib/schemas/movement"
+
+import { useDeleteMovement } from "@/lib/hooks/use-delete-movement"
 import { TxType } from "@/lib/schemas/definitions";
 
 import { formatToBalance } from "@/lib/quick-spend-constants"
-import { getCurrentDateTimeInfo, getCurrentMonthRange, getDateStringsForFilter, getDaysRemainingInMonth, getLastNMonths, getMonthName } from "@/lib/dateUtils"
+import { getDateStringsForFilter, getDaysRemainingInMonth, getLastNMonths, getMonthName } from "@/lib/dateUtils"
 import { useDashboard } from '@/app/dashboard/dashboardContext';
+import { useMovements } from "@/lib/hooks/use-movements"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loading } from "@/components/ui/loading"
 import { toast } from "@/hooks/use-toast"
 import { Progress } from "@/components/ui/progress" // Import Progress component
+
 import SpendingChart from "@/components/dashboard/spending-chart"
 import RecentExpenses from "@/components/dashboard/recent-expenses"
 import QuickSpendCard from "@/components/movements/quick-spend-card"
-import { revalidateUser } from '@/lib/actions/user';
+
+// const { start: _start, end: _end } = getLastNMonths(1);
+// const { startDate, endDate } = getDateStringsForFilter(_start, _end);
+
 
 export default function InicioPage() {
 
-	const { user, userBalance, setUserBalance, loadingUser, error, cats, setCats, loadingCats, loadingTags, budgetedCats, loadingBudgetedCats } = useDashboard();
+	const { user, userBalance, loadingUser, error, cats, loadingCats, loadingTags, budgetedCats, budgetLoading } = useDashboard();
 
 	/**
 	 * 
@@ -44,94 +53,22 @@ export default function InicioPage() {
 	 * 
 	 */
 
-	// used in childs
-	const [allMovements, setAllMovements] = useState<Movements[]>([]);
+	const movementsFilters = useMemo(() => {
+		const { start, end } = getLastNMonths(1);
+		return getDateStringsForFilter(start, end);
+	}, []);
 
-	// Five last movements and amount to use in quick history
-	const [movements, setMovements] = useState<Movements[]>([]);
-	const [lastFiveAmount, setlastFiveAmount] = useState<number>(0);
-	const [loadingMovements, setLoadingMovements] = useState(true);
+	const { data: rawMovements = [], isLoading: loadingMovements } = useMovements(movementsFilters);
+
+	const allMovements = useMemo(() =>
+		[...rawMovements].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+		[rawMovements]
+	);
 
 	/**
 	 * Fetch Movements
 	 */
-
-	// Fetch movements function (extract it so you can reuse)
-	const fetchMovements = async () => {
-
-		try {
-			const filters: any = {};
-
-			// last month (30 days ago to now)
-			const { start, end } = getLastNMonths(1);
-			const result = getDateStringsForFilter(start, end);
-			filters.startDate = result.startDate;
-			filters.endDate = result.endDate;
-
-			const movements = await getMovementsByUserAndFilter(filters);
-
-			const sortedMovements = movements.sort(
-				(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-			);
-
-			setAllMovements(sortedMovements);
-
-			const lastFive = sortedMovements.slice(0, 5); // First 5 (most recent)
-			const lastFiveAmount = lastFive.reduce((sum, item) => {
-
-				if (item.type === TxType.EXPENSE) {
-					return sum + item.amount;
-				}
-				return sum;
-			}, 0);
-
-			setMovements(lastFive);
-			setlastFiveAmount(lastFiveAmount);
-
-			setLoadingMovements(false);
-		} catch (error) {
-			// console.error('Failed to fetch movements:', error);
-			return error;
-		}
-	};
-
-	// Initial fetch of movements
-	useEffect(() => {
-		fetchMovements();
-	}, []);
-
-	/**
-	 * On balance update add or remove balance, to not call api again
-	 */
-	const onBalanceUpdate = async (data: Movement, isDelete: boolean) => {
-		let newBalance = 0;
-
-		// Update balance immediately 
-		if (isDelete) { // If is updated on delete should change the values contrary as a normal movement
-			newBalance = data.type === TxType.INCOME
-				? userBalance - data.amount
-				: userBalance + data.amount;
-		} else {
-			newBalance = data.type === TxType.INCOME
-				? userBalance + data.amount
-				: userBalance - data.amount;
-		}
-
-		revalidateUser();
-
-		setUserBalance(newBalance);
-	}
-
-	/**
-	 * After adding movement
-	 */
 	const onAddMovement = async (data: Movement) => {
-		// Update balance immediately
-		onBalanceUpdate(data, false);
-
-		// Refetch movements to get populated data
-		await fetchMovements();
-
 		toast({
 			variant: "success",
 			title: "Movimiento realizado!",
@@ -139,27 +76,12 @@ export default function InicioPage() {
 		});
 	}
 
-	/**
-	 * Delete latest movement based on array last item id
-	 */
-	const deleteLatestMovement = async () => {
-		setLoadingMovements(true);
-
-		const last = movements[0];
-		if (last) {
-			deleteMovement(last.id);
-			onBalanceUpdate(last, true);
-		}
-
-		// Refetch movements to get populated data
-		await fetchMovements();
-
+	const onDeleteLatestMovement = async () => {
 		toast({
 			variant: "success",
 			title: "Movimiento borrado!",
 			description: `Se eliminó tu último movimiento`,
 		});
-		setLoadingMovements(false);
 	};
 
 	return (
@@ -185,11 +107,16 @@ export default function InicioPage() {
 
 				<Card>
 					<CardHeader className="pb-2">
-						<CardTitle className="text-sm font-medium text-gray-600">Presupuesto {getMonthName()}</CardTitle>
+						<div className="flex items-center justify-between">
+							<CardTitle className="text-sm font-medium text-gray-600">Presupuesto {getMonthName()}</CardTitle>
+							<a href="/dashboard/presupuesto" className="text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors flex items-center gap-1">
+								Gestionar →
+							</a>
+						</div>
 					</CardHeader>
 					<CardContent>
 
-						{loadingBudgetedCats ? (
+						{budgetLoading ? (
 							<Loading></Loading>
 						) : monthlyBudget ? (
 							<div>
@@ -231,7 +158,7 @@ export default function InicioPage() {
 
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 				{/* History of last expenses */}
-				<RecentExpenses loading={loadingMovements} cats={cats} movements={movements} lastFiveAmount={lastFiveAmount} deleteLatestMovement={deleteLatestMovement} />
+				<RecentExpenses onDeleteLatestMovement={onDeleteLatestMovement} />
 
 				<SpendingChart movements={allMovements.filter(a => a.type === TxType.EXPENSE)} />
 

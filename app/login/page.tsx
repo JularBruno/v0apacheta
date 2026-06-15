@@ -1,7 +1,7 @@
 "use client";
 
 import React, { Suspense, useEffect } from "react"
-import { useState, useTransition } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -70,15 +70,15 @@ function LoginForm() {
 	);
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+		<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-secondary to-background py-12 px-4 sm:px-6 lg:px-8">
 			<Toaster />
 			<AuthHeader />
 
-			<div className="w-full max-w-md space-y-8 bg-white p-8 md:p-10 rounded-xl shadow-lg">
+			<div className="w-full max-w-md space-y-8 bg-card p-8 md:p-10 rounded-xl shadow-lg border border-border">
 
 				<div>
-					<h2 className="mt-6 text-center text-3xl font-bold text-gray-900">Ingresa a Apacheta</h2>
-					<p className="mt-2 text-center text-sm text-gray-600">
+					<h2 className="mt-6 text-center text-3xl font-bold text-foreground">Ingresa a Apacheta</h2>
+					<p className="mt-2 text-center text-sm text-muted-foreground">
 						Bienvenido de vuelta! Ingresa tus credenciales para continuar.
 					</p>
 				</div>
@@ -116,7 +116,7 @@ function LoginForm() {
 
 					<div className="flex items-center justify-end">
 						<div className="text-sm">
-							<Link href="/recover-password" className="font-medium text-green-600 hover:text-green-500">
+							<Link href="/recover-password" className="font-medium text-primary hover:text-primary-600">
 								Olvidaste tu contraseña?
 							</Link>
 						</div>
@@ -127,7 +127,7 @@ function LoginForm() {
 
 						<Button
 							type="submit"
-							className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
+							className="w-full"
 							disabled={isPending || isFormEmpty}
 						>
 							{isPending ? "Ingresando..." : "Ingresar"}
@@ -142,9 +142,9 @@ function LoginForm() {
 
 				</form>
 
-				<div className="text-center text-sm text-gray-600">
+				<div className="text-center text-sm text-muted-foreground">
 					No tenés una cuenta?{" "}
-					<Link href="/onboarding" className="font-medium text-green-600 hover:text-green-500">
+					<Link href="/onboarding" className="font-medium text-primary hover:text-primary-600">
 						Registrate
 					</Link>
 				</div>

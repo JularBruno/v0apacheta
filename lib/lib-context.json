@@ -1,0 +1,219 @@
+{
+  "overview": "Next.js 14 app using server actions ('use server') for API communication. Migrating from Next.js unstable_cache to TanStack Query (React Query) for client-side caching. Server actions call a REST API at process.env.API_URL using Bearer token auth from NextAuth session.",
+
+  "schemas": {
+    "TxType": "enum: 'expense' | 'income'",
+    "FinancialElementType": "enum: 'asset' | 'liability'",
+    "User": "{ id, name, email, password, balance: number, totalBudget: number }",
+    "Category": "{ id, name, color, icon, type: TxType, updatedAt?, deletedAt? }",
+    "CategoryBudget": "Category & { createdAt, budget: number, totalExpenses: number }",
+    "Tag": "{ id?, name, categoryId, amount: number }",
+    "Tags": "Tag & { createdAt, updatedAt }",
+    "Movement": "{ userId?, type: TxType, categoryId, tagId?, tagName, amount, description, createdAt?, financialElementId? }",
+    "Movements": "Movement & { id, lastBalance, createdAt, updatedAt?, deletedAt?, user: User, tag: Tags, category: Category }",
+    "FinancialElement": "{ userId?, type: FinancialElementType, name }",
+    "FinancialElements": "FinancialElement & { id, createdAt, currentAmount, movements: Movements[] }",
+    "FinancialElementsAndNetWorth": "{ elements: FinancialElements[], netWorth, totalAssets, totalLiabilities }"
+  },
+
+  "utils": {
+    "file": "lib/actions/utils.ts",
+    "description": "Base HTTP methods used by all actions. All require a valid NextAuth session (accessToken). On 401, signs out and redirects to /login?expired=true.",
+    "functions": {
+      "getSession": "Returns the current NextAuth session (Session | null)",
+      "getMethod<T>(url, id?)": "GET request with session auth. Builds endpoint as API_URL/url or API_URL/url/id",
+      "getMethodWithoutSession<T>(url, session, id?)": "GET without calling getSession internally — needed for unstable_cache wrappers where async calls inside cache are restricted",
+      "postMethod<T>(url, body?, requiresAuth?)": "POST request. requiresAuth defaults to true; set false for /user/register",
+      "putMethod<T>(url, id, body?)": "PATCH request to API_URL/url/id",
+      "deleteMethod<T>(url, id)": "DELETE request to API_URL/url/id. Returns null if response body is empty"
+    }
+  },
+
+  "actions": {
+    "auth": {
+      "file": "lib/actions/auth.ts",
+      "functions": {
+        "authenticate(prevState, formData)": "Login form action. Calls NextAuth signIn('credentials'). Returns Spanish error strings mapped from lastAuthError codes.",
+        "logOut()": "Calls revalidatePath('/', 'layout') then signOut({ redirectTo: '/' }). Used by useLogout hook."
+      }
+    },
+
+    "user": {
+      "file": "lib/actions/user.ts",
+      "functions": {
+        "register(prevState, formData)": "Registers user via POST /user/register then auto-signs in. Validates name/email/password with Zod. Redirects to /dashboard/mapa on success.",
+        "getProfile()": "GET /user/profile. Returns full User object including balance. Previously wrapped in unstable_cache — now fetches fresh every call. Replaced by useProfile hook.",
+        "putUser(data)": "PATCH /user/:sessionUserId. Updates name, totalBudget, or balance. No hook yet.",
+        "revalidateUser()": "Calls revalidateTag('user'). Legacy — should be replaced by queryClient.invalidateQueries(['user-profile']) in hooks."
+      }
+    },
+
+    "categories": {
+      "file": "lib/actions/categories.ts",
+      "functions": {
+        "getCategoriesByUser()": "GET /category/user/:userId. Returns Category[]. Replaced by useCategories hook.",
+        "getBudgetByUserAndPeriod(startDate?, endDate?)": "GET /category/user/:userId/budget?startDate&endDate. Defaults to current month range. Returns CategoryBudget[]. Fresh fetch, no cache.",
+        "getBudgetByUserAndPeriodCached(startDate?, endDate?)": "DEPRECATED — same as above but wrapped in unstable_cache (tag: 'category-budget', revalidate: 3600). Still called in dashboardContext.tsx. Should be replaced by useBudget hook (not yet implemented).",
+        "postCategory(data)": "POST /category with { name, icon, color, type, userId }. Replaced by useCreateCategory hook.",
+        "putCategory(id, data)": "PATCH /category/:id. Calls revalidateTag('categoryBudget') if budget changed. Hook useUpdateCategory exists but is empty.",
+        "deleteCategoryById(id)": "DELETE /category/:id (soft delete on API). Replaced by useDeleteCategory hook.",
+        "revalidateCategories()": "Calls revalidateTag('categories'). Legacy.",
+        "revalidateCategoriesBudget()": "Calls revalidateTag('category-budget'). Legacy — still called in historial/page.tsx and presupuesto/page.tsx."
+      }
+    },
+
+    "movements": {
+      "file": "lib/actions/movements.ts",
+      "functions": {
+        "getMovementsByUserAndFilter(filters?)": "GET /movement?userId&categoryId?&tagId?&startDate?&endDate=. Returns Movements[]. Fresh fetch. Will be used by useMovements hook (not yet implemented).",
+        "getMovementsByUserAndFilterCache(filters?)": "DEPRECATED — same as above wrapped in unstable_cache (tag: 'movements', revalidate: 3600). Not called anywhere in app currently — dead code.",
+        "postMovement(data)": "POST /movement. Also calls revalidateTag('tags') after creation. Replaced by useCreateMovement hook.",
+        "deleteMovement(id)": "DELETE /movement/:id. No hook yet."
+      }
+    },
+
+    "tags": {
+      "file": "lib/actions/tags.ts",
+      "functions": {
+        "getTagsByUser()": "GET /tag/user/:userId. Returns Tags[]. Replaced by useTags hook.",
+        "revalidateTags()": "Calls revalidateTag('tags'). Legacy — postMovement already calls revalidateTag('tags') directly."
+      }
+    },
+
+    "financialElements": {
+      "file": "lib/actions/financialElements.ts",
+      "functions": {
+        "getFinancialElementsByUser()": "DEPRECATED CACHE — GET /financial-element/patrimony wrapped in unstable_cache (tag: 'financial-elements', revalidate: 3600). Returns FinancialElementsAndNetWorth. Still called in patrimonio/page.tsx. Should be replaced by useFinancialElements hook (not yet implemented).",
+        "getFinancialElementById(id)": "GET /financial-element/:id. Returns FinancialElements (single element with its movements). No hook.",
+        "postFinancialElement(data)": "POST /financial-element with { name, type, userId }. No hook.",
+        "putFinancialElement(id, data)": "PATCH /financial-element/:id. No hook.",
+        "deleteFinancialElementById(id)": "DELETE /financial-element/:id. No hook.",
+        "revalidateFinancialElements()": "Calls revalidateTag('financial-elements'). Legacy — still called in patrimonio/page.tsx, patrimonio/[id]/page.tsx, and asset-form-modal.tsx."
+      }
+    },
+
+    "notifications": {
+      "file": "lib/actions/notifications.ts",
+      "functions": {
+        "postSubscriptionNotifications(data)": "POST /notifications with { endpoint, p256dh, auth, userId }. Web Push subscription.",
+        "getSubscriptionNotifications()": "GET /notifications/user/:userId. Returns Subscriptions[].",
+        "deleteSubscriptionNotifications(endpoint)": "DELETE /notifications/endpoint/:endpoint. Unsubscribes from push notifications."
+      }
+    }
+  },
+
+  "tanstackHooks": {
+    "description": "TanStack Query hooks wrapping server actions. QueryClient is provided at app root. All useQuery hooks use staleTime: 0 (always refetch when stale). Mutations invalidate relevant query keys on success.",
+
+    "queries": {
+      "useProfile": {
+        "file": "lib/hooks/use-profile.tsx",
+        "queryKey": ["user-profile"],
+        "action": "getProfile()",
+        "status": "implemented"
+      },
+      "useCategories": {
+        "file": "lib/hooks/use-categories.tsx",
+        "queryKey": ["user-categories"],
+        "action": "getCategoriesByUser()",
+        "status": "implemented"
+      },
+      "useTags": {
+        "file": "lib/hooks/use-tags.tsx",
+        "queryKey": ["user-tags"],
+        "action": "getTagsByUser()",
+        "status": "implemented"
+      },
+      "useBudget": {
+        "file": "lib/hooks/use-budget.tsx",
+        "queryKey": ["budgeted-categories"],
+        "action": "getBudgetByUserAndPeriod()",
+        "status": "EMPTY — not yet implemented. Should replace getBudgetByUserAndPeriodCached in dashboardContext.tsx"
+      },
+      "useMovements": {
+        "file": "lib/hooks/use-movements.tsx",
+        "queryKey": ["user-movements"],
+        "action": "getMovementsByUserAndFilter()",
+        "status": "EMPTY — not yet implemented. getMovementsByUserAndFilterCache is dead code."
+      },
+      "useFinancialElements": {
+        "file": "lib/hooks/use-financial-elements.tsx",
+        "queryKey": ["financial-elements"],
+        "action": "getFinancialElementsByUser()",
+        "status": "EMPTY — not yet implemented. Should replace getFinancialElementsByUser (unstable_cache) in patrimonio/page.tsx"
+      }
+    },
+
+    "mutations": {
+      "useCreateCategory": {
+        "file": "lib/hooks/use-create-category.tsx",
+        "mutationFn": "postCategory(data)",
+        "invalidates": ["user-categories"],
+        "status": "implemented"
+      },
+      "useDeleteCategory": {
+        "file": "lib/hooks/use-delete-category.tsx",
+        "mutationFn": "deleteCategoryById(id)",
+        "invalidates": ["user-categories"],
+        "status": "implemented"
+      },
+      "useUpdateCategory": {
+        "file": "lib/hooks/use-update-category.tsx",
+        "mutationFn": "putCategory(id, data)",
+        "status": "EMPTY — not yet implemented"
+      },
+      "useCreateMovement": {
+        "file": "lib/hooks/use-create-movements.tsx",
+        "mutationFn": "postMovement(data)",
+        "invalidates": ["user-movements", "user-tags", "user-profile"],
+        "status": "implemented"
+      },
+      "useLogout": {
+        "file": "lib/hooks/use-logout.tsx",
+        "description": "Invalidates user-profile cache then calls logOut() server action",
+        "status": "implemented"
+      }
+    }
+  },
+
+  "deprecationStatus": {
+    "summary": "3 server actions still use unstable_cache (Next.js deprecated pattern). 4 hooks are created but empty and need implementation to complete the migration.",
+
+    "stillUsingUnstableCache": [
+      {
+        "action": "getBudgetByUserAndPeriodCached",
+        "file": "lib/actions/categories.ts",
+        "calledIn": ["app/dashboard/dashboardContext.tsx:125"],
+        "replacementHook": "useBudget (empty)",
+        "nonCachedAlternative": "getBudgetByUserAndPeriod"
+      },
+      {
+        "action": "getFinancialElementsByUser",
+        "file": "lib/actions/financialElements.ts",
+        "calledIn": ["app/dashboard/patrimonio/page.tsx:22"],
+        "replacementHook": "useFinancialElements (empty)",
+        "note": "revalidateFinancialElements() also still called in patrimonio/page.tsx, patrimonio/[id]/page.tsx, asset-form-modal.tsx"
+      },
+      {
+        "action": "getMovementsByUserAndFilterCache",
+        "file": "lib/actions/movements.ts",
+        "calledIn": [],
+        "replacementHook": "useMovements (empty)",
+        "note": "Dead code — not called anywhere. Safe to delete."
+      }
+    ],
+
+    "emptyHooksToImplement": [
+      "use-budget.tsx",
+      "use-movements.tsx",
+      "use-financial-elements.tsx",
+      "use-update-category.tsx"
+    ],
+
+    "legacyRevalidateFunctionsStillUsed": [
+      { "function": "revalidateCategoriesBudget()", "usedIn": ["app/dashboard/historial/page.tsx:231", "app/dashboard/presupuesto/page.tsx:82"] },
+      { "function": "revalidateFinancialElements()", "usedIn": ["app/dashboard/patrimonio/page.tsx:38", "app/dashboard/patrimonio/[id]/page.tsx:121", "components/assets/asset-form-modal.tsx:54", "components/assets/asset-form-modal.tsx:80"] },
+      { "function": "revalidateUser()", "usedIn": ["app/dashboard/inicio/page.tsx:120", "app/dashboard/presupuesto/page.tsx:97"] }
+    ]
+  }
+}

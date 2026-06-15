@@ -1,62 +1,29 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import AssetCard from "@/components/assets/asset-card"
 import AssetFormModal from "@/components/assets/asset-form-modal"
-import { getFinancialElementsByUser, revalidateFinancialElements } from "@/lib/actions/financialElements"
-import { FinancialElement, FinancialElements } from '@/lib/schemas/financialElement';
+import { useFinancialElements } from "@/lib/hooks/use-financial-elements"
+import { useQueryClient } from "@tanstack/react-query"
+import { formatToBalance } from "@/lib/quick-spend-constants"
 
 export default function AssetsPage() {
-
-	const [assets, setAssets] = useState<FinancialElements[]>([]);
-	const [isLoading, setIsLoading] = useState(true);
+	const queryClient = useQueryClient();
+	const { data } = useFinancialElements();
+	const assets = data?.elements ?? [];
 
 	const [isModalOpen, setIsModalOpen] = useState(false);
 
-	const fetchFinancialElements = async () => {
-		setIsLoading(true);
-		try {
-			const financialElements = await getFinancialElementsByUser();
-			setAssets(financialElements.elements);
-		}
-		catch (error: any) {
-			return;
-		}
-		finally {
-			setIsLoading(false);
-		}
+	const handleSaveAsset = () => {
+		queryClient.invalidateQueries({ queryKey: ['financial-elements-patrimony'] });
 	}
 
-	useEffect(() => {
-		fetchFinancialElements();
-	}, []);
-
-	const handleSaveAsset = (item: FinancialElements) => {
-		revalidateFinancialElements();
-		if (assets?.some(asset => asset.id === item.id)) {
-			// Edit existing asset
-			setAssets(assets?.map((asset) => (asset.id === item.id ? { ...asset, ...item } : asset)))
-		} else {
-			setAssets([...assets, item])
-		}
-
-	}
-
-	const totalAssets = 0
-	// assets
-	// 	.filter((asset) => asset.type === "asset")
-	// 	.reduce((sum, asset) => sum + asset.currentValue, 0)
-
-	const totalLiabilities = 0
-	// assets
-	// 	.filter((asset) => asset.type === "liability")
-	// 	.reduce((sum, asset) => sum + asset.currentValue, 0)
-
-	const netWorth = 0
-	//  totalAssets - totalLiabilities
+	const totalAssets = data?.totalAssets ?? 0;
+	const totalLiabilities = data?.totalLiabilities ?? 0;
+	const netWorth = data?.netWorth ?? 0;
 
 	return (
 		<div className="space-y-6">
@@ -79,7 +46,7 @@ export default function AssetsPage() {
 						<CardTitle className="text-sm font-medium text-gray-600">Total Activos</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<p className="text-2xl font-bold text-green-600">${totalAssets.toFixed(2)}</p>
+						<p className="text-2xl font-bold text-green-600">{formatToBalance(totalAssets)}</p>
 					</CardContent>
 				</Card>
 				<Card>
@@ -87,7 +54,7 @@ export default function AssetsPage() {
 						<CardTitle className="text-sm font-medium text-gray-600">Total Pasivos</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<p className="text-2xl font-bold text-red-600">${totalLiabilities.toFixed(2)}</p>
+						<p className="text-2xl font-bold text-red-600">{formatToBalance(totalLiabilities)}</p>
 					</CardContent>
 				</Card>
 				<Card>
@@ -96,7 +63,7 @@ export default function AssetsPage() {
 					</CardHeader>
 					<CardContent>
 						<p className={`text-2xl font-bold ${netWorth >= 0 ? "text-green-600" : "text-red-600"}`}>
-							${netWorth.toFixed(2)}
+							{formatToBalance(netWorth)}
 						</p>
 					</CardContent>
 				</Card>
@@ -110,14 +77,7 @@ export default function AssetsPage() {
 						id={asset.id}
 						name={asset.name}
 						type={asset.type}
-						currentValue={0}
-						change={0}
-						changePercent={0}
-						history={[]}
-					// currentValue={asset.currentValue}
-					// change={asset.change}
-					// changePercent={asset.changePercent}
-					// history={asset.history}
+						currentValue={asset.currentAmount}
 					/>
 				))}
 			</div>

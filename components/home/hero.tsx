@@ -1,47 +1,47 @@
-import { ArrowRight, TrendingUp } from "lucide-react"
-import Link from "next/link" // Import Link
+"use client"
+
+import { ArrowRight } from "lucide-react"
+import Link from "next/link"
+import SpinningLogo from "@/components/home/spinning-logo"
 
 export default function Hero() {
 	return (
-		<section id="hero" className="bg-gradient-to-br from-green-50 to-white py-20 lg:py-32">
-			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-				<div className="text-center">
-					{/* Logo grande */}
-					<div className="flex justify-center mb-8">
-						<div className="w-24 h-24 bg-green-600 rounded-2xl flex items-center justify-center shadow-lg">
-							<TrendingUp className="w-12 h-12 text-white" />
-						</div>
-					</div>
+		<section id="hero" className="bg-white py-24 lg:py-36">
+			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
 
-					{/* Título principal */}
-					{/* <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6"> */}
-					<h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-gray-900 mb-6">
-						Las apachetas
-						{/* LAS APACHETAS */}
-						<span className="block text-green-600">guiarán tu camino...</span>
-						{/* <span className="block text-green-600">GUIARÁN TU CAMINO</span> */}
-					</h1>
+				<div className="flex justify-center mb-10">
+					<SpinningLogo size="lg" />
+				</div>
 
-					{/* Subtítulo */}
-					<p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
-						Sigue el camino para salir de deudas, ahorrar más y construir patrimonio.
-					</p>
+				<h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-foreground mb-4 leading-tight">
+					Las apachetas
+					<span className="block text-burnt-peach-500 mt-2">guiarán tu camino.</span>
+				</h1>
 
-					{/* CTA Button - Updated to Link to onboarding */}
-					<Link
-						href="/onboarding"
-						className="bg-green-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-green-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl inline-flex items-center space-x-2"
-					>
-						<span>Comienza tu Camino</span>
-						<ArrowRight className="w-5 h-5" />
-					</Link>
+				<p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
+					Sigue el camino para salir de deudas, ahorrar más y construir patrimonio...
+					{/* Educación financiera diseñada para Argentina. */}
+				</p>
 
-					{/* Badge */}
-					<div className="mt-12">
-						<span className="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium">
-							🇦🇷 Educación financiera para Argentina
+				<Link
+					href="/onboarding"
+					className="inline-flex items-center gap-2 bg-primary text-coffee-bean-800 font-bold px-8 py-4 rounded-xl text-lg hover:bg-primary-500 transition-all duration-200 shadow-lg hover:shadow-xl"
+				>
+					Comienza tu Camino
+					<ArrowRight className="w-5 h-5" />
+				</Link>
+
+				<div className="flex flex-wrap justify-center gap-3 mt-14">
+					{[
+						{ label: "🇦🇷 Para Argentina", color: "bg-burnt-peach-50 text-burnt-peach-700" },
+						// { label: "📊 Presupuesto", color: "bg-berry-crush-50 text-berry-crush-700" },
+						// { label: "💰 Ahorro", color: "bg-primary/10 text-primary-600" },
+						// { label: "📈 Inversión", color: "bg-ash-grey-100 text-ash-grey-700" },
+					].map((tag) => (
+						<span key={tag.label} className={`${tag.color} px-4 py-1.5 rounded-full text-sm font-medium`}>
+							{tag.label}
 						</span>
-					</div>
+					))}
 				</div>
 			</div>
 		</section>

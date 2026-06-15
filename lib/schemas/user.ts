@@ -1,3 +1,5 @@
+export type NotificationFrequency = 'daily' | 'weekly' | 'monthly';
+
 /** User interface to reuse in schemas **/
 export interface User {
 	id: string;
@@ -7,6 +9,8 @@ export interface User {
 	// role: string;
 	balance: number;
 	totalBudget: number;
+	notificationFrequency: NotificationFrequency;
+	mapLevel: string | null;
 }
 
 /** User State type to reuse in forms **/

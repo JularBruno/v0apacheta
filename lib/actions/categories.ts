@@ -7,28 +7,16 @@ import {
 	postMethod,
 	putMethod,
 	deleteMethod,
-	getMethodWithoutSession,
 } from './utils';
 import { TxType } from '../schemas/definitions';
-import { unstable_cache } from 'next/cache';
 import { revalidateTag } from "next/cache";
-import { getCurrentMonthRange, getDateStringsForFilter, getLastNMonths } from '../dateUtils';
+import { getCurrentMonthRange, getDateStringsForFilter } from '../dateUtils';
 
 const url = 'category';
 
-//// All Categories methods and form validations
 export async function getCategoriesByUser(): Promise<Array<Category>> {
 	const session = await getSession();
-	const url = 'category/user';
-
-	const getCategories = unstable_cache(async () => {
-		return await getMethodWithoutSession<Array<Category>>(url, session, session?.user.id);
-	},
-		['user-categories'],
-		{ revalidate: 3600, tags: ['categories'] }
-	);
-
-	return await getCategories();
+	return await getMethod<Array<Category>>('category/user', session?.user.id);
 }
 
 export async function getBudgetByUserAndPeriod(
@@ -37,56 +25,20 @@ export async function getBudgetByUserAndPeriod(
 ): Promise<Array<CategoryBudget>> {
 	const session = await getSession();
 
-	const { start, end } = getCurrentMonthRange();
+	const { start, end } = getCurrentMonthRange(); // on default use current month
 	const result = getDateStringsForFilter(start, end);
 
-	// Build query params
-	const params = new URLSearchParams({
-	});
+	const params = new URLSearchParams();
+	params.append('startDate', startDate ?? result.startDate);
+	params.append('endDate', endDate ?? result.endDate);
 
-	if (startDate) { params.append('startDate', startDate) }
-	else { params.append('startDate', result.startDate) };
-
-	if (endDate) { params.append('endDate', endDate) }
-	else { params.append('endDate', result.endDate) }; // default values when not setting filter to this month
-
-	const url = `category/user/${session!.user.id}/budget?${params.toString()}`;
-
-	return await getMethod<Array<CategoryBudget>>(url);
-
-}
-
-
-export async function getBudgetByUserAndPeriodCached(
-	startDate?: string,
-	endDate?: string
-): Promise<Array<CategoryBudget>> {
-	const session = await getSession();
-
-	const { start, end } = getCurrentMonthRange();
-	const result = getDateStringsForFilter(start, end);
-
-	// Build query params
-	const params = new URLSearchParams({
-	});
-
-	params.append('startDate', result.startDate)
-	params.append('endDate', result.endDate); // default values when not setting filter to this month
-
-	const url = `category/user/${session!.user.id}/budget?${params.toString()}`;
-
-	const getBudgetCache = unstable_cache(async () => {
-		return await getMethodWithoutSession<Array<CategoryBudget>>(url, session);
-	},
-		['category-budget'],
-		{ revalidate: 3600, tags: ['category-budget'] }
+	return await getMethod<Array<CategoryBudget>>(
+		`category/user/${session!.user.id}/budget?${params.toString()}`
 	);
-
-	return await getBudgetCache();
 }
 
 export async function deleteCategoryById(id: string) {
-	return await deleteMethod<Category>(url, id); // REMEMBER THIS IS SOFT DELETE ON API
+	return await deleteMethod<Category>(url, id);
 }
 
 export async function postCategory(data: {
@@ -97,12 +49,10 @@ export async function postCategory(data: {
 }): Promise<Category> {
 	const session = await getSession();
 
-	const result = await postMethod<Category>(url, {
+	return await postMethod<Category>(url, {
 		...data,
 		userId: session!.user.id,
 	});
-
-	return result;
 }
 
 export async function putCategory(
@@ -116,24 +66,10 @@ export async function putCategory(
 	}
 ): Promise<Category> {
 	const session = await getSession();
-
 	if (!session?.user.id) throw new Error('User ID is missing');
 
-	const result = await putMethod<Category>(url, id, {
+	return await putMethod<Category>(url, id, {
 		...data,
 		userId: session.user.id,
 	});
-
-	if (data.budget) {
-		revalidateTag('categoryBudget')
-	}
-	return result;
-}
-
-export async function revalidateCategories() {
-	revalidateTag('categories'); // get categories from api! revalidate cache
-}
-
-export async function revalidateCategoriesBudget() {
-	revalidateTag('category-budget'); // get categories from api! revalidate cache
 }

@@ -12,7 +12,6 @@ import { Tag } from "@/lib/schemas/tag";
 import {
 	Settings,
 	Plus,
-	X,
 	Calendar,
 	ChevronUp,
 	ChevronDown,
@@ -21,10 +20,9 @@ import { cn } from "@/lib/utils"
 
 import { formatToBalance } from "@/lib/quick-spend-constants"
 import { getCurrentDateTimeInfo } from "@/lib/dateUtils"
-import { Movement, movementSchema, MovementFormData } from "@/lib/schemas/movement";
+import { MovementFormData } from "@/lib/schemas/movement";
 import IconComponent from "./icon-component";
 import { TxType } from "@/lib/schemas/definitions";
-import { useState } from "react";
 
 
 type CategoryHeaderProps = {
@@ -39,7 +37,7 @@ export function CategoryHeaderDesktop({
 	return (
 		<>
 			<div className="hidden md:flex items-center justify-between py-4">
-				<Label className="text-sm text-gray-600">Categorías</Label>
+				<Label className="text-sm text-muted-foreground">Categorías</Label>
 				<div className="flex items-center gap-2">
 					<Button
 						type="button"
@@ -74,7 +72,7 @@ export function CategoryHeaderMobile({
 	return (
 		<>
 			<div className="md:hidden flex items-center justify-between py-4">
-				<Label className="text-sm text-gray-600">Categorías</Label>
+				<Label className="text-sm text-muted-foreground">Categorías</Label>
 				<div className="flex items-center gap-1">
 					<Button
 						type="button"
@@ -129,15 +127,15 @@ export function CategoryGrid({
 							className={cn(
 								"p-3 rounded-lg border flex items-center gap-2 transition-all text-left min-w-0",
 								active
-									? "border-blue-600 bg-blue-50 ring-2 ring-blue-200 shadow-md"
-									: "border-gray-200 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm",
+									? "border-primary-400 bg-primary-50 ring-2 ring-primary-200 shadow-md"
+									: "border-border hover:bg-muted hover:border-ash-grey-400 hover:shadow-sm",
 							)}
 							disabled={loading}
 						>
 							<span className={cn("w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0", category.color)}>
 								<IconComponent icon={category.icon} className="w-4 h-4 text-white" />
 							</span>
-							<span className={cn("text-sm font-medium truncate", active ? "text-blue-900" : "text-gray-700")}>
+							<span className={cn("text-sm font-medium truncate", active ? "text-coffee-bean-800" : "text-foreground")}>
 								{category.name}
 							</span>
 						</button>
@@ -187,7 +185,7 @@ export function TagRow({
 	return (
 		<>
 			<div className="space-y-2 py-4">
-				<Label htmlFor="descripcion" className="text-sm text-gray-600 ">Descripción</Label>
+				<Label htmlFor="descripcion" className="text-sm text-muted-foreground">Descripción</Label>
 				<p id="tag-hint" className="sr-only">
 					Escribe una descripción, o selecciona un movimiento previo
 				</p>
@@ -223,8 +221,7 @@ export function TagRow({
 				<div id={listId} role="listbox" className="hidden md:flex md:flex-wrap gap-2">
 					<button
 						type="button"
-						// onClick={clearToNew}
-						className="px-3 py-1.5 rounded-full border text-sm border-blue-600 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
+						className="px-3 py-1.5 rounded-full border text-sm border-primary-400 bg-primary-50 text-coffee-bean-800 hover:bg-primary-100 transition-colors"
 						aria-label="Crear nuevo tag"
 						role="option"
 						aria-selected={tagId === ""}
@@ -242,13 +239,13 @@ export function TagRow({
 							className={cn(
 								"px-3 py-1.5 rounded-full border text-sm transition-all",
 								t.id === tagId
-									? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-200 shadow-md"
-									: "border-gray-200 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm",
+									? "border-primary-400 bg-primary-50 text-coffee-bean-800 ring-2 ring-primary-200 shadow-md"
+									: "border-border hover:bg-muted hover:border-ash-grey-400 hover:shadow-sm text-foreground",
 							)}
 							disabled={loading}
 						>
 							{t.name}
-							<span className="text-xs text-gray-500 ml-1" hidden={categoryType == TxType.INCOME}>{formatToBalance(t.amount)}</span>
+							<span className="text-xs text-muted-foreground ml-1" hidden={categoryType == TxType.INCOME}>{formatToBalance(t.amount)}</span>
 							{/* {t.category.type === "whatever" && (
 							<span className="text-xs text-gray-500 ml-1">
 								{formatToBalance(t.amount)}
@@ -266,8 +263,8 @@ export function TagRow({
 							className={cn(
 								"shrink-0 px-3 py-1.5 rounded-full border text-sm transition-all whitespace-nowrap",
 								tagId === ""
-									? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-200 shadow-md"
-									: "border-gray-200 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm",
+									? "border-primary-400 bg-primary-50 text-coffee-bean-800 ring-2 ring-primary-200 shadow-md"
+									: "border-border hover:bg-muted hover:border-ash-grey-400 hover:shadow-sm text-foreground",
 							)}
 							aria-label="Crear nuevo tag"
 							role="option"
@@ -286,11 +283,11 @@ export function TagRow({
 									className={cn(
 										"shrink-0 px-3 py-1.5 rounded-full border text-sm transition-all whitespace-nowrap",
 										t.id === tagId
-											? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-200 shadow-md"
-											: "border-gray-200 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm",
+											? "border-primary-400 bg-primary-50 text-coffee-bean-800 ring-2 ring-primary-200 shadow-md"
+											: "border-border hover:bg-muted hover:border-ash-grey-400 hover:shadow-sm text-foreground",
 									)}
 								>
-									{t.name} <span className="text-xs text-gray-500 ml-1" hidden={categoryType == TxType.INCOME}>{formatToBalance(t.amount)}</span>
+									{t.name} <span className="text-xs text-muted-foreground ml-1" hidden={categoryType == TxType.INCOME}>{formatToBalance(t.amount)}</span>
 								</button>
 							))}
 
@@ -298,7 +295,7 @@ export function TagRow({
 							<button
 								type="button"
 								onClick={() => setMobileTagsExpanded(!mobileTagsExpanded)}
-								className="shrink-0 px-3 py-1.5 rounded-full border border-gray-300 bg-gray-100 text-sm transition-all whitespace-nowrap flex items-center gap-1 text-gray-600 hover:bg-gray-200"
+								className="shrink-0 px-3 py-1.5 rounded-full border border-border bg-muted text-sm transition-all whitespace-nowrap flex items-center gap-1 text-muted-foreground hover:bg-secondary"
 								aria-expanded={mobileTagsExpanded}
 								aria-label={mobileTagsExpanded ? "Ver menos tags" : "Ver más tags"}
 							>
@@ -347,14 +344,14 @@ export function DateTimeRow({
 			<button
 				type="button"
 				onClick={() => { setShowDateTime(!showDateTime); setCustomDate(customDate); setCustomTime(customTime); }}
-				className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+				className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
 			>
 				<Calendar className="w-4 h-4" />
 				<span>Fecha y hora</span>
 				{showDateTime ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
 
 				{(customDate !== getCurrentDateTimeInfo().dateInput || customTime !== getCurrentDateTimeInfo().timeInput) && (
-					<span className="text-xs text-blue-600 ml-1">
+					<span className="text-xs text-primary ml-1">
 
 						({new Date(`${customDate}T${customTime}`).toLocaleDateString("es-AR")})
 
