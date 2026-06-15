@@ -9,7 +9,7 @@ export function useUpdateFinancialElement() {
 		mutationFn: ({ id, data }: { id: string; data: FinancialElement }) =>
 			putFinancialElement(id, data),
 		onSuccess: (_, { id }) => {
-			queryClient.invalidateQueries({ queryKey: ['financial-elements'] });
+			queryClient.invalidateQueries({ queryKey: ['financial-elements-patrimony'] });
 			queryClient.invalidateQueries({ queryKey: ['financial-element', id] });
 		},
 		onError: (error) => {

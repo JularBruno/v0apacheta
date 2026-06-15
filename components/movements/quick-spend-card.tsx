@@ -244,25 +244,22 @@ export default function QuickSpendCard({
 	const [mobileTagsExpanded, setMobileTagsExpanded] = useState(false)
 
 
+	const tagsByType = useMemo(() =>
+		allTags.filter(t => cats.find(c => c.id === t.categoryId)?.type === type),
+		[allTags, cats, type]
+	);
+
 	// Match the amount of tag pills to diplay and filter by category id when selected
 	const matchingSuggestions = useMemo(() => {
-		if (!categoryId) return allTags.slice(0, 12);
-
-		return allTags
-			.filter(t => t.categoryId === categoryId) // ← filter by selected category
-			.slice(0, 12);
-	}, [allTags, categoryId]);
+		if (!categoryId) return tagsByType.slice(0, 12);
+		return allTags.filter(t => t.categoryId === categoryId).slice(0, 12);
+	}, [allTags, tagsByType, categoryId]);
 
 	const matchingSuggestionsMobile = useMemo(() => {
-		if (!categoryId) return allTags.slice(0, 4);
-
-		let sliceAmount = mobileTagsExpanded ? 12 : 4;
-
-		return allTags
-			.filter(t => t.categoryId === categoryId) // ← filter by selected category
-			.slice(0, sliceAmount);
-
-	}, [allTags, categoryId, mobileTagsExpanded]);
+		const sliceAmount = mobileTagsExpanded ? 12 : 4;
+		if (!categoryId) return tagsByType.slice(0, sliceAmount);
+		return allTags.filter(t => t.categoryId === categoryId).slice(0, sliceAmount);
+	}, [allTags, tagsByType, categoryId, mobileTagsExpanded]);
 
 	/**
 	 *
@@ -448,8 +445,8 @@ export default function QuickSpendCard({
 							className={cn(
 								"py-3 px-4 rounded-lg text-base font-semibold transition-all border-2 md:py-4 md:px-6 md:text-lg",
 								type === TxType.EXPENSE
-									? "bg-red-50 border-red-500 text-red-700 shadow-md ring-2 ring-red-200"
-									: "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100",
+									? "bg-burnt-peach-100 border-burnt-peach-400 text-coffee-bean-800 shadow-md ring-2 ring-burnt-peach-200"
+									: "bg-secondary border-border text-muted-foreground hover:bg-muted",
 							)}
 						>
 							<span className="block sm:inline">💸</span> Gasto
@@ -463,8 +460,8 @@ export default function QuickSpendCard({
 							className={cn(
 								"py-3 px-4 rounded-lg text-base font-semibold transition-all border-2 md:py-4 md:px-6 md:text-lg",
 								type === TxType.INCOME
-									? "bg-green-50 border-green-500 text-green-700 shadow-md ring-2 ring-green-200"
-									: "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100",
+									? "bg-primary-100 border-primary-400 text-coffee-bean-800 shadow-md ring-2 ring-primary-200"
+									: "bg-secondary border-border text-muted-foreground hover:bg-muted",
 							)}
 						>
 							<span className="block sm:inline">💰</span> Ingreso
@@ -517,7 +514,7 @@ export default function QuickSpendCard({
 
 					{/* Amount */}
 					<div className="space-y-2 pb-4">
-						<Label htmlFor="amount" className="text-sm text-gray-600">Monto</Label>
+						<Label htmlFor="amount" className="text-sm text-muted-foreground">Monto</Label>
 						<div className="relative gap-2 ">
 							<BalanceInput
 								errors={errors}

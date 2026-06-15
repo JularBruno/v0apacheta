@@ -1,15 +1,14 @@
 "use client"
 
 import type React from "react"
-import { useState, useTransition, useActionState, useEffect } from "react"
+import { useState, useActionState, useEffect } from "react"
 import { register } from '@/lib/actions/user';
-import { UserState, initialUserState } from '@/lib/schemas/user';
+import { initialUserState } from '@/lib/schemas/user';
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import AuthHeader from "@/components/auth-header"
 
 /**
@@ -149,7 +148,7 @@ export default function OnboardingPage() {
 	 */
 	return (
 
-		<div className="min-h-screen flex flex-col lg:flex-row items-center justify-center bg-gradient-to-br from-green-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+		<div className="min-h-screen flex flex-col lg:flex-row items-center justify-center bg-gradient-to-br from-secondary to-background py-12 px-4 sm:px-6 lg:px-8">
 			<AuthHeader />
 
 			{/* IMAGE CARD Section */}
@@ -162,7 +161,7 @@ export default function OnboardingPage() {
 					shadow-lg
 					mt-8 lg:mt-0 lg:mr-8
 					flex items-center justify-center
-					bg-green-50
+					bg-secondary border border-border
 				"
 			>
 				<img
@@ -173,14 +172,14 @@ export default function OnboardingPage() {
 			</div>
 
 			{/* FORM CARD Section */}
-			<div className="w-full lg:w-1/2 max-w-md lg:max-w-lg space-y-8 bg-white p-8 md:p-10 rounded-xl shadow-lg mt-8 lg:mt-0 lg:ml-8">
+			<div className="w-full lg:w-1/2 max-w-md lg:max-w-lg space-y-8 bg-card p-8 md:p-10 rounded-xl shadow-lg border border-border mt-8 lg:mt-0 lg:ml-8">
 
-				{/* 
-					FORM CARD HEADER 
+				{/*
+					FORM CARD HEADER
 				*/}
 				<div>
-					<h2 className="mt-6 text-center text-3xl font-bold text-gray-900">Comienza tu camino</h2>
-					<p className="mt-2 text-center text-sm text-gray-600">
+					<h2 className="mt-6 text-center text-3xl font-bold text-foreground">Comienza tu camino</h2>
+					<p className="mt-2 text-center text-sm text-muted-foreground">
 						{currentStep === 1 && "Cuentanos sobre ti."}
 						{currentStep === 2 && "Unas preguntas rápidas para guiarte mejor."}
 						{currentStep === 3 && "Casi listos, última pregunta."}
@@ -219,7 +218,7 @@ export default function OnboardingPage() {
 							<Button
 								type="button"
 								onClick={handleNext}
-								className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
+								className="w-full"
 							>
 								Siguiente
 							</Button>
@@ -250,9 +249,9 @@ export default function OnboardingPage() {
 												checked={question1Value === option.score}
 												onChange={() => handleQuestion1Change(option.score)}
 												disabled={isPending}
-												className="h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500"
+												className="h-4 w-4 accent-primary border-border focus:ring-primary"
 											/>
-											<Label htmlFor={option.id} className="ml-2 text-sm text-gray-900">
+											<Label htmlFor={option.id} className="ml-2 text-sm text-foreground">
 												{option.label}
 											</Label>
 										</div>
@@ -270,7 +269,7 @@ export default function OnboardingPage() {
 									type="button"
 									onClick={handleNext}
 									disabled={!question1Value}
-									className="w-1/2 bg-green-600 text-white"
+									className="w-1/2"
 								>
 									Siguiente
 								</Button>
@@ -300,9 +299,9 @@ export default function OnboardingPage() {
 												checked={question2Value === option.score}
 												onChange={() => handleQuestion2Change(option.score)}
 												disabled={isPending}
-												className="h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500"
+												className="h-4 w-4 accent-primary border-border focus:ring-primary"
 											/>
-											<Label htmlFor={option.id} className="ml-2 text-sm text-gray-900">
+											<Label htmlFor={option.id} className="ml-2 text-sm text-foreground">
 												{option.label}
 											</Label>
 										</div>
@@ -320,7 +319,7 @@ export default function OnboardingPage() {
 										type="button"
 										onClick={handleNext}
 										disabled={!question2Value}
-										className="w-1/2 bg-green-600 text-white"
+										className="w-1/2"
 									>
 										Siguiente
 									</Button>
@@ -332,16 +331,16 @@ export default function OnboardingPage() {
 					{/* Step 4: Personalized Message */}
 					{currentStep === 4 && (
 						<div className="space-y-6">
-							<div className="bg-green-50 border border-green-200 rounded-lg p-6">
+							<div className="bg-secondary border border-border rounded-lg p-6">
 								<div className="flex items-start space-x-3">
 									<div className="flex-shrink-0">
-										<div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-											<span className="text-green-600 text-lg">✨</span>
+										<div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+											<span className="text-primary text-lg">✨</span>
 										</div>
 									</div>
 									<div className="flex-1">
-										<h3 className="text-lg font-semibold text-green-800 mb-2">El mapa guiará tu camino</h3>
-										<p className="text-green-700 leading-relaxed">{getPersonalizedMessage()}</p>
+										<h3 className="text-lg font-semibold text-foreground mb-2">El mapa guiará tu camino</h3>
+										<p className="text-muted-foreground leading-relaxed">{getPersonalizedMessage()}</p>
 									</div>
 								</div>
 							</div>
@@ -356,7 +355,7 @@ export default function OnboardingPage() {
 									type="button"
 									onClick={handleNext}
 									disabled={!question2Value}
-									className="w-1/2 bg-green-600 text-white"
+									className="w-1/2"
 								>
 									Siguiente
 								</Button>
@@ -422,7 +421,7 @@ export default function OnboardingPage() {
 								</Button>
 								<Button
 									type="submit"
-									className="w-1/2 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
+									className="w-1/2"
 									disabled={isPending}
 								>
 									{isPending ? "Finalizando..." : "Terminar Registro"}
@@ -437,11 +436,11 @@ export default function OnboardingPage() {
 					)}
 
 				</form>
-				<div className="text-center text-sm text-gray-600">
+				<div className="text-center text-sm text-muted-foreground">
 					{currentStep < 4 && (
 						<>
 							Ya tenés una cuenta?{" "}
-							<Link href="/login" className="font-medium text-green-600 hover:text-green-500">
+							<Link href="/login" className="font-medium text-primary hover:text-primary-600">
 								Ingresa aca!
 							</Link>
 						</>

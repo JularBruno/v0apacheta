@@ -11,9 +11,10 @@ import z from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { FinancialElementType } from "@/lib/schemas/definitions"
-import { postFinancialElement, putFinancialElement, revalidateFinancialElements } from "@/lib/actions/financialElements"
 import { useToast } from '@/hooks/use-toast';
 import { Controller } from "react-hook-form";
+import { useCreateFinancialElement } from "@/lib/hooks/use-create-financial-element"
+import { useUpdateFinancialElement } from "@/lib/hooks/use-update-financial-element"
 
 interface AssetFormModalProps {
 	isOpen: boolean
@@ -26,81 +27,41 @@ type FinancialElementFormData = z.infer<typeof financialElementSchema>;
 
 export default function AssetFormModal({ isOpen, onClose, onSave, initialData }: AssetFormModalProps) {
 	const { toast } = useToast();
+	const createMutation = useCreateFinancialElement();
+	const updateMutation = useUpdateFinancialElement();
 
-	/** Form zod validator, values, handlers, errors and loading */
 	const {
 		register,
 		handleSubmit,
-		formState: { errors, isSubmitting },
+		formState: { errors },
 		reset,
 		control
 	} = useForm<FinancialElementFormData>({
-		resolver: zodResolver(financialElementSchema)
-		,
+		resolver: zodResolver(financialElementSchema),
 		defaultValues: {
 			name: initialData?.name || '',
 			type: initialData?.type || FinancialElementType.ASSET,
 		}
 	});
 
+	const isPending = createMutation.isPending || updateMutation.isPending;
+
 	const onSubmitHandler = async (data: FinancialElementFormData) => {
-		if (initialData) {
-			try {
-				const financialElement = await putFinancialElement(initialData?.id, data);
-
+		try {
+			if (initialData) {
+				const result = await updateMutation.mutateAsync({ id: initialData.id, data: data as FinancialElement });
 				onClose();
-				onSave(financialElement);
-
-				await revalidateFinancialElements();
-
-				toast({
-					// title: `Categoría ${editingCategory?.id ? "editada" : "creada"}!`,
-					title: `editado`,
-					description: `se editó`,
-					variant: "success",
-				})
-
-			} catch (error) {
-				console.log('error ', error);
-				toast({
-					// title: `Categoría ${editingCategory?.id ? "editada" : "creada"}!`,
-					title: `error`,
-					description: `se creó`,
-					variant: "destructive",
-				})
-				return error;
-			}
-		} else {
-			try {
-				const financialElement = await postFinancialElement(data);
-
+				onSave(result);
+				toast({ title: 'Elemento actualizado', variant: 'success' });
+			} else {
+				const result = await createMutation.mutateAsync(data);
+				reset({ name: '', type: FinancialElementType.ASSET });
 				onClose();
-				onSave(financialElement);
-
-				await revalidateFinancialElements();
-
-				toast({
-					// title: `Categoría ${editingCategory?.id ? "editada" : "creada"}!`,
-					title: `creoado`,
-					description: `se creó`,
-					variant: "success",
-				})
-
-			} catch (error) {
-				console.log('error ', error);
-				toast({
-					// title: `Categoría ${editingCategory?.id ? "editada" : "creada"}!`,
-					title: `error`,
-					description: `se creó`,
-					variant: "destructive",
-				})
-				return error;
-			} finally {
-				reset({
-					name: '',
-					type: FinancialElementType.ASSET,
-				});
+				onSave(result);
+				toast({ title: 'Elemento creado', variant: 'success' });
 			}
+		} catch (error) {
+			toast({ title: 'Error', description: 'No se pudo guardar el elemento', variant: 'destructive' });
 		}
 	}
 
@@ -122,6 +83,7 @@ export default function AssetFormModal({ isOpen, onClose, onSave, initialData }:
 								{...register('name')}
 								id="name"
 								className="col-span-3" />
+						{errors.name && <p className="col-span-4 text-red-500 text-sm text-right">{errors.name.message}</p>}
 						</div>
 						<div className="grid grid-cols-4 items-center gap-4">
 							<Label htmlFor="type" className="text-right">
@@ -174,9 +136,8 @@ export default function AssetFormModal({ isOpen, onClose, onSave, initialData }:
 							Cancelar
 						</Button>
 						{/* <Button onClick={handleSubmit}>Guardar</Button> */}
-						<Button type="submit" >
-							{/* {isSubmitting ? 'Guardando...' : editingCategory ? 'Actualizar' : 'Crear'} */}
-							Guardar
+						<Button type="submit" disabled={isPending}>
+							{isPending ? 'Guardando...' : initialData ? 'Actualizar' : 'Crear'}
 						</Button>
 					</DialogFooter>
 				</form>

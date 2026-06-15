@@ -25,7 +25,7 @@ export async function getBudgetByUserAndPeriod(
 ): Promise<Array<CategoryBudget>> {
 	const session = await getSession();
 
-	const { start, end } = getCurrentMonthRange();
+	const { start, end } = getCurrentMonthRange(); // on default use current month
 	const result = getDateStringsForFilter(start, end);
 
 	const params = new URLSearchParams();
@@ -72,8 +72,4 @@ export async function putCategory(
 		...data,
 		userId: session.user.id,
 	});
-}
-
-export async function revalidateCategoriesBudget() {
-	revalidateTag('category-budget');
 }

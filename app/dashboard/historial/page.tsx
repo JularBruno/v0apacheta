@@ -14,11 +14,11 @@ import {
 	Trash
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Movements } from "@/lib/schemas/movement";
 import { TxType } from "@/lib/schemas/definitions";
 import { Category, CategoryBudget } from "@/lib/schemas/category";
-import { getBudgetByUserAndPeriod, revalidateCategoriesBudget } from "@/lib/actions/categories";
+import { getBudgetByUserAndPeriod } from "@/lib/actions/categories";
 import { deleteMovement, getMovementsByUserAndFilter, postMovement } from "@/lib/actions/movements";
 import { quickFilters, formatNumberToInput, formatToBalance } from "@/lib/quick-spend-constants";
 import { formatDate, getDateStringsForFilter, formatDateNoYear, getLastNDays, getLastNMonths, getMonthRange, getMonthName } from "@/lib/dateUtils";
@@ -46,9 +46,14 @@ import {
 	ChartCardSkeleton
 } from "@/components/history/skeletons"
 
+import { useMovements } from "@/lib/hooks/use-movements"
+import { useBudget } from "@/lib/hooks/use-budget"
+import { useDeleteMovement } from "@/lib/hooks/use-delete-movement"
+
 const allFilteredId = "all"; // this the id for when selecting all on a picker as a constant
 
 export default function HistorialPage() {
+	const { mutateAsync: deleteMutation } = useDeleteMovement();
 
 	const [searchTerm, setSearchTerm] = useState("")
 	const [selectedCategory, setSelectedCategory] = useState("all")
@@ -56,16 +61,8 @@ export default function HistorialPage() {
 
 	const [showFilters, setShowFilters] = useState(false)
 
-	// literal filters for api, these are here bacause of chart requiring this data
-	let filters: any = {
-	};
-
-	const { start, end } = getLastNMonths(1);
-	const result = getDateStringsForFilter(start, end);
-	filters.startDate = result.startDate;
-	filters.endDate = result.endDate;
-
-	const [selectedDateFilter, setSelectedDateFilter] = useState("month")
+	const now = new Date();
+	const [selectedDateFilter, setSelectedDateFilter] = useState(`month-${now.getMonth()}-${now.getFullYear()}`)
 
 	/**
 	 * FILTERS
@@ -107,16 +104,6 @@ export default function HistorialPage() {
 
 			case quickFilters[3].id: {// last 3 months (90 days ago to now)
 
-				const { start, end } = getLastNMonths(6);
-				const result = getDateStringsForFilter(start, end);
-				filters.startDate = result.startDate;
-				filters.endDate = result.endDate;
-
-				break;
-			}
-
-			case quickFilters[3].id: {// last 6 months TEST
-
 				const { start, end } = getLastNMonths(3);
 				const result = getDateStringsForFilter(start, end);
 				filters.startDate = result.startDate;
@@ -125,8 +112,18 @@ export default function HistorialPage() {
 				break;
 			}
 
-			case quickFilters[4].id: // TEST: EVERY DATES
-				// TODO REMOVE THIS
+			case quickFilters[4].id: {// last 6 months TEST
+
+				const { start, end } = getLastNMonths(6);
+				const result = getDateStringsForFilter(start, end);
+				filters.startDate = result.startDate;
+				filters.endDate = result.endDate;
+
+				break;
+			}
+
+			// TODO REMOVE THIS
+			case quickFilters[5].id: // TEST: EVERY DATES
 				filters.startDate = null;
 				filters.endDate = null;
 
@@ -159,20 +156,49 @@ export default function HistorialPage() {
 	 * 
 	 */
 
-	const { error, cats, setCats, loadingCats, loadingBudgetedCats } = useDashboard();
+	const { error, cats, loadingCats } = useDashboard();
 
-	const [budgetedCats, setBudgetedCats] = useState<CategoryBudget[]>([])
+	// const [budgetedCats, setBudgetedCats] = useState<CategoryBudget[]>([])
 
-	const getBudget = async () => {
-		let filters = getFiltersForDateSelection();
-		let budgetedCats = await getBudgetByUserAndPeriod(filters.startDate, filters.endDate);
-		setBudgetedCats(budgetedCats);
-	}
+	const { startDate, endDate } = useMemo(() => getFiltersForDateSelection(), [selectedDateFilter]);
+	const { data: budgetedCats = [], isLoading: budgetLoading } = useBudget(startDate, endDate);
 
-	useEffect(() => {
+	const isSpecificMonth = selectedDateFilter.startsWith("month-");
 
-		getBudget();
+	const periodLabel = useMemo(() => {
+		if (isSpecificMonth) {
+			const [, monthStr, yearStr] = selectedDateFilter.split("-");
+			return new Date(parseInt(yearStr), parseInt(monthStr), 1)
+				.toLocaleDateString("es-AR", { month: "long", year: "numeric" });
+		}
+		return quickFilters.find(f => f.id === selectedDateFilter)?.label ?? "";
+	}, [selectedDateFilter, isSpecificMonth]);
+
+	const budgetMultiplier = useMemo(() => {
+		switch (selectedDateFilter) {
+			case "today": return 1 / 30;
+			case "week": return 1 / 4;
+			case "3months": return 3;
+			case "6months": return 6;
+			default: return 1; // "month" rolling 30d or specific month-X-YYYY
+		}
 	}, [selectedDateFilter]);
+
+	const scaledBudgetCats = useMemo(() =>
+		budgetedCats.map(cat => ({ ...cat, budget: cat.budget * budgetMultiplier })),
+		[budgetedCats, budgetMultiplier]
+	);
+
+	// const getBudget = async () => {
+	// 	let filters = getFiltersForDateSelection();
+	// 	let budgetedCats = await getBudgetByUserAndPeriod(filters.startDate, filters.endDate);
+	// 	setBudgetedCats(budgetedCats);
+	// }
+
+	// useEffect(() => {
+
+	// 	getBudget();
+	// }, [selectedDateFilter]);
 
 	/**
 	 * 
@@ -195,143 +221,41 @@ export default function HistorialPage() {
 		selectedType !== "all" ? selectedType : "",
 	].filter(Boolean).length
 
-	// ALl movements from api. Filtered by default one month ago 
-	const [movements, setMovements] = useState<Movements[]>([]);
-	// All movements filtered in UI for selectedCategory, selectedType, and searchTerm
-	const [filteredMovements, setFilteredMovements] = useState<Movements[]>([])
+	const { data: rawMovements = [], isLoading: loadingMovements } = useMovements({ startDate, endDate });
 
-	// random data thats cool set on MovementsFetch
-	const [movementsTotal, setMovementsTotal] = useState<number>(0);
-	const [movementsTotalIncome, setMovementsTotalIncome] = useState<number>(0);
-	const [movementsAverage, setMovementsAverage] = useState<number>(0);
+	const movements = useMemo(() =>
+		[...rawMovements].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+		[rawMovements]
+	);
 
-	// refresh trigger for fetching movements on deletion on when refresh required
-	const [refreshTrigger, setRefreshTrigger] = useState(0);
+	const filteredMovements = useMemo(() => {
+		let filtered = movements;
+		if (selectedCategory !== allFilteredId) {
+			filtered = filtered.filter((m) => m.categoryId === selectedCategory);
+		} else if (selectedType !== allFilteredId) {
+			filtered = filtered.filter((m) => m.type === selectedType);
+		}
+		if (searchTerm) {
+			filtered = filtered.filter((m) => m.tag.name.toLowerCase().includes(searchTerm.toLowerCase()));
+		}
+		return filtered;
+	}, [movements, selectedCategory, selectedType, searchTerm]);
 
-	// Loading movements for spinner
-	const [loadingMovements, setLoadingMovements] = useState(true);
+	const movementsTotal = useMemo(() => filteredMovements.reduce((sum, item) => item.type === TxType.EXPENSE ? sum + item.amount : sum, 0), [filteredMovements]);
+	const movementsTotalIncome = useMemo(() => filteredMovements.reduce((sum, item) => item.type === TxType.INCOME ? sum + item.amount : sum, 0), [filteredMovements]);
+	const movementsAverage = useMemo(() => movementsTotal / (filteredMovements.length || 1), [movementsTotal, filteredMovements.length]);
 
 	const deleteSelectedMovement = async (movement: Movements) => {
-		setLoadingMovements(true);
-		const ok = confirm(
-			`¿Seguro que querés borrar el movimiento "${movement.tag.name}"?`
-		);
+		const ok = confirm(`¿Seguro que querés borrar el movimiento "${movement.tag.name}"?`);
+		if (!ok) return;
 
-		if (!ok) { setLoadingMovements(false); return; }
-
-		await deleteMovement(movement.id);
-
+		await deleteMutation({ id: movement.id, type: movement.type, amount: movement.amount });
 		toast({
 			variant: "success",
 			title: "Movimiento borrado!",
 			description: `Se eliminó el movimiento ${movement.tag.name} y se actualizó tu balance`,
 		});
-
-		setRefreshTrigger(prev => prev + 1);
-		await revalidateCategoriesBudget();
-		await getBudget();
-		setLoadingMovements(false);
-
 	};
-
-	/**
-	 * API Fetch and api filters
-	 */
-
-	const fetchData = async () => {
-		try {
-
-			// get movement with filters for API
-			const movements = await getMovementsByUserAndFilter(getFiltersForDateSelection())
-
-			// sort by date because these come unsorted from the backend
-			let sortedMovements = movements.sort(
-				(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-			);
-
-			let calculateMovementsTotal = movements.reduce((sum, item) => {
-				if (item.type === TxType.EXPENSE) {
-					return sum + item.amount;
-				}
-				return sum;
-			}, 0);
-
-			let calculateMovementsTotalIncome = movements.reduce((sum, item) => {
-				if (item.type === TxType.INCOME) {
-					return sum + item.amount;
-				}
-				return sum;
-			}, 0);
-
-			// setMovements(sortedMovements);
-			// setFilteredMovements(sortedMovements);
-			setMovementsTotal(calculateMovementsTotal);
-			setMovementsTotalIncome(calculateMovementsTotalIncome);
-			setMovementsAverage(calculateMovementsTotal / movements.length);
-
-			return sortedMovements;
-		} catch (error) {
-			console.error('Failed to fetch movements:', error);
-		}
-	};
-
-	useEffect(() => {
-		const load = async () => {
-			const movements: any = await fetchData()
-			setMovements(movements)
-		}
-		load();
-	}, [selectedDateFilter, refreshTrigger])
-
-
-	/**
-	 * UI FILTERS for getting movements called by useeffect when filtering 
-	 */
-	useEffect(() => {
-		// remmember this is called when movements update
-		// setLoadingMovements(true);
-
-		let filtered = movements;
-
-		// Apply category filter
-		if (selectedCategory !== allFilteredId) {
-			filtered = movements.filter((m) => m.categoryId === selectedCategory);
-		}
-		// Apply type filter (only if no category is selected)
-		else if (selectedType !== allFilteredId) {
-			filtered = movements.filter((m) => m.type === selectedType);
-		}
-
-		// search term input
-		if (searchTerm) {
-			filtered = filtered.filter((transaction) => transaction.tag.name.toLowerCase().includes(searchTerm.toLowerCase()))
-		}
-
-		let calculateMovementsTotal = filtered.reduce((sum, item) => {
-			if (item.type === TxType.EXPENSE) {
-				return sum + item.amount;
-			}
-			return sum;
-		}, 0);
-
-		let calculateMovementsTotalIncome = filtered.reduce((sum, item) => {
-			if (item.type === TxType.INCOME) {
-				return sum + item.amount;
-			}
-			return sum;
-		}, 0);
-
-		setMovementsTotal(calculateMovementsTotal);
-		setMovementsTotalIncome(calculateMovementsTotalIncome);
-		setMovementsAverage(calculateMovementsTotal / filtered.length);
-
-		// console.log("setFilteredMovements ", filtered);
-		// console.log("setFilteredMovements ", filtered.find(a => a.category === null));
-
-		setFilteredMovements(filtered);
-
-		setLoadingMovements(false);
-	}, [movements, selectedCategory, selectedType, searchTerm]);
 
 	// selectedCategory selectedType Reset the opposite filter when one is changed for common sense usage, attempted to do in if but required useeffect
 	useEffect(() => {
@@ -355,22 +279,25 @@ export default function HistorialPage() {
 
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-				{/* Category Budget Breakdown */}
-				{loadingBudgetedCats ? (
-					<CategoryBudgetListSkeleton itemCount={5} />
-				) : (
-					<CategoryBudgetList budgetedCategories={budgetedCats} />
+				{/* Category Budget Breakdown - only for specific month selection */}
+				{isSpecificMonth && (
+					budgetLoading ? (
+						<CategoryBudgetListSkeleton itemCount={5} />
+					) : (
+						<CategoryBudgetList budgetedCategories={scaledBudgetCats} label={periodLabel} />
+					)
 				)}
 
-				{/* Donut Chart */}
-				{loadingMovements ? (
-					<ChartCardSkeleton titleWidth="max-w-48">
-						<DonutChartSkeleton legendItems={4} />
-					</ChartCardSkeleton>
-				) : (
-					<CategoryDonutChart budgetedCategories={budgetedCats} />
-
-				)}
+				{/* Donut Chart - full width when budget list is hidden */}
+				<div className={!isSpecificMonth ? "lg:col-span-2" : ""}>
+					{budgetLoading ? (
+						<ChartCardSkeleton titleWidth="max-w-48">
+							<DonutChartSkeleton legendItems={4} />
+						</ChartCardSkeleton>
+					) : (
+						<CategoryDonutChart budgetedCategories={scaledBudgetCats} label={periodLabel} />
+					)}
+				</div>
 
 				{/* 
 				* Movements List 

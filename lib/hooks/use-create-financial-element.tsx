@@ -9,7 +9,7 @@ export function useCreateFinancialElement() {
 		mutationFn: (data: { name: string; type: FinancialElementType }) =>
 			postFinancialElement(data),
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['financial-elements'] });
+			queryClient.invalidateQueries({ queryKey: ['financial-elements-patrimony'] });
 		},
 		onError: (error) => {
 			console.error('Create financial element failed:', error);

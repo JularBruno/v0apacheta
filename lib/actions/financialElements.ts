@@ -7,7 +7,6 @@ import {
 	postMethod,
 	putMethod,
 	deleteMethod,
-	getMethodWithoutSession,
 } from './utils';
 import { FinancialElementType } from '../schemas/definitions';
 
@@ -15,7 +14,7 @@ const url = 'financial-element';
 
 export async function getFinancialElementsByUser(): Promise<FinancialElementsAndNetWorth> {
 	const session = await getSession();
-	return await getMethodWithoutSession<FinancialElementsAndNetWorth>('financial-element/patrimony', session);
+	return await getMethod<FinancialElementsAndNetWorth>('financial-element/patrimony', session!.user.id);
 }
 
 export async function getFinancialElementById(id: string): Promise<FinancialElements> {

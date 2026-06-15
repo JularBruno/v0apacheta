@@ -9,9 +9,8 @@ import { CategoryBudget } from "@/lib/schemas/category"
 import { availableColors, formatToBalance } from "@/lib/quick-spend-constants"
 import { getMonthName } from "@/lib/dateUtils"
 
-export default function CategoryBudgetList({ budgetedCategories }: { budgetedCategories: CategoryBudget[] }) {
+export default function CategoryBudgetList({ budgetedCategories, label }: { budgetedCategories: CategoryBudget[], label?: string }) {
 	const [expanded, setExpanded] = useState(false)
-	const [filteredDate, setFilteredDate] = useState('')
 	const VISIBLE_COUNT = 5
 
 	// const expenses = budgetedCategories.filter((t) => t.type === TxType.EXPENSE)
@@ -62,9 +61,16 @@ export default function CategoryBudgetList({ budgetedCategories }: { budgetedCat
 	return (
 		<Card>
 			<CardHeader className="pb-3">
-				<div className="flex items-center justify-between">
-					<CardTitle className="text-base">Presupuesto por Categoria {filteredDate}</CardTitle>
-					<div className="text-right">
+				<div className="flex items-start justify-between gap-3">
+					<div>
+						<CardTitle className="text-base">Presupuesto por Categoria</CardTitle>
+						{label && <p className="text-xs text-gray-500 capitalize mt-0.5">{label}</p>}
+						<div className="sm:hidden mt-1">
+							<p className="text-lg font-bold tabular-nums">{formatToBalance(totalSpent)}</p>
+							<p className="text-xs text-muted-foreground">de {formatToBalance(totalBudget)}</p>
+						</div>
+					</div>
+					<div className="text-right hidden sm:block">
 						<p className="text-lg font-bold tabular-nums">{formatToBalance(totalSpent)}</p>
 						<p className="text-xs text-muted-foreground">de {formatToBalance(totalBudget)}</p>
 					</div>

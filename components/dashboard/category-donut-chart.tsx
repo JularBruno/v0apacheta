@@ -9,7 +9,7 @@ import { availableColors, formatToBalance } from "@/lib/quick-spend-constants"
 import { Button } from "../ui/button"
 import { ChevronDown, ChevronUp } from "lucide-react"
 
-export default function CategoryDonutChart({ budgetedCategories }: { budgetedCategories: CategoryBudget[] }) {
+export default function CategoryDonutChart({ budgetedCategories, label }: { budgetedCategories: CategoryBudget[], label?: string }) {
 	const [hoveredCategory, setHoveredCategory] = useState<string | null>(null)
 	const [viewType, setViewType] = useState<TxType.EXPENSE | TxType.INCOME>(TxType.EXPENSE)
 
@@ -60,11 +60,14 @@ export default function CategoryDonutChart({ budgetedCategories }: { budgetedCat
 	return (
 		<Card>
 			<CardHeader className="pb-3">
-				<div className="flex items-center justify-between">
-					<CardTitle className="text-base">
-						{viewType === TxType.EXPENSE ? "Gastos" : "Ingresos"} por Categoria
-					</CardTitle>
-					<div className="flex rounded-lg border overflow-hidden">
+				<div className="flex items-start justify-between gap-3">
+					<div>
+						<CardTitle className="text-base">
+							{viewType === TxType.EXPENSE ? "Gastos" : "Ingresos"} por Categoria
+						</CardTitle>
+						{label && <p className="text-xs text-gray-500 capitalize mt-0.5">{label}</p>}
+					</div>
+					<div className="flex rounded-lg border overflow-hidden shrink-0">
 						<button
 							type="button"
 							onClick={() => setViewType(TxType.EXPENSE)}

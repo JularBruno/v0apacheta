@@ -18,6 +18,8 @@ export function useDeleteMovement() {
 			});
 			queryClient.invalidateQueries({ queryKey: ['user-movements'] });
 			queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+			queryClient.invalidateQueries({ queryKey: ['budgeted-categories'] });
+
 		},
 		onError: (error) => {
 			console.error('Delete movement failed:', error);

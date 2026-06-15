@@ -1,23 +1,28 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect } from "react"
 import { useRouter, useParams, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Edit, Trash2, Filter, Plus } from "lucide-react"
+import { ArrowLeft, Edit, Trash2, Filter, Plus, MoreHorizontal, Trash } from "lucide-react"
 import { cn } from "@/lib/utils"
 import AssetFormModal from "@/components/assets/asset-form-modal"
 import QuickSpendCard from "@/components/movements/quick-spend-card"
 import EditTransactionModal from "@/components/assets/edit-transaction-modal"
 import DeleteConfirmationModal from "@/components/assets/delete-confirmation-modal"
 import { FinancialElementType, TxType } from "@/lib/schemas/definitions";
-import { deleteFinancialElementById, getFinancialElementById, revalidateFinancialElements } from "@/lib/actions/financialElements"
+import { useFinancialElementById } from "@/lib/hooks/use-financial-element-by-id"
+import { useDeleteFinancialElement } from "@/lib/hooks/use-delete-financial-element"
+import { useDeletePatrimonyMovement } from "@/lib/hooks/use-delete-financial-element-movement"
 import { FinancialElement, FinancialElements } from "@/lib/schemas/financialElement"
 import { toast } from "@/hooks/use-toast"
-import { Movement, Movements } from "@/lib/schemas/movement"
+import { Movements } from "@/lib/schemas/movement"
+import { useQueryClient } from "@tanstack/react-query"
 import IconComponent from "@/components/movements/icon-component";
 import { formatToBalance } from "@/lib/quick-spend-constants"
+import { formatDate } from "@/lib/dateUtils"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import Loading from "./loading"
 
 
@@ -29,19 +34,20 @@ export default function AssetDetailPage() {
 
 	const actionParam = searchParams.get("action") as TxType.INCOME | TxType.EXPENSE | null
 
-	const [asset, setAsset] = useState<FinancialElements | undefined>()
-	const [notFound, setNotFound] = useState<boolean>(false)
+	const queryClient = useQueryClient()
+
+	const { data: asset, isLoading, isError } = useFinancialElementById(assetId)
+	const { mutateAsync: deleteMutation } = useDeleteFinancialElement()
+	const { mutateAsync: deleteMovementMutation } = useDeletePatrimonyMovement(assetId)
+
 	const [showQuickSpend, setShowQuickSpend] = useState(false)
-	const [isLoading, setIsLoading] = useState(true)
-	// const [filterType, setFilterType] = useState<"all" | "gasto" | "ingreso">("all")
-	// const [transactions, setTransactions] = useState<Transaction[]>([])
-
-	// const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
-	// const [deletingTransaction, setDeletingTransaction] = useState<Transaction | null>(null)
-
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-	const [isEditTransactionModalOpen, setIsEditTransactionModalOpen] = useState(false)
-	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+
+	const handleDeleteMovement = async (movement: Movements) => {
+		if (!confirm(`¿Seguro que querés borrar "${movement.description}"?`)) return;
+		await deleteMovementMutation({ id: movement.id, type: movement.type, amount: movement.amount });
+		toast({ variant: 'success', title: 'Movimiento borrado' });
+	}
 
 	// useEffect(() => {
 	// 	setIsLoading(true)
@@ -100,51 +106,25 @@ export default function AssetDetailPage() {
 	// 	// setIsDeleteModalOpen(true)
 	// }
 
-	const handleConfirmDelete = () => {
-		// if (deletingTransaction) {
-		// 	setTransactions((prev) => prev.filter((t) => t.id !== deletingTransaction.id))
-		// 	setDeletingTransaction(null)
-		// }
-	}
-
-	const handleEditAsset = () => {
-		setIsEditModalOpen(true)
-	}
-
 	const handleDeleteAsset = async () => {
 		if (!confirm("¿Estás seguro de que quieres eliminar este elemento financiero? Esta acción no se puede deshacer.")) return;
-		console.log('about to delete asset id ', assetId);
-		setIsLoading(true);
-
 		try {
-			await deleteFinancialElementById(assetId);
-			await revalidateFinancialElements();
+			await deleteMutation(assetId);
 		} catch (error) {
 			console.error(error);
 		} finally {
 			router.push("/dashboard/patrimonio");
-			// setIsLoading(false);
 		}
 	}
 
-	const handleSaveAsset = (item: any) => {
-		setIsLoading(true);
-		if (asset && item.id === asset.id) {
-			setAsset({ ...asset, name: item.name, type: item.type, currentAmount: asset.currentAmount })
-		}
-		setIsEditModalOpen(false)
-		setIsLoading(false);
-		toast({
-			variant: "success",
-			title: "Se actualizó tu patrimonio!",
-			description: `Se realizó tu actualización de ${item.amount}`,
-		});
+	const handleSaveAsset = () => {
+		setIsEditModalOpen(false);
 	}
 
-	const handleQuickSpend = (
-		data: any // Movement
-	) => {
-		asset?.movements.push(data);
+	const handleQuickSpend = (data: any) => {
+		queryClient.invalidateQueries({ queryKey: ['financial-element', assetId] });
+
+		queryClient.invalidateQueries({ queryKey: ['financial-elements-patrimony'] });
 
 		toast({
 			variant: "success",
@@ -153,57 +133,17 @@ export default function AssetDetailPage() {
 		});
 	}
 
-	const handleShowQuickSpend = () => {
-		setShowQuickSpend(true)
-	}
-
-	const handleHideQuickSpend = () => {
-		// setShowQuickSpend(false)
-		// Remove action parameter from URL if present
-		// if (actionParam) {
-		// 	router.replace(`/dashboard/patrimonio/${assetId}`)
-		// }
-	}
-
-	const fetchFinancialElement = async () => {
-		// Show QuickSpendCard if action parameter is present
+	useEffect(() => {
 		if (actionParam === TxType.INCOME || actionParam === TxType.EXPENSE) {
 			setShowQuickSpend(true)
 		}
-		try {
-			const financialElement = await getFinancialElementById(assetId);
-
-			await new Promise(f => setTimeout(f, 1000));
-
-			if (!financialElement) {
-				// setAsset(null);
-				setNotFound(true);
-			} else {
-				setNotFound(false);
-				setAsset(financialElement);
-			}
-		}
-		catch (error: any) {
-			// setError(error);
-			setNotFound(true);
-			console.log(error);
-
-			return;
-		}
-		finally {
-			setIsLoading(false);
-		}
-	}
-
-	useEffect(() => {
-		fetchFinancialElement();
-	}, []);
+	}, [actionParam]);
 
 	if (isLoading) return (
 		<Loading />
 	);
 
-	if (notFound) return (
+	if (isError || !asset) return (
 		<div className="flex items-center justify-center min-h-[400px]">
 			<div className="text-center">
 				<p className="text-gray-500 mb-4">Elemento financiero no encontrado</p>
@@ -212,9 +152,8 @@ export default function AssetDetailPage() {
 		</div>
 	);
 
-	const isAsset = asset?.type === "asset"
-	const valueColorClass = isAsset ? "text-green-600" : "text-red-600"
-	const valuePrefix = isAsset ? "$" : "-$"
+	const currentAmount = asset?.currentAmount ?? 0
+	const valueColorClass = currentAmount >= 0 ? "text-green-600" : "text-red-600"
 
 	return (
 		<div className="space-y-6">
@@ -228,7 +167,7 @@ export default function AssetDetailPage() {
 					<p className="text-sm text-gray-500 capitalize">{asset?.type === FinancialElementType.ASSET ? "Activo" : "Pasivo"}</p>
 				</div>
 				<div className="flex gap-2">
-					<Button variant="outline" size="icon" onClick={handleEditAsset}>
+					<Button variant="outline" size="icon" onClick={() => setIsEditModalOpen(true)}>
 						<Edit className="w-4 h-4" />
 					</Button>
 					<Button variant="outline" size="icon" onClick={handleDeleteAsset}>
@@ -243,8 +182,7 @@ export default function AssetDetailPage() {
 					<div className="text-center">
 						<p className="text-sm text-gray-500 mb-2">Valor Actual</p>
 						<p className={cn("text-4xl font-bold", valueColorClass)}>
-							{valuePrefix}
-							{asset?.currentAmount}
+							{formatToBalance(currentAmount)}
 						</p>
 					</div>
 				</CardContent>
@@ -256,13 +194,13 @@ export default function AssetDetailPage() {
 					onAdd={handleQuickSpend}
 					initialType={actionParam || undefined}
 					financialElementId={assetId}
-					onCancel={handleHideQuickSpend}
+					onCancel={() => setShowQuickSpend(false)}
 				/>
 			) : (
 				<Card>
 					<CardContent className="p-4">
 						<Button
-							onClick={handleShowQuickSpend}
+							onClick={() => setShowQuickSpend(true)}
 							className="w-full flex items-center gap-2 bg-transparent"
 							variant="outline"
 						>
@@ -339,65 +277,56 @@ export default function AssetDetailPage() {
 									<p>No hay transacciones para mostrar.</p>
 								</div>
 							) : (
-								<div className="space-y-3">
-									{asset?.movements.map((movement) => {
-										// const IconComponent = categoryIcons[transaction.category as keyof typeof categoryIcons] || Filter
-										// const isIncome = transaction.type === "ingreso"
-										return (
-											<div
-												key={movement.id}
-												className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-100"
-											>
-												<div className="flex items-center space-x-3 min-w-0 flex-1">
+								<div className="space-y-2">
+									{asset?.movements.map((movement) => (
+										<Card key={movement.id} className="p-3 hover:shadow-sm transition-all md:p-4">
+											<div className="flex flex-col space-y-3">
+												{/* Top row: Category badge + Dropdown */}
+												<div className="flex items-center justify-between">
+													<span className="bg-gray-100 px-2.5 py-1 rounded-full text-xs font-medium text-gray-700">
+														{movement.category?.name ?? "Sin categoría"}
+													</span>
+													<DropdownMenu>
+														<DropdownMenuTrigger asChild>
+															<button className="p-1 hover:bg-gray-100 rounded">
+																<MoreHorizontal className="w-4 h-4 text-gray-500" />
+															</button>
+														</DropdownMenuTrigger>
+														<DropdownMenuContent align="end">
+															<DropdownMenuItem className="text-red-600" onClick={() => handleDeleteMovement(movement)}>
+																<Trash className="w-4 h-4 mr-2" />
+																Borrar
+															</DropdownMenuItem>
+														</DropdownMenuContent>
+													</DropdownMenu>
+												</div>
+
+												{/* Middle: Icon + Description */}
+												<div className="flex items-center space-x-3">
 													<div
 														className={cn(
-															"w-10 h-10 rounded-lg flex items-center justify-center shrink-0",
-															movement.type === TxType.INCOME ? "bg-green-500" : "bg-gray-400",
+															"w-10 h-10 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0",
+															movement.category?.color ?? (movement.type === TxType.INCOME ? "bg-green-500" : "bg-gray-400"),
 														)}
 													>
 														<IconComponent icon={movement.category?.icon} className="w-5 h-5 text-white" />
 													</div>
-													<div className="min-w-0 flex-1">
-														<p className="font-medium text-sm text-gray-900 truncate">{movement.description}</p>
-														<p className="text-xs text-gray-500">
-															{/* {formatDate(transaction.date)} {transaction.time} */}
-														</p>
-														<span
-															className={cn(
-																"lg:hidden font-semibold text-sm",
-																movement.type === TxType.INCOME ? "text-emerald-600" : "text-red-600",
-															)}
-														>
-															{/* <span className={cn("lg:hidden font-semibold text-sm", movement.type === TxType.INCOME ? "text-green-600" : "text-gray-900")}> */}
-															{movement.type === TxType.INCOME ? "+" : "-"}${movement.amount}
-															{formatToBalance(movement.amount)}
-														</span>
-													</div>
+													<p className="font-semibold text-sm text-gray-900 line-clamp-2 flex-1">{movement.description}</p>
 												</div>
-												<div className="flex items-center gap-2 shrink-0">
-													<span className={cn("hidden lg:block font-semibold text-sm", movement.type === TxType.INCOME ? "text-green-600" : "text-gray-900")}>
-														{movement.type === TxType.INCOME ? "+" : "-"}${movement.amount.toFixed(2)}
+
+												{/* Bottom row: Date + Amount */}
+												<div className="flex items-center justify-between">
+													<span className="text-xs text-gray-500">
+														{formatDate(movement.createdAt)}
 													</span>
-													<Button
-														variant="ghost"
-														size="icon"
-														// onClick={() => handleEditTransaction(transaction)}
-														className="w-8 h-8"
-													>
-														<Edit className="w-4 h-4" />
-													</Button>
-													<Button
-														variant="ghost"
-														size="icon"
-														// onClick={() => handleDeleteTransaction(transaction)}
-														className="w-8 h-8"
-													>
-														<Trash2 className="w-4 h-4 text-red-500" />
-													</Button>
+													<span className={movement.type === TxType.INCOME ? "font-bold text-lg text-green-600" : "font-bold text-lg text-gray-900"}>
+														{movement.type === TxType.INCOME ? "+" : "-"}
+														{formatToBalance(movement.amount)}
+													</span>
 												</div>
 											</div>
-										)
-									})}
+										</Card>
+									))}
 								</div>
 							)}
 				</CardContent>

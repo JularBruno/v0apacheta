@@ -1,0 +1,53 @@
+
+Wide panoramic hand-drawn map in the style of The Binding of Isaac Afterbirth+. 
+Landscape orientation, 3:1 ratio. Aged parchment texture background, warm off-white, 
+worn and slightly yellowed.
+
+LANDSCAPE: The Sierras Chicas of Córdoba, Argentina. Rocky granite hill terrain — 
+rounded exposed rock outcrops, stone-covered slopes, rough granite boulders drawn 
+in loose ink strokes. The terrain is not flat: it rises steadily from left to right. 
+No dramatic peaks, no snow, no cacti. The hills are gentle but the ground is visibly 
+rocky and textured. A sketched river (Río Suquía) with rounded river stones on its 
+banks crosses the lower-left area. Native low shrubs (espinillo, molle) as rough 
+scratchy ink marks between rocks. The overall feel: rocky sierra foothills, dry 
+granite hillside, the kind of terrain where you'd actually find stone cairns on a 
+hiking trail near Córdoba.
+
+PATH: A single winding dotted/dashed line in dark red (#8B2E2E) connects all 27 
+nodes from left to right, starting at flat ground near the river, rising through 
+rocky foothills, ending at the top of a rocky granite hilltop. The line has 
+hand-drawn imperfection and natural curves. It may double back slightly or fork 
+briefly in the middle sections before rejoining.
+
+NODES — exactly 27 total, all represented ONLY as stone cairns (apachetas). 
+No other symbols. No coins, no skulls, no chests, no question marks. Only stone cairns.
+Three sizes based on importance:
+
+  LARGE CAIRNS — 3 nodes (chapter milestones, placed at the end of each major section):
+  Tall impressive stone pile, 6-8 rounded rocks stacked, clearly the biggest markers 
+  on the map. Placed at roughly: 1/5, 2/5, and 4/5 of the path length.
+  
+  MEDIUM CAIRNS — 6 nodes (major milestones):
+  Medium stone pile, 4-5 rocks stacked, solid and prominent. Distributed along 
+  the path between the large cairns.
+  
+  SMALL CAIRNS — 18 nodes (minor steps):
+  Small pile of 2-3 rocks or a single marked stone. The most numerous nodes, 
+  clustered between major and chapter cairns.
+
+All cairns are drawn in the same scratchy hand-drawn ink style. The rocks are rounded, 
+the kind found in Córdoba sierra riverbeds and hillsides — granite river stones.
+
+NODE STATES (shown across the map to imply a journey in progress):
+- First 4-5 nodes from the left: filled solid dark ink (completed — stones clearly placed)
+- Current/active node: same cairn but with small radiating sketch lines around it, 
+  slightly bolder ink
+- All remaining nodes to the right: faded, lighter ink, ghosted appearance
+
+COLOR PALETTE: Monochromatic warm sepia and gray. Path line in muted dark red. 
+Completed cairns in warm dark brown ink. Active cairn slightly bolder. 
+Locked/future cairns in light gray. Parchment background in aged off-white.
+
+STYLE: The Binding of Isaac world map screen. Hand-drawn rough ink sketch. 
+No clean lines. No digital gradients. Top-down perspective, slightly tilted. 
+Parchment background only — no UI frames, no text, no labels.

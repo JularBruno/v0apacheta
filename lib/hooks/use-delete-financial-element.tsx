@@ -7,7 +7,7 @@ export function useDeleteFinancialElement() {
 	return useMutation({
 		mutationFn: (id: string) => deleteFinancialElementById(id),
 		onSuccess: (_, id) => {
-			queryClient.invalidateQueries({ queryKey: ['financial-elements'] });
+			queryClient.invalidateQueries({ queryKey: ['financial-elements-patrimony'] });
 			queryClient.removeQueries({ queryKey: ['financial-element', id] });
 		},
 		onError: (error) => {

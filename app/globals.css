@@ -4,87 +4,98 @@
 
 @layer base {
 	:root {
-		--background: 140 10% 97%;
-		--foreground: 28 34% 10%;
+		/* palette: Coffee Bean / Muted Teal (primary) / Burnt Peach (expenses) / Berry Crush (destructive) / Ash Grey */
+		--background: 178 15% 97%;
+		--foreground: 337 32% 8%;
+		/* #1b0e13 coffee bean */
 		--card: 0 0% 100%;
-		--card-foreground: 28 34% 10%;
+		--card-foreground: 337 32% 8%;
 		--popover: 0 0% 100%;
-		--popover-foreground: 28 34% 10%;
-		--primary: 137 16% 55%;
-		/* #7a9e84 lichen sage */
-		--primary-foreground: 0 0% 100%;
-		--secondary: 140 12% 92%;
-		--secondary-foreground: 142 21% 25%;
-		--muted: 130 8% 91%;
-		--muted-foreground: 26 10% 43%;
-		/* #7a6d63 warm stone */
-		--accent: 15 54% 46%;
-		/* #b55536 terracotta */
-		--accent-foreground: 0 0% 100%;
-		--destructive: 0 80% 55%;
+		--popover-foreground: 337 32% 8%;
+		--primary: 171 25% 58%;
+		/* #7aafa7 muted teal — main CTAs */
+		--primary-foreground: 337 32% 8%;
+		/* coffee bean — dark text on teal */
+		--secondary: 178 17% 92%;
+		/* pale ash grey surface */
+		--secondary-foreground: 337 25% 20%;
+		--muted: 171 15% 91%;
+		/* pale muted teal */
+		--muted-foreground: 337 20% 38%;
+		/* dark coffee — readable label text */
+		--accent: 16 54% 56%;
+		/* #cb7352 burnt peach — expenses */
+		--accent-foreground: 337 32% 8%;
+		/* coffee bean on peach */
+		--destructive: 341 43% 47%;
+		/* #aa4465 berry crush — errors, delete, cancel */
 		--destructive-foreground: 0 0% 100%;
-		--border: 130 8% 83%;
-		--input: 130 8% 88%;
-		--ring: 137 16% 55%;
+		--border: 178 17% 82%;
+		--input: 178 17% 86%;
+		--ring: 171 25% 58%;
 		--radius: 0.75rem;
 
-		--sidebar-background: 142 25% 18%;
-		/* #2a4033 stone forest */
-		--sidebar-foreground: 0 0% 96%;
-		--sidebar-primary: 137 16% 68%;
-		--sidebar-primary-foreground: 142 25% 12%;
-		--sidebar-accent: 142 25% 26%;
-		--sidebar-accent-foreground: 0 0% 96%;
-		--sidebar-border: 142 20% 24%;
-		--sidebar-ring: 137 16% 68%;
+		--sidebar-background: 337 32% 8%;
+		/* #1b0e13 coffee bean */
+		--sidebar-foreground: 178 17% 88%;
+		--sidebar-primary: 171 25% 65%;
+		/* lighter muted teal on dark sidebar */
+		--sidebar-primary-foreground: 337 32% 8%;
+		--sidebar-accent: 337 25% 15%;
+		--sidebar-accent-foreground: 178 17% 88%;
+		--sidebar-border: 337 25% 14%;
+		--sidebar-ring: 171 25% 65%;
 
-		--chart-1: 137 16% 55%;
-		/* lichen sage */
-		--chart-2: 15 54% 46%;
-		/* terracotta */
-		--chart-3: 38 49% 55%;
-		/* andean straw */
-		--chart-4: 72 60% 41%;
-		/* yellow-green */
-		--chart-5: 220 9% 46%;
-		/* slate */
+		--chart-1: 171 25% 58%;
+		/* muted teal — income / primary */
+		--chart-2: 16 54% 56%;
+		/* burnt peach — expenses */
+		--chart-3: 341 43% 47%;
+		/* berry crush — warnings */
+		--chart-4: 178 17% 67%;
+		/* ash grey */
+		--chart-5: 337 25% 35%;
+		/* medium coffee */
 	}
 
 	.dark {
-		--background: 142 20% 8%;
-		--foreground: 140 10% 94%;
-		--card: 142 18% 11%;
-		--card-foreground: 140 10% 94%;
-		--popover: 142 18% 11%;
-		--popover-foreground: 140 10% 94%;
-		--primary: 137 16% 62%;
-		--primary-foreground: 142 25% 10%;
-		--secondary: 142 15% 18%;
-		--secondary-foreground: 140 10% 88%;
-		--muted: 142 12% 16%;
-		--muted-foreground: 130 8% 58%;
-		--accent: 15 54% 52%;
-		--accent-foreground: 0 0% 100%;
-		--destructive: 0 75% 45%;
+		--background: 337 32% 6%;
+		--foreground: 178 17% 90%;
+		--card: 337 28% 11%;
+		--card-foreground: 178 17% 90%;
+		--popover: 337 28% 11%;
+		--popover-foreground: 178 17% 90%;
+		--primary: 171 25% 65%;
+		/* lighter muted teal for dark mode */
+		--primary-foreground: 337 32% 6%;
+		--secondary: 337 25% 17%;
+		--secondary-foreground: 178 17% 80%;
+		--muted: 337 20% 15%;
+		--muted-foreground: 178 17% 60%;
+		--accent: 16 54% 62%;
+		/* lighter burnt peach for dark */
+		--accent-foreground: 337 32% 8%;
+		--destructive: 341 43% 55%;
+		/* lighter berry crush for dark */
 		--destructive-foreground: 0 0% 100%;
-		--border: 142 15% 20%;
-		--input: 142 15% 20%;
-		--ring: 137 16% 62%;
+		--border: 337 25% 20%;
+		--input: 337 25% 20%;
+		--ring: 171 25% 65%;
 
-		--chart-1: 137 16% 62%;
-		--chart-2: 15 54% 52%;
-		--chart-3: 38 49% 60%;
-		--chart-4: 72 55% 48%;
-		--chart-5: 26 10% 55%;
+		--chart-1: 171 25% 62%;
+		--chart-2: 16 54% 62%;
+		--chart-3: 341 43% 58%;
+		--chart-4: 178 17% 60%;
+		--chart-5: 337 25% 50%;
 
-		--sidebar-background: 142 25% 11%;
-		--sidebar-foreground: 0 0% 96%;
-		--sidebar-primary: 137 16% 68%;
-		--sidebar-primary-foreground: 142 25% 8%;
-		--sidebar-accent: 142 25% 18%;
-		--sidebar-accent-foreground: 0 0% 96%;
-		--sidebar-border: 142 20% 16%;
-		--sidebar-ring: 137 16% 68%;
+		--sidebar-background: 337 32% 6%;
+		--sidebar-foreground: 178 17% 88%;
+		--sidebar-primary: 171 25% 65%;
+		--sidebar-primary-foreground: 337 32% 6%;
+		--sidebar-accent: 337 25% 15%;
+		--sidebar-accent-foreground: 178 17% 88%;
+		--sidebar-border: 337 25% 17%;
+		--sidebar-ring: 171 25% 65%;
 	}
 }
 

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { TrendingUp, TrendingDown, Eye, Plus, Minus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { TxType, FinancialElementType } from "@/lib/schemas/definitions"
+import { formatToBalance } from "@/lib/quick-spend-constants"
 
 interface AssetCardProps {
 	id: string
@@ -25,9 +26,8 @@ export default function AssetCard({ id, name, type, currentValue, change, change
 
 	const isAsset = type === FinancialElementType.ASSET
 	const isPositiveChange = (change || 0) >= 0
-	const valueColorClass = isAsset ? "text-green-600" : "text-red-600"
+	const valueColorClass = currentValue >= 0 ? "text-green-600" : "text-red-600"
 	const changeColorClass = isPositiveChange ? "text-green-600" : "text-red-600"
-	const valuePrefix = isAsset ? "$" : "-$"
 
 	const handleIncomeClick = () => {
 		router.push(`/dashboard/patrimonio/${id}?action=${TxType.INCOME}`)
@@ -53,8 +53,7 @@ export default function AssetCard({ id, name, type, currentValue, change, change
 					</div>
 					<div className="text-right">
 						<p className={cn("text-2xl font-bold", valueColorClass)}>
-							{valuePrefix}
-							{currentValue.toFixed(2)}
+							{formatToBalance(currentValue)}
 						</p>
 						{change !== undefined && changePercent !== undefined && (
 							<div className={cn("flex items-center justify-end gap-1 text-sm", changeColorClass)}>
@@ -120,9 +119,8 @@ export default function AssetCard({ id, name, type, currentValue, change, change
 								{(isExpanded ? history : history.slice(0, 3)).map((entry, index) => (
 									<div key={index} className="flex justify-between items-center text-sm">
 										<span className="text-gray-500">{entry.date}</span>
-										<span className={cn("font-medium", valueColorClass)}>
-											{valuePrefix}
-											{entry.value.toFixed(2)}
+										<span className={cn("font-medium", entry.value >= 0 ? "text-green-600" : "text-red-600")}>
+											${entry.value.toFixed(2)}
 										</span>
 									</div>
 								))}

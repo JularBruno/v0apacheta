@@ -30,7 +30,7 @@ import QuickSpendCard from "@/components/movements/quick-spend-card"
 
 export default function InicioPage() {
 
-	const { user, userBalance, loadingUser, error, cats, loadingCats, loadingTags, budgetedCats, loadingBudgetedCats } = useDashboard();
+	const { user, userBalance, loadingUser, error, cats, loadingCats, loadingTags, budgetedCats, budgetLoading } = useDashboard();
 
 	/**
 	 * 
@@ -107,11 +107,16 @@ export default function InicioPage() {
 
 				<Card>
 					<CardHeader className="pb-2">
-						<CardTitle className="text-sm font-medium text-gray-600">Presupuesto {getMonthName()}</CardTitle>
+						<div className="flex items-center justify-between">
+							<CardTitle className="text-sm font-medium text-gray-600">Presupuesto {getMonthName()}</CardTitle>
+							<a href="/dashboard/presupuesto" className="text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors flex items-center gap-1">
+								Gestionar →
+							</a>
+						</div>
 					</CardHeader>
 					<CardContent>
 
-						{loadingBudgetedCats ? (
+						{budgetLoading ? (
 							<Loading></Loading>
 						) : monthlyBudget ? (
 							<div>
