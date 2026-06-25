@@ -75,9 +75,9 @@ const helpStages: HelpStage[] = [
 			{
 				id: "1.1.2",
 				type: "minor",
-				question: "¿Cómo registro mi ingreso del mes?",
+				question: "¿Cómo anoto mis movimientos y qué opciones tengo para arrancar?",
 				answer:
-					"Inicio → Quick Spend Card → seleccioná tipo 'Ingreso' → ingresá el monto → asegurate de poner la fecha correcta si ya arrancó el mes.\n\nAnotá tu sueldo, honorarios, o cualquier entrada de dinero. El ingreso es el techo de todo lo demás — lo que planeás tiene que caber dentro de ese número.",
+					"La tarjeta de registro rápido es el cuadro grande en el centro de la pantalla de Inicio. Tocá tipo Ingreso o Gasto, elegí o creá una categoría, ingresá el monto y la fecha. Es el corazón de la app.\n\nPara arrancar bien, tenés tres opciones:\n\n1️⃣ Importar desde Excel: si ya tenías tus movimientos anotados, subí el archivo desde el botón de importar. Es la forma más completa.\n\n2️⃣ Cargar manualmente desde el 1° del mes: revisá el historial de tu banco, sumá los gastos en efectivo que recuerdes, y cargalos uno por uno con sus fechas reales.\n\n3️⃣ Solo el saldo actual: si arrancar desde el primer día se siente como demasiado, anotá solo tu saldo actual en el banco. Después seguís registrando desde hoy.",
 			},
 			{
 				id: "1.1.3",

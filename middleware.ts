@@ -1,8 +1,6 @@
 import type { NextAuthConfig } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import NextAuth from 'next-auth';
-import { getSession } from './lib/actions/utils';
-import { getToken } from 'next-auth/jwt' // If using NextAuth
 
 /**
  * @title Auth config to extend with basic setting
@@ -27,9 +25,8 @@ export const authConfig = {
 				return NextResponse.redirect(loginUrl);
 			}
 
-			// If logged in and on login page, redirect to dashboard
-			if (isPublic && isLoggedIn) {
-				// if (nextUrl.pathname === '/login' && isLoggedIn) {
+			// If logged in and on login/onboarding/root, redirect to dashboard
+			if ((isPublic || nextUrl.pathname === '/') && isLoggedIn) {
 				return Response.redirect(new URL('/dashboard/inicio', nextUrl));
 			}
 
@@ -47,7 +44,7 @@ export const authConfig = {
  */
 const { auth } = NextAuth(authConfig);
 
-export default auth(async (request: NextRequest) => {
+export default auth(async (_request: NextRequest) => {
 	// Get the response from NextAuth
 	const response = NextResponse.next();
 
@@ -89,6 +86,7 @@ export const config = {
 	// matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)',], // this has changed a few times, it is working properly but on previous github versions there was a clearer execution of this regex
 
 	matcher: [
+		'/',
 		'/dashboard/:path*',
 		'/login',
 		'/onboarding',

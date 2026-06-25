@@ -205,9 +205,10 @@ export function TagRow({
 							}
 						})}
 						onKeyDown={(e) => onInputKeyDown(e)}
-						// autoCapitalize="none"
-						// autoCorrect="off"
-						// autoComplete="off"
+						autoCapitalize="sentences"
+						autoCorrect="off"
+						autoComplete="off"
+						spellCheck={false}
 						enterKeyHint="next"
 						className="flex-1"
 

@@ -5,6 +5,8 @@ import { ChevronDown, MapPin, X, CheckCircle2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import SubscriptionButtonNotification from "@/components/notifications/subscription-notification-button"
+import { useStepValidation } from "@/lib/hooks/use-step-validation"
+import { STEP_CONTENT_REGISTRY, DefaultStepContent, renderBold } from "@/components/map/step-content-registry"
 
 interface StepCardStep {
 	id: string
@@ -16,6 +18,7 @@ interface StepCardStep {
 	validationButton?: string
 	validationFallback?: string
 	customComponent?: "notification-button"
+	contentComponent?: string
 	status: "completed" | "unlocked" | "locked"
 }
 
@@ -26,8 +29,13 @@ interface StepCardProps {
 }
 
 export default function StepCard({ step, onClose, onComplete }: StepCardProps) {
-	const [expanded, setExpanded] = useState(false)
+	const [expanded, setExpanded] = useState(true)
 	const isCompleted = step.status === "completed"
+	const { valid, isLoading: validating } = useStepValidation(step.id)
+
+	const ContentComponent = step.contentComponent
+		? (STEP_CONTENT_REGISTRY[step.contentComponent] ?? DefaultStepContent)
+		: DefaultStepContent
 
 	return (
 		<div
@@ -56,29 +64,35 @@ export default function StepCard({ step, onClose, onComplete }: StepCardProps) {
 
 			{/* Body */}
 			<div className="max-h-[42vh] overflow-y-auto px-4 py-3 space-y-3">
-				<p className="text-sm leading-relaxed text-foreground/80">{step.description}</p>
+				<ContentComponent
+					id={step.id}
+					description={step.description}
+					longDescription={step.longDescription}
+					appInstruction={step.appInstruction}
+				/>
 
-				{/* Ver más toggle */}
-				<button
-					onClick={() => setExpanded(e => !e)}
-					className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
-				>
-					{expanded ? "Ver menos" : "Ver más"}
-					<ChevronDown className={cn("h-3 w-3 transition-transform duration-200", expanded && "rotate-180")} />
-				</button>
-
-				{expanded && (
-					<p className="text-sm leading-relaxed text-foreground/70">{step.longDescription}</p>
-				)}
-
-				{/* App instruction */}
-				{step.appInstruction && (
-					<div className="rounded-lg border bg-muted/40 px-3 py-2.5 flex gap-2">
-						<MapPin className="h-4 w-4 mt-0.5 shrink-0 text-accent" />
-						<p className="text-xs leading-relaxed text-foreground/70 whitespace-pre-line">
-							{step.appInstruction}
-						</p>
-					</div>
+				{/* Ver más toggle — only shown in default component */}
+				{!step.contentComponent && (
+					<>
+						<button
+							onClick={() => setExpanded(e => !e)}
+							className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+						>
+							{expanded ? "Ver menos" : "Ver más"}
+							<ChevronDown className={cn("h-3 w-3 transition-transform duration-200", expanded && "rotate-180")} />
+						</button>
+						{expanded && (
+							<p className="text-sm leading-relaxed text-foreground/70">{renderBold(step.longDescription)}</p>
+						)}
+						{step.appInstruction && (
+							<div className="rounded-lg border bg-muted/40 px-3 py-2.5 flex gap-2">
+								<MapPin className="h-4 w-4 mt-0.5 shrink-0 text-accent" />
+								<p className="text-xs leading-relaxed text-foreground/70 whitespace-pre-line">
+									{renderBold(step.appInstruction)}
+								</p>
+							</div>
+						)}
+					</>
 				)}
 			</div>
 
@@ -94,12 +108,12 @@ export default function StepCard({ step, onClose, onComplete }: StepCardProps) {
 						<SubscriptionButtonNotification />
 						{step.validationFallback && (
 							<Button
-								variant="ghost"
+								variant={valid ? "default" : "ghost"}
 								size="sm"
-								className="w-full text-muted-foreground text-xs"
+								className="w-full text-xs"
 								onClick={() => onComplete(step.id)}
 							>
-								{step.validationFallback}
+								{valid ? "Continuar" : step.validationFallback}
 							</Button>
 						)}
 					</div>
@@ -110,8 +124,12 @@ export default function StepCard({ step, onClose, onComplete }: StepCardProps) {
 				) : (
 					<div className="space-y-2">
 						{step.validationButton && (
-							<Button className="w-full" onClick={() => onComplete(step.id)}>
-								{step.validationButton}
+							<Button
+								className="w-full"
+								disabled={validating || !valid}
+								onClick={() => onComplete(step.id)}
+							>
+								{validating ? "Verificando…" : step.validationButton}
 							</Button>
 						)}
 						{step.validationFallback && (

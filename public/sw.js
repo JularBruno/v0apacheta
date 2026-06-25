@@ -1,3 +1,4 @@
+// v2
 self.addEventListener('push', function (event) {
 	let data = {}
 
@@ -9,8 +10,8 @@ self.addEventListener('push', function (event) {
 
 	const options = {
 		body: data.body,
-		icon: '/iconwbg-192x192.png',  // 192x192 ✓
-		badge: '/iconwbg-192x192.png', // used as monochrome badge on Android
+		icon: '/iconwbg-192x192.png',  // expanded notification icon — must be PNG, SVG not supported
+		badge: '/logo.svg',            // status bar badge — SVG works here
 		data: {
 			url: data.url || 'https://apacheta.ar/dashboard/mapa'
 		},

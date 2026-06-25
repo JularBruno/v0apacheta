@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useActionState, useEffect } from "react"
+import { useState, useActionState, useEffect, useRef } from "react"
 import { register } from '@/lib/actions/user';
 import { initialUserState, type NotificationFrequency } from '@/lib/schemas/user';
 
@@ -64,6 +64,33 @@ export default function OnboardingPage() {
 	useEffect(() => {
 		setDisplayErrors(state.errors);
 	}, [state.errors]);
+
+	const emailInputRef = useRef<HTMLInputElement>(null);
+
+	// On each step change: focus the text input (opens keyboard on mobile) or scroll the
+	// form card into view for steps that have no keyboard input.
+	// 150ms delay ensures the incoming step is rendered before focus fires.
+	useEffect(() => {
+		if (currentStep === 1) {
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+			return;
+		}
+
+		if (currentStep === 5) {
+			const t = setTimeout(() => {
+				window.scrollTo({ top: 0, behavior: 'smooth' });
+			}, 50);
+			return () => clearTimeout(t);
+		}
+
+		if (currentStep !== 6) return;
+
+		const t = setTimeout(() => {
+			emailInputRef.current?.focus();
+		}, 150);
+
+		return () => clearTimeout(t);
+	}, [currentStep]);
 
 	/** handles input values on change **/
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -262,16 +289,15 @@ export default function OnboardingPage() {
 								</div>
 							</div>
 
-							<div className="flex justify-between gap-4">
-								<Button type="button" onClick={handleBack} variant="outline" className="w-1/2">
+							<div className="flex flex-col sm:flex-row gap-3">
+								<Button type="button" onClick={handleBack} variant="outline" className="w-full sm:w-1/2">
 									Atrás
 								</Button>
-
 								<Button
 									type="button"
 									onClick={handleNext}
 									disabled={!question1Value}
-									className="w-1/2"
+									className="w-full sm:w-1/2"
 								>
 									Siguiente
 								</Button>
@@ -311,21 +337,18 @@ export default function OnboardingPage() {
 								</div>
 							</div>
 
-							<div className="flex justify-between gap-4">
-								<div className="flex justify-between gap-4">
-									<Button type="button" onClick={handleBack} variant="outline" className="w-1/2">
-										Atrás
-									</Button>
-
-									<Button
-										type="button"
-										onClick={handleNext}
-										disabled={!question2Value}
-										className="w-1/2"
-									>
-										Siguiente
-									</Button>
-								</div>
+							<div className="flex flex-col sm:flex-row gap-3">
+								<Button type="button" onClick={handleBack} variant="outline" className="w-full sm:w-1/2">
+									Atrás
+								</Button>
+								<Button
+									type="button"
+									onClick={handleNext}
+									disabled={!question2Value}
+									className="w-full sm:w-1/2"
+								>
+									Siguiente
+								</Button>
 							</div>
 						</div>
 					)}
@@ -362,15 +385,15 @@ export default function OnboardingPage() {
 								</div>
 							</div>
 
-							<div className="flex justify-between gap-4">
-								<Button type="button" onClick={handleBack} variant="outline" className="w-1/2">
+							<div className="flex flex-col sm:flex-row gap-3">
+								<Button type="button" onClick={handleBack} variant="outline" className="w-full sm:w-1/2">
 									Atrás
 								</Button>
 								<Button
 									type="button"
 									onClick={handleNext}
 									disabled={!question3Value}
-									className="w-1/2"
+									className="w-full sm:w-1/2"
 								>
 									Siguiente
 								</Button>
@@ -395,16 +418,14 @@ export default function OnboardingPage() {
 								</div>
 							</div>
 
-							<div className="flex justify-between gap-4">
-
-								<Button type="button" onClick={handleBack} variant="outline" className="w-1/2">
+							<div className="flex flex-col sm:flex-row gap-3">
+								<Button type="button" onClick={handleBack} variant="outline" className="w-full sm:w-1/2">
 									Atrás
 								</Button>
-
 								<Button
 									type="button"
 									onClick={handleNext}
-									className="w-1/2"
+									className="w-full sm:w-1/2"
 								>
 									Siguiente
 								</Button>
@@ -422,6 +443,7 @@ export default function OnboardingPage() {
 							<div>
 								<Label htmlFor="email">Email</Label>
 								<Input
+									ref={emailInputRef}
 									id="email"
 									name="email"
 									type="email"
@@ -466,13 +488,13 @@ export default function OnboardingPage() {
 
 							</div>
 
-							<div className="flex justify-between gap-4">
-								<Button type="button" onClick={handleBack} variant="outline" className="w-1/2 bg-transparent">
+							<div className="flex flex-col sm:flex-row gap-3">
+								<Button type="button" onClick={handleBack} variant="outline" className="w-full sm:w-1/2 bg-transparent">
 									Atrás
 								</Button>
 								<Button
 									type="submit"
-									className="w-1/2"
+									className="w-full sm:w-1/2"
 									disabled={isPending}
 								>
 									{isPending ? "Finalizando..." : "Terminar Registro"}

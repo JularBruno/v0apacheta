@@ -9,10 +9,11 @@ import AssetFormModal from "@/components/assets/asset-form-modal"
 import { useFinancialElements } from "@/lib/hooks/use-financial-elements"
 import { useQueryClient } from "@tanstack/react-query"
 import { formatToBalance } from "@/lib/quick-spend-constants"
+import { Loading } from "@/components/ui/loading"
 
 export default function AssetsPage() {
 	const queryClient = useQueryClient();
-	const { data } = useFinancialElements();
+	const { data, isLoading } = useFinancialElements();
 	const assets = data?.elements ?? [];
 
 	const [isModalOpen, setIsModalOpen] = useState(false);
@@ -70,17 +71,29 @@ export default function AssetsPage() {
 			</div>
 
 			{/* Assets Grid */}
-			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-				{assets?.map((asset) => (
-					<AssetCard
-						key={asset.id}
-						id={asset.id}
-						name={asset.name}
-						type={asset.type}
-						currentValue={asset.currentAmount}
-					/>
-				))}
-			</div>
+			{isLoading ? (
+				<Loading />
+			) : assets.length === 0 ? (
+				<div className="flex flex-col items-center justify-center py-16 text-center">
+					<p className="text-muted-foreground text-sm">Todavía no tenés elementos financieros.</p>
+					<Button variant="outline" className="mt-4" onClick={() => setIsModalOpen(true)}>
+						<Plus className="w-4 h-4 mr-2" />
+						Agregar tu primer elemento
+					</Button>
+				</div>
+			) : (
+				<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+					{assets.map((asset) => (
+						<AssetCard
+							key={asset.id}
+							id={asset.id}
+							name={asset.name}
+							type={asset.type}
+							currentValue={asset.currentAmount}
+						/>
+					))}
+				</div>
+			)}
 
 			{/* Add Asset Modal */}
 			<AssetFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSaveAsset} />

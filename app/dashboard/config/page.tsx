@@ -73,13 +73,14 @@ export default function SettingsPage() {
 						{/* <Input id="email" type="email" value={user?.email} readOnly className="bg-gray-100 cursor-not-allowed" /> */}
 						<p className="text-sm text-gray-500 mt-1">El email no puede ser cambiado aquí.</p>
 					</div>
-					<Button onClick={handleSaveProfile}>Guardar Cambios</Button>
+					{/* <Button onClick={handleSaveProfile}>Guardar Cambios</Button> */}
 					<Separator className="my-4" />
 					<h3 className="text-md font-semibold">Contraseña</h3>
-					<p className="text-sm text-gray-600">Cambia tu contraseña para mantener tu cuenta segura.</p>
-					<Button variant="outline" onClick={handleChangePassword}>
+					<p className="text-sm text-gray-600">Cambia tu contraseña en desarrollo.</p>
+					{/* <p className="text-sm text-gray-600">Cambia tu contraseña para mantener tu cuenta segura.</p> */}
+					{/* <Button variant="outline" onClick={handleChangePassword}>
 						Cambiar Contraseña
-					</Button>
+					</Button> */}
 				</CardContent>
 			</Card>
 
@@ -96,6 +97,7 @@ export default function SettingsPage() {
 						{/** SUPER COMPONENT FOR activating notifications and suscribing user to them */}
 					</div>
 
+					{/* 
 					<div className="flex items-center justify-between">
 						<Label htmlFor="budget-alerts">Alertas de Presupuesto</Label>
 						<Switch
@@ -131,7 +133,7 @@ export default function SettingsPage() {
 							onCheckedChange={(checked) => setNotifications({ ...notifications, newsletters: checked })}
 							disabled
 						/>
-					</div>
+					</div> */}
 				</CardContent>
 			</Card>
 
@@ -149,14 +151,14 @@ export default function SettingsPage() {
 							financiero. Siempre consulta a un profesional antes de tomar decisiones de inversión.
 						</AlertDescription>
 					</Alert>
-					<div className="flex flex-col sm:flex-row gap-2">
+					{/* <div className="flex flex-col sm:flex-row gap-2">
 						<Link href="#" className="text-sm text-green-600 hover:underline">
 							Términos de Servicio
 						</Link>
 						<Link href="#" className="text-sm text-green-600 hover:underline">
 							Política de Privacidad
 						</Link>
-					</div>
+					</div> */}
 				</CardContent>
 			</Card>
 
@@ -165,14 +167,14 @@ export default function SettingsPage() {
 				<CardHeader>
 					<CardTitle>Acciones de la Cuenta</CardTitle>
 				</CardHeader>
-				<CardContent className="space-y-4">
+				{/* <CardContent className="space-y-4">
 					<p className="text-sm text-gray-600">
 						Si deseas eliminar tu cuenta y todos tus datos, puedes hacerlo aquí. Esta acción es irreversible.
 					</p>
 					<Button variant="destructive" onClick={handleDeleteAccount}>
 						Eliminar Cuenta
 					</Button>
-				</CardContent>
+				</CardContent> */}
 			</Card>
 		</div>
 	)

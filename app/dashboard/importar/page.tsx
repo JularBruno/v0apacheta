@@ -67,6 +67,18 @@ export default function ImportarPage() {
 					<CardDescription>Selecciona un archivo .xlsx con tus movimientos financieros</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-4">
+					<div className="border-2 border-dashed border-destructive rounded-lg p-8 text-center hover:border-accent-400 transition-colors">
+						<input type="file" id="excel-upload" accept=".xlsx" onChange={handleFileChange} className="hidden" />
+						<label htmlFor="excel-upload" className="cursor-pointer">
+							<Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+							<p className="text-lg font-medium text-gray-900 mb-2">
+								{selectedFile ? selectedFile.name : "HOLA ESTO Anda pero avisame a mi hacemos la migración juntos"}
+							</p>
+							<p className="text-sm text-gray-600">o arrastra y suelta tu archivo Excel aquí</p>
+							<p className="text-xs text-gray-500 mt-2">Solo archivos .xlsx</p>
+						</label>
+					</div>
+					{/* 
 					<div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary-400 transition-colors">
 						<input type="file" id="excel-upload" accept=".xlsx" onChange={handleFileChange} className="hidden" />
 						<label htmlFor="excel-upload" className="cursor-pointer">
@@ -77,8 +89,8 @@ export default function ImportarPage() {
 							<p className="text-sm text-gray-600">o arrastra y suelta tu archivo Excel aquí</p>
 							<p className="text-xs text-gray-500 mt-2">Solo archivos .xlsx</p>
 						</label>
-					</div>
-
+					</div> */}
+					{/* 
 					{selectedFile && (
 						<div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
 							<CheckCircle2 className="w-5 h-5 text-green-600" />
@@ -87,7 +99,7 @@ export default function ImportarPage() {
 								<p className="text-sm text-green-700">{(selectedFile.size / 1024).toFixed(2)} KB</p>
 							</div>
 						</div>
-					)}
+					)} */}
 
 					<Button onClick={handleImport} disabled={!selectedFile} className="w-full">
 						<Upload className="w-4 h-4 mr-2" />

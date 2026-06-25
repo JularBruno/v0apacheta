@@ -85,16 +85,28 @@ export default function QuickSpendCard({
 
 	// Switch between "gasto" (expense) and "ingreso" (income) types
 	// and make sure a valid category is selected for the new type
-	const switchType = (next: TxType) => { // next: the type we're switching TO
-		setType(next)// Update the transaction type
-		// Get the first available category for the new type (or undefined if none exist)
-		const first = next === TxType.EXPENSE ? expenseCats[0]?.id : incomeCats[0]?.id
+	const switchType = (next: TxType) => {
+		if (next === type) return
+		setType(next)
+
+		// Clear the incoming type's category so nothing appears pre-selected
 		if (next === TxType.EXPENSE) {
-			// For expenses: keep current selection, OR use first available, OR fallback to "comida"
-			setSelectedExpenseCat((prev) => prev || first || "comida")
+			setSelectedExpenseCat(null)
 		} else {
-			setSelectedIncomeCat((prev) => prev || first || "trabajo")
+			setSelectedIncomeCat(null)
 		}
+
+		// Clear tag and reset form fields on type change
+		setTagId("")
+		setTagInput("")
+		setDescriptionDone(false)
+		reset({
+			type: next,
+			tagId: undefined,
+			tagName: '',
+			amount: undefined,
+			description: '',
+		})
 	}
 
 
@@ -137,6 +149,7 @@ export default function QuickSpendCard({
 		if (tagId) {
 			setTagId(""); // Clear this FIRST
 			setTagInput("");
+			setDescriptionDone(false);
 
 			reset({
 				type: type,
@@ -163,23 +176,12 @@ export default function QuickSpendCard({
 	const [showCreateCategory, setShowCreateCategory] = useState(false)
 	const [newCatType, setNewCatType] = useState<TxType>(type)
 
-	// // After submiting a category in dialog, add it to state
-	// const categorySubmit = (cat: Category) => {
-	// 	// revalidateCategories();
-
-	// 	// setCats((prev: Category[]) => {
-	// 	// 	// Remove duplicates by ID
-	// 	// 	const filtered = prev.filter(filteredCat => filteredCat.id !== cat.id);
-	// 	// 	return [...filtered, cat];
-	// 	// });
-	// }
-
 	// Manage Categories dialog state and handlers
 	const [showManageCategories, setShowManageCategories] = useState(false)
 
 
 	/* deletion of a category */
-	const deleteCategoryORI = async (catId: string) => {
+	const deleteCategoryConfirmation = async (catId: string) => {
 		const cat = cats.find((c) => c.id === catId)
 		if (!cat) return
 
@@ -189,10 +191,7 @@ export default function QuickSpendCard({
 			const confirmDelete = confirm( // TODO this should be a nicer component
 				`Esta categoría tiene ${relatedTags.length} tag(s) asociado(s). ¿Estás seguro de que quieres eliminarla? Esto también eliminará todos los tags asociados.`,
 			)
-			if (!confirmDelete) return
-
-			// Remove related tags
-			// setAllTags((prev) => prev.filter((t) => t.categoryId !== catId))
+			if (!confirmDelete) return;
 		}
 
 		deleteCategory(catId, {
@@ -212,22 +211,6 @@ export default function QuickSpendCard({
 			},
 		});
 
-		// Reset selection if deleted category was selected
-		// 	if (categoryId === catId) {
-		// 		const remaining = cats.filter((c) => c.id !== catId && c.type === type)
-		// 		if (remaining.length > 0) {
-		// 			if (type === TxType.EXPENSE) setSelectedExpenseCat(remaining[0].id)
-		// 			else setSelectedIncomeCat(remaining[0].id)
-		// 		}
-		// 	}
-
-		// 	announce(`Categoría ${cat.name} eliminada`)
-
-		// 	toast({
-		// 		title: `Categoría eliminada`,
-		// 		description: `Se eliminó la categoría`,
-		// 		variant: "success",
-		// 	})
 	}
 
 	/**
@@ -249,17 +232,26 @@ export default function QuickSpendCard({
 		[allTags, cats, type]
 	);
 
+	const tagsByTypeLastUsed = useMemo(() =>
+		[...tagsByType].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()),
+		[tagsByType]
+	);
+
 	// Match the amount of tag pills to diplay and filter by category id when selected
 	const matchingSuggestions = useMemo(() => {
-		if (!categoryId) return tagsByType.slice(0, 12);
-		return allTags.filter(t => t.categoryId === categoryId).slice(0, 12);
-	}, [allTags, tagsByType, categoryId]);
+		const base = categoryId
+			? tagsByTypeLastUsed.filter(t => t.categoryId === categoryId)
+			: tagsByTypeLastUsed;
+		return base.slice(0, 12);
+	}, [tagsByTypeLastUsed, categoryId]);
 
 	const matchingSuggestionsMobile = useMemo(() => {
 		const sliceAmount = mobileTagsExpanded ? 12 : 4;
-		if (!categoryId) return tagsByType.slice(0, sliceAmount);
-		return allTags.filter(t => t.categoryId === categoryId).slice(0, sliceAmount);
-	}, [allTags, tagsByType, categoryId, mobileTagsExpanded]);
+		const base = categoryId
+			? tagsByTypeLastUsed.filter(t => t.categoryId === categoryId)
+			: tagsByTypeLastUsed;
+		return base.slice(0, sliceAmount);
+	}, [tagsByTypeLastUsed, categoryId, mobileTagsExpanded]);
 
 	/**
 	 *
@@ -271,8 +263,7 @@ export default function QuickSpendCard({
 	 * showDateTime component variables required to chose specific time on movement
 	 */
 	const [showDateTime, setShowDateTime] = useState(false);
-	// const [customDate, setCustomDate] = useState(nowInfo().dateInput);
-	// const [customTime, setCustomTime] = useState(nowInfo().timeInput);
+
 	const [customDate, setCustomDate] = useState(getCurrentDateTimeInfo().dateInput);
 	const [customTime, setCustomTime] = useState(getCurrentDateTimeInfo().timeInput)
 
@@ -284,7 +275,8 @@ export default function QuickSpendCard({
 		formState: { errors, isSubmitting },
 		reset,
 		setValue,
-		clearErrors
+		clearErrors,
+		watch,
 	} = useForm<MovementFormData>({
 		resolver: zodResolver(movementSchema)
 		,
@@ -298,13 +290,45 @@ export default function QuickSpendCard({
 		}
 	});
 
-	const [movementLoading, setMovementLoading] = useState<boolean>(false);
+	// watch('amount') subscribes to the field reactively — unlike getValues() which reads once,
+	// this returns a new value on every keystroke so currentStep re-derives correctly via useMemo.
+	const watchedAmount = watch('amount');
 
+	// True once the user explicitly presses Enter/Done on the description input or selects a tag pill.
+	// Advancing step 3→4 on every keystroke would immediately scroll away while typing.
+	const [descriptionDone, setDescriptionDone] = useState(false);
+
+	// Tracks which step the user is currently on based on form state.
+	// Step 1 (type) is always complete — there's always a default.
+	const currentStep = useMemo(() => {
+		if (!categoryId) return 2;
+		if (!(tagId || descriptionDone)) return 3;
+		if (!watchedAmount) return 4;
+		return 5;
+	}, [categoryId, tagId, descriptionDone, watchedAmount]);
+
+	// Refs for each section so we can scroll the active one into view on mobile.
+	const categoryRef = useRef<HTMLDivElement>(null);
+	const descriptionRef = useRef<HTMLDivElement>(null);
+	const amountRef = useRef<HTMLDivElement>(null);
+	const submitRef = useRef<HTMLButtonElement>(null);
+
+	useEffect(() => {
+		if (typeof window === 'undefined' || window.innerWidth >= 768) return;
+		const refMap: Record<number, React.RefObject<HTMLElement | null>> = {
+			2: categoryRef,
+			3: descriptionRef,
+			4: amountRef,
+			5: submitRef,
+		};
+		refMap[currentStep]?.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+	}, [currentStep]);
 
 	// Helps to clear specific error when typing again
 	function handleTagKeyDown(e: any) {
 		if (e.key === 'Enter') {
 			e.preventDefault();
+			setDescriptionDone(true);
 			setTimeout(() => {
 				inputAmountRef.current?.scrollIntoView({
 					behavior: 'smooth',
@@ -326,6 +350,7 @@ export default function QuickSpendCard({
 		if (!t) return
 
 		setTagId(t.id)
+		setDescriptionDone(true);
 		setValue('amount', t.amount || 0); // Update form amount too
 		setValue('tagName', t.name); // Update form amount too
 
@@ -361,46 +386,34 @@ export default function QuickSpendCard({
 	 * @param data movementform data from schema, to be submited
 	 */
 	const onSubmitHandler = async (data: MovementFormData) => {
-		setMovementLoading(true);
+		if (!categoryId) return alert("Seleccioná una categoría.");
 
-		// Format the datetime to ISO string
 		const dateObj = new Date(`${customDate}T${customTime}`);
-		const isoString = dateObj.toISOString(); // "2026-01-05T13:36:50.121Z"
+		const isoString = dateObj.toISOString();
+
+		const movementData: Movement = {
+			...data,
+			userId: undefined,
+			categoryId: categoryId,
+			type: type,
+			tagId: tagId ? tagId : undefined,
+			description: data.tagName,
+			createdAt: showDateTime ? isoString : undefined,
+		};
+
+		if (financialElementId) {
+			movementData.financialElementId = financialElementId;
+		}
+
+		// Reset immediately so the form feels instant on mobile
+		reset({ type: type, tagId: undefined, tagName: '', amount: undefined, description: '' });
+		setTagInput("");
+		setTagId("");
+		setDescriptionDone(false);
 
 		try {
-			if (!categoryId) { setMovementLoading(false); return alert("Seleccioná una categoría."); };
-
-			const movementData: Movement = {
-				...data,
-				userId: undefined, // will be set in post method
-				categoryId: categoryId,
-				type: type,
-				tagId: tagId ? tagId : undefined,
-				description: data.tagName,
-				createdAt: showDateTime ? isoString : undefined, // Only include if custom date selected
-			};
-
-			if (financialElementId) {
-				movementData.financialElementId = financialElementId;
-			}
 			const movement = await createMovement.mutateAsync(movementData);
-
-			// AFTER SUBMITING reset form and states
-			// reset form values
-			reset({
-				type: TxType.EXPENSE,
-				tagId: undefined,
-				tagName: '',
-				amount: 0,
-				description: ''
-			});
-
-			// reset local states
-			setTagInput("");
-			setTagId("");
-
-			onAdd(movement); // CALL PARENT
-			setMovementLoading(false);
+			onAdd(movement);
 		} catch (error) {
 			console.error('Submit error:', error);
 		}
@@ -481,39 +494,52 @@ export default function QuickSpendCard({
 					/>
 
 					{/* Category: grid */}
-					<CategoryGrid
-						items={shownCategories}
-						categoryId={categoryId}
-						setCategory={setCategory}
-						loading={movementLoading} // set diabled on loading movement submit
-					/>
+					<div
+						ref={categoryRef}
+						className={cn("rounded-lg transition-colors", currentStep === 2 && "md:bg-transparent md:ring-0 ring-1 ring-primary/30 bg-primary/5 px-2 pt-2 pb-2")}
+					>
+						<CategoryGrid
+							items={shownCategories}
+							categoryId={categoryId}
+							setCategory={setCategory}
+							loading={isSubmitting}
+						/>
+					</div>
 
 					{/* Tags */}
-					<TagRow
-						tagInput={tagInput}
-						setTagInput={setTagInput}
+					<div
+						ref={descriptionRef}
+						className={cn("rounded-lg transition-colors mt-1", currentStep === 3 && "md:bg-transparent md:ring-0 ring-1 ring-primary/30 bg-primary/5 px-2")}
+					>
+						<TagRow
+							tagInput={tagInput}
+							setTagInput={setTagInput}
 
-						categoryType={type}
+							categoryType={type}
 
-						tagId={tagId}
-						setTagId={setTagId}
+							tagId={tagId}
+							setTagId={setTagId}
 
-						matchingSuggestions={matchingSuggestions}
-						matchingSuggestionsMobile={matchingSuggestionsMobile}
+							matchingSuggestions={matchingSuggestions}
+							matchingSuggestionsMobile={matchingSuggestionsMobile}
 
-						selectTag={selectTag}
-						tagNameError={errors.tagName?.message}
-						onInputKeyDown={handleTagKeyDown}
-						mobileTagsExpanded={mobileTagsExpanded}
-						setMobileTagsExpanded={setMobileTagsExpanded}
+							selectTag={selectTag}
+							tagNameError={errors.tagName?.message}
+							onInputKeyDown={handleTagKeyDown}
+							mobileTagsExpanded={mobileTagsExpanded}
+							setMobileTagsExpanded={setMobileTagsExpanded}
 
-						register={register}
+							register={register}
 
-						loading={movementLoading} // set diabled on loading movement submit
-					/>
+							loading={isSubmitting}
+						/>
+					</div>
 
 					{/* Amount */}
-					<div className="space-y-2 pb-4">
+					<div
+						ref={amountRef}
+						className={cn("space-y-2 pb-4 rounded-lg transition-colors", currentStep === 4 && "md:bg-transparent md:ring-0 ring-1 ring-primary/30 bg-primary/5 px-2 pt-2")}
+					>
 						<Label htmlFor="amount" className="text-sm text-muted-foreground">Monto</Label>
 						<div className="relative gap-2 ">
 							<BalanceInput
@@ -536,11 +562,15 @@ export default function QuickSpendCard({
 					/>
 
 					{/* submit button */}
-					<Button data-testid="submit-button" type="submit" className="w-full h-12 text-base font-semibold"
-						disabled={movementLoading}
+					<Button
+						ref={submitRef}
+						data-testid="submit-button"
+						type="submit"
+						className={cn("w-full h-12 text-base font-semibold transition-opacity", currentStep < 5 && "opacity-60")}
+						disabled={isSubmitting}
 					>
-						{movementLoading
-							? <Loading></Loading>
+						{isSubmitting
+							? <Loading />
 							: type === TxType.EXPENSE
 								? "Gastar"
 								: "Agregar"}
@@ -564,7 +594,7 @@ export default function QuickSpendCard({
 				setNewCatType={setNewCatType}
 				newCatType={newCatType}
 
-				deleteCategory={deleteCategoryORI}
+				deleteCategory={deleteCategoryConfirmation}
 			// onSubmit={categorySubmit}
 			/>
 		</Card>
