@@ -7,7 +7,7 @@ const COLORS = [
 	"#aa4465", // berry crush
 	"#7aafa7", // muted teal
 	"#9db9b8", // ash grey
-	"#0d0709", // pitch black
+	// "#0d0709", // pitch black
 ]
 
 const SIZES = {

@@ -13,13 +13,13 @@ export default function Hero() {
 					<SpinningLogo size="lg" />
 				</div>
 
-				<h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-foreground mb-4 leading-tight">
+				<h1 className="text-5xl md:text-7xl text-muted-500 lg:text-8xl font-bold text-foreground mb-4 leading-tight">
 					Las apachetas
-					<span className="block text-burnt-peach-500 mt-2">guiarán tu camino.</span>
+					<span className="block text-primary mt-2">guiarán tu camino...</span>
 				</h1>
 
 				<p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
-					Sigue el camino para salir de deudas, ahorrar más y construir patrimonio...
+					Sigue el camino para salir de deudas, ahorrar más y construir patrimonio.
 					{/* Educación financiera diseñada para Argentina. */}
 				</p>
 

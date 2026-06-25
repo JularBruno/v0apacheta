@@ -5,6 +5,7 @@ import { useState, useRef, useEffect, useMemo } from "react"
 import TrailPath from "@/components/map/trail-path"
 import StepNode from "@/components/map/step-node"
 import StepCard from "@/components/map/step-card"
+import { useUpdateMapLevel } from "@/lib/hooks/use-update-map-level"
 
 const STEP_GAP = 130
 
@@ -18,6 +19,7 @@ export interface MapStepInput {
 	validationButton?: string
 	validationFallback?: string
 	customComponent?: "notification-button"
+	contentComponent?: string
 	status: "completed" | "unlocked" | "locked"
 	icon: ComponentType<{ className?: string }>
 	type: "chapter" | "major" | "minor"
@@ -33,11 +35,13 @@ interface MapViewProps {
 	steps: MapStepInput[]
 }
 
+
 export default function MapView({ steps: initialSteps }: MapViewProps) {
 	const [steps, setSteps] = useState<MapStepInput[]>(initialSteps)
 	const [selectedId, setSelectedId] = useState<string | null>(null)
 	const [isDesktop, setIsDesktop] = useState(false)
 	const scrollRef = useRef<HTMLDivElement>(null)
+	const { mutate: updateMapLevel } = useUpdateMapLevel()
 
 	useEffect(() => {
 		const mq = window.matchMedia('(min-width: 768px)')
@@ -89,7 +93,22 @@ export default function MapView({ steps: initialSteps }: MapViewProps) {
 	}, [playerId, canvasHeight])
 
 	function handleComplete(stepId: string) {
-		setSteps(prev => prev.map(s => s.id === stepId ? { ...s, status: "completed" as const } : s))
+		const idx = steps.findIndex(s => s.id === stepId)
+		const next = steps[idx + 1]
+
+		if (next) {
+			console.log("[map] completing", stepId, "→ advancing mapLevel to", next.id)
+			updateMapLevel(next.id, {
+				onSuccess: () => console.log("[map] mapLevel updated to", next.id),
+				onError: (err) => console.error("[map] mapLevel update failed", err),
+			})
+		}
+
+		setSteps(prev => prev.map((s, i) => {
+			if (s.id === stepId) return { ...s, status: "completed" as const }
+			if (i === idx + 1 && s.status === "locked") return { ...s, status: "unlocked" as const }
+			return s
+		}))
 		setSelectedId(null)
 	}
 

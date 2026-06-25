@@ -75,7 +75,7 @@ export default function AssetCard({ id, name, type, currentValue, change, change
 					<Button
 						onClick={handleIncomeClick}
 						size="sm"
-						className="bg-green-500 hover:bg-green-600 text-white flex items-center gap-1"
+						className="bg-primary text-primary-foreground hover:opacity-90 flex items-center gap-1"
 					>
 						<Plus className="w-3 h-3" />
 						<span className="hidden sm:inline">Ingreso</span>
@@ -84,7 +84,7 @@ export default function AssetCard({ id, name, type, currentValue, change, change
 						onClick={handleExpenseClick}
 						size="sm"
 						variant="outline"
-						className="border-red-200 text-red-600 hover:bg-red-50 flex items-center gap-1 bg-transparent"
+						className="bg-transparent border-accent text-accent hover:bg-accent hover:text-accent-foreground flex items-center gap-1"
 					>
 						<Minus className="w-3 h-3" />
 						<span className="hidden sm:inline">Gasto</span>

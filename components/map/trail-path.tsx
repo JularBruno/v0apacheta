@@ -13,6 +13,7 @@ export default function TrailPath({ steps }: TrailPathProps) {
 		: null
 
 	return (
+
 		<svg
 			className="absolute inset-0 w-full h-full pointer-events-none"
 			viewBox="0 0 100 100"
@@ -22,12 +23,14 @@ export default function TrailPath({ steps }: TrailPathProps) {
 			<polyline
 				points={points}
 				fill="none"
-				stroke="hsl(var(--border))"
+				stroke="hsl(var(--accent))"
 				strokeWidth="3"
 				strokeLinecap="round"
 				strokeLinejoin="round"
 				vectorEffect="non-scaling-stroke"
+				strokeDasharray="9 7"
 			/>
+
 			{traveledPoints && (
 				<polyline
 					points={traveledPoints}

@@ -17,11 +17,9 @@ import { cn } from "@/lib/utils"
 import { useEffect, useMemo, useState } from "react";
 import { Movements } from "@/lib/schemas/movement";
 import { TxType } from "@/lib/schemas/definitions";
-import { Category, CategoryBudget } from "@/lib/schemas/category";
-import { getBudgetByUserAndPeriod } from "@/lib/actions/categories";
-import { deleteMovement, getMovementsByUserAndFilter, postMovement } from "@/lib/actions/movements";
-import { quickFilters, formatNumberToInput, formatToBalance } from "@/lib/quick-spend-constants";
-import { formatDate, getDateStringsForFilter, formatDateNoYear, getLastNDays, getLastNMonths, getMonthRange, getMonthName } from "@/lib/dateUtils";
+import { CategoryBudget } from "@/lib/schemas/category";
+import { quickFilters, formatToBalance } from "@/lib/quick-spend-constants";
+import { formatDate, formatDateNoYear, getDateStringsForFilter, getLastNDays, getLastNMonths, getMonthRange } from "@/lib/dateUtils";
 import { PeriodSelector } from "@/components/movements/period-selector"
 import { toast } from "@/hooks/use-toast"
 
@@ -37,12 +35,9 @@ import { useDashboard } from "../dashboardContext"
 import CategoryBudgetList from "@/components/dashboard/category-budget-list"
 import CategoryDonutChart from "@/components/dashboard/category-donut-chart"
 
-import LoadingHistory from "./loading"
 import {
 	DonutChartSkeleton,
 	CategoryBudgetListSkeleton,
-	TransactionListSkeleton,
-	SummaryStatsSkeleton,
 	ChartCardSkeleton
 } from "@/components/history/skeletons"
 
@@ -156,7 +151,7 @@ export default function HistorialPage() {
 	 * 
 	 */
 
-	const { error, cats, loadingCats } = useDashboard();
+	const { cats } = useDashboard();
 
 	// const [budgetedCats, setBudgetedCats] = useState<CategoryBudget[]>([])
 
@@ -240,6 +235,12 @@ export default function HistorialPage() {
 		}
 		return filtered;
 	}, [movements, selectedCategory, selectedType, searchTerm]);
+
+	useEffect(() => {
+		if (!loadingMovements && filteredMovements.length === 0) {
+			setShowFilters(true);
+		}
+	}, [filteredMovements.length, loadingMovements]);
 
 	const movementsTotal = useMemo(() => filteredMovements.reduce((sum, item) => item.type === TxType.EXPENSE ? sum + item.amount : sum, 0), [filteredMovements]);
 	const movementsTotalIncome = useMemo(() => filteredMovements.reduce((sum, item) => item.type === TxType.INCOME ? sum + item.amount : sum, 0), [filteredMovements]);

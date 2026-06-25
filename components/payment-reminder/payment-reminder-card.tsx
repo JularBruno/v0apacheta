@@ -55,44 +55,44 @@ export default function PaymentReminderCard({
 	cats: CategoryBudget[]
 }) {
 
-	const [monthlyPayments, setMonthlyPayments] = useState<PaymentItem[]>([
-		{ id: "1", name: "Alquiler", amount: 500, dueDay: 1 },
-		{ id: "2", name: "Internet", amount: 30, dueDay: 15 },
-		{ id: "3", name: "Electricidad", amount: 70, dueDay: 20 },
-	])
-	const [randomPayments, setRandomPayments] = useState<PaymentItem[]>([
-		{ id: "4", name: "Regalo de Cumpleaños", amount: 40 },
-		{ id: "5", name: "Reparación Auto", amount: 150 },
-	])
+	// const [monthlyPayments, setMonthlyPayments] = useState<PaymentItem[]>([
+	// 	{ id: "1", name: "Alquiler", amount: 500, dueDay: 1 },
+	// 	{ id: "2", name: "Internet", amount: 30, dueDay: 15 },
+	// 	{ id: "3", name: "Electricidad", amount: 70, dueDay: 20 },
+	// ])
+	// const [randomPayments, setRandomPayments] = useState<PaymentItem[]>([
+	// 	{ id: "4", name: "Regalo de Cumpleaños", amount: 40 },
+	// 	{ id: "5", name: "Reparación Auto", amount: 150 },
+	// ])
 
-	const [showPaymentReminder, setShowPaymentReminder] = useState(false);
-	const [paymentReminderType, setPaymentReminderType] = useState<PaymentType.MONTHLY | PaymentType.ONE_TIME>(PaymentType.MONTHLY)
-	const [editingPaymentReminder, setEditingPaymentReminder] = useState<PaymentReminder | undefined>()
+	// const [showPaymentReminder, setShowPaymentReminder] = useState(false);
+	// const [paymentReminderType, setPaymentReminderType] = useState<PaymentType.MONTHLY | PaymentType.ONE_TIME>(PaymentType.MONTHLY)
+	// const [editingPaymentReminder, setEditingPaymentReminder] = useState<PaymentReminder | undefined>()
 
-	const [selectedPayment, setSelectedPayment] = useState<PaymentItem | null>(null)
+	// const [selectedPayment, setSelectedPayment] = useState<PaymentItem | null>(null)
 
-	const [showPaymentModal, setShowPaymentModal] = useState(false)
+	// const [showPaymentModal, setShowPaymentModal] = useState(false)
 
-	const handleCreatePayment = (
-	) => {
-		console.log('handle create');
+	// const handleCreatePayment = (
+	// ) => {
+	// 	console.log('handle create');
 
-	}
+	// }
 
-	const removePayment = (type: "monthly" | "random", id: string) => {
-		if (type === "monthly") {
-			setMonthlyPayments((prev) => prev.filter((p) => p.id !== id))
-		} else {
-			setRandomPayments((prev) => prev.filter((p) => p.id !== id))
-		}
-	}
+	// const removePayment = (type: "monthly" | "random", id: string) => {
+	// 	if (type === "monthly") {
+	// 		setMonthlyPayments((prev) => prev.filter((p) => p.id !== id))
+	// 	} else {
+	// 		setRandomPayments((prev) => prev.filter((p) => p.id !== id))
+	// 	}
+	// }
 
-	const handlePayment = (payment: PaymentItem) => {
-		// setSelectedPayment(payment)
-		setShowPaymentModal(true)
-	}
+	// const handlePayment = (payment: PaymentItem) => {
+	// 	// setSelectedPayment(payment)
+	// 	setShowPaymentModal(true)
+	// }
 
-	const handleEditPayment = () => { }
+	// const handleEditPayment = () => { }
 
 	return (
 		<>
@@ -106,7 +106,8 @@ export default function PaymentReminderCard({
 						</CardTitle>
 					</CardHeader>
 					<CardContent className="space-y-3">
-						{monthlyPayments.length === 0 ? (
+						<h3>Funcionalidad en desarrollo, si la querés rápido avisame</h3>
+						{/* {monthlyPayments.length === 0 ? (
 							<p className="text-gray-500 text-sm text-center">No hay pagos mensuales registrados.</p>
 						) : (
 							monthlyPayments.map((payment) => (
@@ -156,7 +157,7 @@ export default function PaymentReminderCard({
 							className="w-full mt-4 flex items-center gap-2"
 						>
 							<Plus className="w-4 h-4" /> Agregar Recordatorio Mensual
-						</Button>
+						</Button> */}
 					</CardContent>
 				</Card>
 
@@ -168,7 +169,9 @@ export default function PaymentReminderCard({
 						</CardTitle>
 					</CardHeader>
 					<CardContent className="space-y-3">
-						{randomPayments.length === 0 ? (
+						<h3>Funcionalidad en desarrollo, si la querés rápido avisame</h3>
+
+						{/* {randomPayments.length === 0 ? (
 							<p className="text-gray-500 text-sm text-center">No hay pagos aleatorios registrados.</p>
 						) : (
 							randomPayments.map((payment) => (
@@ -211,25 +214,25 @@ export default function PaymentReminderCard({
 								setShowPaymentReminder(true)
 							}}
 							className="w-full mt-4 flex items-center gap-2"
-						>
-							<Plus className="w-4 h-4" /> Agregar Recordatorio de Pago
-						</Button>
+						> 
+						<Plus className="w-4 h-4" /> Agregar Recordatorio de Pago
+					</Button> */}
 					</CardContent>
 				</Card>
-			</div>
+			</div >
 
-			<PaymentReminderModal
-				showPaymentReminder={showPaymentReminder}
-				setShowPaymentReminder={setShowPaymentReminder}
-				cats={cats}
-				onSubmit={handleCreatePayment}
-				paymentReminderType={paymentReminderType}
-				setPaymentType={setPaymentReminderType}
-				editingPaymentReminder={editingPaymentReminder}
+			{/* // <PaymentReminderModal
+			// 	showPaymentReminder={showPaymentReminder}
+			// 	setShowPaymentReminder={setShowPaymentReminder}
+			// 	cats={cats}
+			// 	onSubmit={handleCreatePayment}
+			// 	paymentReminderType={paymentReminderType}
+			// 	setPaymentType={setPaymentReminderType}
+			// 	editingPaymentReminder={editingPaymentReminder}
 
-			/>
+			// />
 
-			<PaymentModal open={showPaymentModal} onOpenChange={setShowPaymentModal} payment={selectedPayment || undefined} />
+			// <PaymentModal open={showPaymentModal} onOpenChange={setShowPaymentModal} payment={selectedPayment || undefined} /> */}
 		</>
 	)
 }

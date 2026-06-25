@@ -6,8 +6,7 @@ import { User } from '../schemas/user';
 import { useDashboard } from '@/app/dashboard/dashboardContext';
 
 export function useCreateMovement() {
-	const { cats, loadingBudgetedCats } = useDashboard();
-
+	const { cats } = useDashboard();
 	const queryClient = useQueryClient();
 
 	return useMutation({

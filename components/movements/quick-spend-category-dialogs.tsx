@@ -216,7 +216,7 @@ export function QuickSpendCategoryDialogs({
 
 							<div>
 								<Label>Ícono</Label>
-								<div className="grid grid-cols-5 gap-2 mt-2">
+								<div className="grid grid-cols-4 md:grid-cols-7 gap-2 mt-2">
 									{availableIcons.map((i) => {
 										const Icon = i.icon
 										const active = newCatIconId === i.id
@@ -226,12 +226,12 @@ export function QuickSpendCategoryDialogs({
 												onClick={() => setNewCatIconId(i.id)}
 												type="button"
 												className={cn(
-													"p-2 rounded-lg border flex items-center justify-center",
-													active ? "border-primary-600 bg-primary-50" : "border-gray-200 hover:bg-gray-50",
+													"p-3 md:p-2 rounded-lg border flex items-center justify-center",
+													active ? "border-primary-600 bg-primary-50 ring-2 ring-primary-200" : "border-gray-200 hover:bg-gray-50",
 												)}
 												title={i.name}
 											>
-												<Icon className="w-5 h-5" />
+												<Icon className="w-6 h-6 md:w-5 md:h-5" />
 											</button>
 										)
 									})}
@@ -240,7 +240,7 @@ export function QuickSpendCategoryDialogs({
 
 							<div>
 								<Label>Color</Label>
-								<div className="grid grid-cols-8 gap-2 mt-2">
+								<div className="grid grid-cols-6 md:grid-cols-12 gap-3 mt-2">
 									{availableColors.map((c) => {
 										const active = newCatColorId === c.id
 										return (
@@ -249,9 +249,9 @@ export function QuickSpendCategoryDialogs({
 												onClick={() => setNewCatColorId(c.id)}
 												type="button"
 												className={cn(
-													"w-8 h-8 rounded-full border-2",
+													"w-10 h-10 md:w-8 md:h-8 rounded-full border-2 transition-transform",
 													c.class,
-													active ? "border-gray-900" : "border-white",
+													active ? "border-gray-900 scale-110" : "border-white hover:scale-105",
 												)}
 												title={c.name}
 											/>
@@ -260,25 +260,22 @@ export function QuickSpendCategoryDialogs({
 								</div>
 							</div>
 						</div>
-						<DialogFooter>
+						<DialogFooter className="flex-col-reverse sm:flex-row gap-2 pt-2">
 							<Button type="button" variant="outline" onClick={() => {
-								console.log('Cancel clicked');
 								setShowCreateCategory(false);
 								setEditingCategory(null);
 								setNewCatColorId(availableColors[0]?.id);
 								setNewCatIconId(availableIcons[0]?.id);
-								// reset form values too
 								reset({
 									name: '',
 									color: availableColors[0]?.id,
 									icon: availableIcons[0]?.id,
 									type: newCatType,
 								});
-
 							}}>
 								Cancelar
 							</Button>
-							<Button type="submit" >
+							<Button type="submit">
 								{isSubmitting ? 'Guardando...' : editingCategory ? 'Actualizar' : 'Crear'}
 							</Button>
 						</DialogFooter>

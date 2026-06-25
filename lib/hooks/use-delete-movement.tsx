@@ -9,17 +9,21 @@ export function useDeleteMovement() {
 	return useMutation({
 		mutationFn: ({ id }: { id: string; type: TxType; amount: number }) =>
 			deleteMovement(id),
-		onSuccess: (_, { type, amount }) => {
+		onSuccess: (_, { id, type, amount }) => {
+			queryClient.setQueriesData(
+				{ queryKey: ['user-movements'] },
+				(old: any) => old ? old.filter((m: any) => m.id !== id) : old
+			);
+
 			queryClient.setQueryData(['user-profile'], (old: User) => {
 				if (!old) return old;
-				// delete reverses the movement: income deletion decreases balance
 				const delta = type === TxType.INCOME ? -amount : amount;
 				return { ...old, balance: old.balance + delta };
 			});
+
 			queryClient.invalidateQueries({ queryKey: ['user-movements'] });
 			queryClient.invalidateQueries({ queryKey: ['user-profile'] });
 			queryClient.invalidateQueries({ queryKey: ['budgeted-categories'] });
-
 		},
 		onError: (error) => {
 			console.error('Delete movement failed:', error);

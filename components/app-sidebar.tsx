@@ -57,21 +57,21 @@ const toolsMenuItems = [
 		url: "/dashboard/importar",
 		icon: FileSpreadsheet,
 	},
-	{
-		title: "Acomodar Balance",
-		url: "/dashboard/balance",
-		icon: DollarSign,
-	},
+	// {
+	// 	title: "Acomodar Balance",
+	// 	url: "/dashboard/balance",
+	// 	icon: DollarSign,
+	// },
 	{
 		title: "Dividir Cuenta",
 		url: "/dashboard/dividir-cuenta",
 		icon: Split,
 	},
-	{
-		title: "Seguidor de ahorro",
-		url: "/dashboard/seguidor-ahorro",
-		icon: PiggyBank,
-	},
+	// {
+	// 	title: "Seguidor de ahorro",
+	// 	url: "/dashboard/seguidor-ahorro",
+	// 	icon: PiggyBank,
+	// },
 ]
 
 const secondaryMenuItems = [
@@ -80,11 +80,11 @@ const secondaryMenuItems = [
 		url: "/dashboard/config",
 		icon: Settings,
 	},
-	{
-		title: "Donaciones",
-		url: "/dashboard/donaciones",
-		icon: Heart,
-	},
+	// {
+	// 	title: "Donaciones",
+	// 	url: "/dashboard/donaciones",
+	// 	icon: Heart,
+	// },
 ]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {

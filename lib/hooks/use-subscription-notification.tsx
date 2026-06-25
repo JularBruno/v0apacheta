@@ -23,6 +23,7 @@ export function useSubscribe() {
 			queryClient.setQueryData(['subscription-notifications'], (old: any[]) =>
 				old ? [...old, newSub] : [newSub],
 			);
+			queryClient.invalidateQueries({ queryKey: ['step-valid', '1.0'] });
 		},
 		onError: (error) => {
 			console.error('Subscribe failed:', error);

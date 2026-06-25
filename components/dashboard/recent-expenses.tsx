@@ -29,11 +29,14 @@ export default function RecentExpenses({
 	const { mutateAsync: deleteMutation } = useDeleteMovement();
 
 	const movementsFilters = useMemo(() => {
-		const { start, end } = getLastNMonths(1);
+		const { start } = getLastNMonths(1);
+		const end = new Date();
+		end.setHours(23, 59, 59, 999); // end of today — prevents newly created movements from falling outside the filter
 		return getDateStringsForFilter(start, end);
 	}, []);
 
-	const { data: rawMovements = [], isLoading: loading } = useMovements(movementsFilters);
+	const { data: rawMovements = [], isLoading, isFetching } = useMovements(movementsFilters);
+	const loading = isLoading || isFetching;
 
 	const allMovements = useMemo(() =>
 		[...rawMovements].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -41,8 +44,7 @@ export default function RecentExpenses({
 
 	const movements = useMemo(() => allMovements.slice(0, 5), [allMovements]);
 
-	const lastFiveAmount = useMemo(() =>
-		movements.reduce((sum, item) => item.type === TxType.EXPENSE ? sum + item.amount : sum, 0),
+	const lastFiveAmount = useMemo(() => movements.reduce((sum, item) => item.type === TxType.EXPENSE ? sum + item.amount : sum, 0),
 		[movements]
 	);
 

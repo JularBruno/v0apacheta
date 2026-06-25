@@ -1,557 +1,550 @@
 {
-  "meta": {
-    "description": "Teaching context for the Apacheta financial journey map. Defines philosophy, principles, step structure, validation logic, and notification plan.",
-    "lastUpdated": "2026-06-11"
-  },
-
-  "metaphor": {
-    "apacheta": "A stone cairn left by travelers on the trails of the Sierras Cordobesas. Near Córdoba city — where the humid pampa meets the foot of the Sierras Chicas — hikers place a stone on existing cairns as they pass: an offering, a mark of progress, a signal to those who follow that the path is real. In Apacheta the app, each milestone is one of these cairns: a marker you build by taking real financial actions, visible proof that you moved forward.",
-    "geography": "Córdoba, Argentina. The city sits on the Humid Pampa plains, at the foot of the Sierras Chicas (Sierras Cordobesas), average height 550m. The Río Suquía and the La Cañada stream cross the landscape. Native vegetation: espinillo, algarrobo, molle, tala. The financial journey mirrors the physical one: starting on the flat pampa, crossing the river, climbing gently through the sierras foothills, reaching the hilltop.",
-    "journey": "Financial health is a trail through the sierras, not a destination you teleport to. The map shows the full path from the pampa to the hilltop. Progress is earned step by step, apacheta by apacheta.",
-    "tone": "Calm, honest, direct. Not motivational-poster language. Acknowledges that Argentina's economy is hard. Celebrates small wins as real wins. Uses vos."
-  },
-
-  "teachingPhilosophy": {
-    "coreRule": "Gastá menos de lo que ganás. Todo lo demás es técnica.",
-    "grandmaPrinciples": [
-      "Gastá menos de lo que ganás",
-      "Dale un nombre a cada peso",
-      "Gastá en papel antes de gastar en la realidad",
-      "Enojate con las deudas y las cuotas",
-      "La gente no se hace rica con tarjetas de crédito ni cuotas"
-    ],
-    "babyStepsAdaptedForArgentina": [
-      "1. Fondo de emergencia inicial (~$500–$1000 USD equivalente) — antes de atacar la deuda",
-      "2. Fondo de emergencia completo: 3 a 6 meses de gastos",
-      "3. Salí de todas las deudas (menos hipoteca)",
-      "4. Invertí el 15% de tus ingresos",
-      "5. Ahorrá para metas a largo plazo (educación, emprendimiento)",
-      "6. Construí patrimonio y aportá a los demás"
-    ],
-    "learnByDoing": "Cada paso del mapa requiere una acción real dentro de la app. La lección es la acción.",
-    "progressiveUnlocking": "No se puede saltear pasos. Entender el interés compuesto no sirve si todavía no sabés adónde va tu dinero. Primero los cimientos.",
-    "contextIsArgentina": "La inflación es real. El peso pierde valor. El dólar importa. Plazo fijo UVA, FCI, Cedears y el dólar MEP son el kit local. El mapa enseña con esta realidad, no a pesar de ella.",
-    "noShaming": "La deuda no es un fracaso moral. Gastar no es debilidad. El mapa arranca desde donde el usuario está, no desde donde debería haber estado.",
-    "progressTracking": "Cada paso tiene una condición de validación. Para pasos conceptuales sin acción verificable en la API, el usuario confirma con un botón 'Entendido, siguiente apacheta'. El progreso se guarda en localStorage por stepId en primera instancia, migrable a API."
-  },
-
-  "stages": [
-    {
-      "id": "stage-1",
-      "chapter": "Capítulo 1: Conoce el camino",
-      "tagline": "El primer paso es mirar.",
-      "principle": "No podés mejorar lo que no ves. Antes de cualquier plan, hay que saber dónde está el dinero.",
-      "appFeatures": ["inicio"],
-      "steps": [
-        {
-          "stepId": "1.0",
-          "type": "major",
-          "title": "Primera Apacheta",
-          "description": "Bienvenido al camino. Acá empieza todo.",
-          "longDescription": "El mapa te va a guiar paso a paso. Cada apacheta es una piedra que vos colocás en el camino — una acción real que ya hiciste. Seguí el mapa, seguí las apachetas. El primer paso: instalá la app y activá las notificaciones para que el camino te acompañe.",
-          "appInstruction": "Instalá Apacheta como app en tu celular (PWA) y permitís las notificaciones para recibir recordatorios del camino.",
-          "validation": {
-            "type": "pwa_or_acknowledged",
-            "apiCheck": "getSubscriptionNotifications() retorna 1 o más resultados (suscripción push existe)",
-            "fallback": "Botón 'Ya lo hice, continuar' si el usuario no quiere notificaciones ahora"
-          }
-        },
-        {
-          "stepId": "1.1",
-          "type": "major",
-          "title": "Empezá a registrar",
-          "description": "Anotá lo que entra y lo que sale. Cada día.",
-          "longDescription": "La mayoría de las personas no sabe a dónde va su dinero. Anotar cada movimiento — por pequeño que sea — cambia eso. No es un presupuesto todavía. Es solo mirar. Este hábito, sostenido en el tiempo, va a cambiar cómo tomás decisiones con el dinero.",
-          "appInstruction": "Seguí los sub-pasos para configurar tu punto de partida.",
-          "validation": {
-            "type": "children_completed",
-            "description": "Completado cuando todos los sub-pasos 1.1.1 a 1.1.4 están completos."
-          }
-        },
-        {
-          "stepId": "1.1.1",
-          "type": "minor",
-          "title": "¿Cuál es tu balance actual?",
-          "description": "Tu punto de partida: cuánto tenés ahora mismo.",
-          "longDescription": "El balance personal es todo lo que tenés disponible: el efectivo en tu billetera, lo que tenés en el banco, y cualquier plata que considerás tuya en este momento. No son inversiones ni deudas — eso viene después. Solo: si tuvieras que contar lo que tenés hoy, ¿cuánto sería? Ese número es tu punto de partida.",
-          "appInstruction": "Inicio → tocá tu balance → editá y poné tu balance actual en pesos.",
-          "validation": {
-            "type": "api",
-            "apiCheck": "user.balance !== 0",
-            "note": "Esta validación se verifica al intentar avanzar a 1.1.2. El acto de guardar el balance en 1.1.1 es lo que habilita el siguiente paso."
-          }
-        },
-        {
-          "stepId": "1.1.2",
-          "type": "minor",
-          "title": "Anotá tu ingreso del mes",
-          "description": "¿Cuánto entra este mes? Ese es el techo de todo lo demás.",
-          "longDescription": "El ingreso es el límite de tu vida financiera. Todo lo que planeás — gastos, ahorros, inversiones — tiene que caber dentro de ese número. Anotá tu sueldo, honorarios, o cualquier ingreso que recibiste este mes. Si ya arrancaste el mes, podés poner la fecha correspondiente al momento en que lo recibiste.",
-          "appInstruction": "Inicio → Quick Spend Card → tipo Ingreso → ingresá el monto con la fecha correcta.",
-          "validation": {
-            "type": "api",
-            "apiCheck": "Al menos 1 movimiento de tipo 'income' este mes",
-            "prereq": "user.balance !== 0 (1.1.1 completo)"
-          }
-        },
-        {
-          "stepId": "1.1.3",
-          "type": "minor",
-          "title": "Anotá un gasto",
-          "description": "Por donde empieza el control: saber a dónde va la plata.",
-          "longDescription": "La mayoría de las personas subestima sus gastos en un 30 a 50%. Anotar rompe esa ilusión. Elegí una categoría que represente ese gasto — o creá una nueva si no existe. No hay gastos vergonzosos. El punto es verlos. Con el tiempo, estos registros van a mostrar patrones que hoy no ves.",
-          "appInstruction": "Inicio → Quick Spend Card → tipo Gasto → elegí o creá una categoría → guardá.",
-          "validation": {
-            "type": "api",
-            "apiCheck": "Al menos 1 movimiento de tipo 'expense' registrado"
-          }
-        },
-        {
-          "stepId": "1.1.4",
-          "type": "minor",
-          "title": "Seguí registrando",
-          "description": "El hábito es lo que cambia todo, no el conocimiento.",
-          "longDescription": "Un día de registro no sirve. Una semana ya empieza a revelar algo. Un mes te da un cuadro completo. El desafío ahora es sostener el hábito: anotar cada gasto el día que sucede, no a fin de mes de memoria. Podés activar o desactivar los recordatorios en Configuración para que la app te ayude a no olvidarte.",
-          "appInstruction": "Configuración → Notificaciones → activá el recordatorio diario de registro.",
-          "notificationNote": "Las notificaciones se configuran en la página de Configuración, no inline en este paso. El usuario puede activarlas o desactivarlas cuando quiera.",
-          "validation": {
-            "type": "api",
-            "apiCheck": "5 o más movimientos de tipo 'expense' registrados en total"
-          }
-        },
-        {
-          "stepId": "1.2",
-          "type": "chapter",
-          "title": "Gastá menos de lo que ganás",
-          "description": "La regla de la abuela. La única regla que importa.",
-          "longDescription": "Esto no es matemática. Es comportamiento. Si gastás más de lo que ganás — aunque sea poquito, aunque sea en cuotas — estás construyendo una deuda que crece sola. Si gastás menos, tenés un sobrante. Y ese sobrante es el material con el que se construye cualquier libertad financiera. No hay app, ni inversión, ni truco que reemplace esta regla. Todo lo demás que vas a aprender en este camino es una técnica para aplicarla mejor.",
-          "appInstruction": "Revisá tu balance en Inicio. ¿Tu balance creció o bajó desde que empezaste a registrar?",
-          "validation": {
-            "type": "acknowledged",
-            "button": "Entendido, siguiente apacheta"
-          }
-        }
-      ]
-    },
-
-    {
-      "id": "stage-2",
-      "chapter": "Capítulo 2: Presupuesto — Gestiona tus recursos",
-      "tagline": "Dale un nombre a cada peso antes de gastarlo.",
-      "principle": "Un presupuesto no es una restricción. Es un plan para gastar en lo que importa y no gastar en lo que no importa.",
-      "appFeatures": ["presupuesto", "historial"],
-      "futureNote": "Se agregarán más gráficos y guías dentro de Presupuesto e Historial para que el usuario entienda sus patrones visualmente mientras avanza en el mapa.",
-      "steps": [
-        {
-          "stepId": "2.0",
-          "type": "major",
-          "title": "Hacé un presupuesto",
-          "description": "Antes de que empiece el mes, cada peso ya tiene un destino.",
-          "longDescription": "Un presupuesto de base cero significa que tu ingreso menos todos tus gastos planeados da cero. Cada peso tiene un nombre: alquiler, comida, transporte, ahorro. No sobra plata sin nombre porque la plata sin nombre siempre se gasta en algo que no importa. Esto no es restricción — es intención.",
-          "appInstruction": "Presupuesto → configurá un límite para cada categoría de gasto que tengas.",
-          "teachingConcepts": [
-            "Presupuesto de base cero: ingreso - todos los destinos = 0",
-            "Regla 50/30/20: 50% necesidades, 30% deseos, 20% ahorro/deuda",
-            "Gastá en papel primero: definí el presupuesto antes de que empiece el mes"
-          ],
-          "validation": {
-            "type": "acknowledged",
-            "button": "Entendido, voy a hacerlo"
-          }
-        },
-        {
-          "stepId": "2.1",
-          "type": "minor",
-          "title": "Dale un nombre a cada peso",
-          "description": "Asigná un límite a cada categoría de gasto.",
-          "longDescription": "Entrá a Presupuesto y poné un número en al menos 3 categorías de gasto. No tiene que ser perfecto — el primer presupuesto nunca lo es. Lo importante es que exista. El mes que viene lo ajustás con lo que aprendiste este mes.",
-          "appInstruction": "Presupuesto → seleccioná una categoría → asigná un monto máximo mensual → repetí para al menos 3 categorías.",
-          "validation": {
-            "type": "api",
-            "apiCheck": "3 o más categorías con budget > 0 en CategoryBudget del mes actual"
-          }
-        },
-        {
-          "stepId": "2.2",
-          "type": "minor",
-          "title": "Sabé cuánto te queda",
-          "description": "El presupuesto solo sirve si lo mirás mientras gastás.",
-          "longDescription": "Configuraste tus límites. Ahora cada vez que gastás en una categoría, el presupuesto te muestra cuánto te queda. La sugerencia de gasto diario te dice: si dividís lo que resta entre los días que faltan, ¿cuánto podés gastar por día sin pasarte? Este número te ayuda a tomar decisiones en el momento.",
-          "appInstruction": "Presupuesto → mirá la barra de progreso de cada categoría y la sugerencia de gasto diario.",
-          "validation": {
-            "type": "api",
-            "apiCheck": "Al menos 1 gasto registrado en una categoría que tiene presupuesto asignado"
-          }
-        },
-        {
-          "stepId": "2.3",
-          "type": "minor",
-          "title": "Revisá tu historial",
-          "description": "Los patrones solo aparecen cuando tenés suficientes datos.",
-          "longDescription": "Tu historial de gastos es un espejo. Filtrarlo por categoría revela dónde va más plata de lo que creías. Este es el input más honesto para ajustar tu presupuesto el mes que viene. No te juzgues — usá lo que ves para decidir mejor.",
-          "appInstruction": "Historial → filtrá por categoría → identificá dónde gastaste más de lo planeado.",
-          "validation": {
-            "type": "api",
-            "apiCheck": "10 o más movimientos registrados en total"
-          }
-        },
-        {
-          "stepId": "2.4",
-          "type": "chapter",
-          "title": "Gastá en papel antes que en la realidad",
-          "description": "El próximo mes, planealo antes de que empiece.",
-          "longDescription": "El presupuesto más poderoso es el que hacés antes de que empiece el mes. No a fin de mes mirando qué pasó — antes de que empiece, decidiendo qué va a pasar. Sentate unos minutos antes del primero de cada mes y asigná cada peso de tu ingreso esperado. El mes que viene va a ser diferente.",
-          "appInstruction": "Antes de fin de mes → Presupuesto → actualizá los límites para el mes siguiente según lo que aprendiste.",
-          "validation": {
-            "type": "acknowledged",
-            "button": "Lo voy a hacer, siguiente apacheta"
-          }
-        }
-      ]
-    },
-
-    {
-      "id": "stage-3",
-      "chapter": "Capítulo 3: Protección — Antes de crecer, protegerse",
-      "tagline": "Construí el escudo. Después escalá.",
-      "principle": "Sin fondo de emergencia, cualquier imprevisto te manda de vuelta a cero. Sin salir de la deuda, el interés te roba el futuro.",
-      "appFeatures": ["patrimonio", "seguidor-ahorro"],
-      "notificationPlan": {
-        "budgetAlerts": [
-          "80% de una categoría gastado → 'Te queda poco en [categoría] este mes'",
-          "100% de una categoría alcanzado → 'Llegaste al límite de [categoría]. Revisá si podés ajustar'",
-          "5 días antes de fin de mes con más del 30% restante → 'Todavía tenés margen en tu presupuesto, ¿estás anotando todo?'"
-        ],
-        "savingsAlerts": [
-          "Meta de ahorro al 50% → 'Llegaste a la mitad de [nombre del objetivo]'",
-          "Meta de ahorro al 100% → '¡Completaste [nombre]! Apacheta colocada'",
-          "Mensual → 'Tu patrimonio neto este mes: [número]'"
-        ],
-        "debtAlerts": [
-          "Pasivo reducido en más del 20% → 'Estás liquidando [deuda], seguí así'",
-          "Pasivo llegando a $0 → 'Casi libre de esta deuda'"
-        ]
-      },
-      "steps": [
-        {
-          "stepId": "3.0",
-          "type": "major",
-          "title": "Conocé tu patrimonio",
-          "description": "El número real: lo que tenés menos lo que debés.",
-          "longDescription": "El patrimonio neto es el único número financiero que importa a largo plazo. Es simple: todo lo que tenés (activos) menos todo lo que debés (pasivos). Puede ser negativo al principio — eso no es un fracaso, es el punto de partida honesto. El objetivo del camino es que ese número crezca, mes a mes.",
-          "appInstruction": "Patrimonio → explorá la página. Vas a ver tus activos, tus pasivos, y tu patrimonio neto.",
-          "validation": {
-            "type": "acknowledged",
-            "button": "Entendí, voy a empezar a cargarlo"
-          }
-        },
-        {
-          "stepId": "3.1",
-          "type": "minor",
-          "title": "Fondo de emergencia inicial",
-          "description": "Antes de atacar deudas: un colchón mínimo para no volver a endeudarte.",
-          "longDescription": "Antes de pagar deudas agresivamente, necesitás un fondo mínimo de emergencia — el equivalente a unos $500–$1000 USD en pesos o dólares. ¿Por qué? Porque si no tenés ese colchón, cualquier emergencia (el auto, la salud, un electrodoméstico) te va a hacer volver al crédito. Es un escudo, no una inversión. Guardalo en algo líquido: caja de ahorro, billetera virtual, o efectivo dolarizado.",
-          "appInstruction": "Patrimonio → Nuevo activo → nombralo 'Fondo de emergencia inicial' → ingresá el monto que tenés ahorrado para esto.",
-          "teachingConcepts": [
-            "Liquidez: el fondo de emergencia tiene que estar disponible en 24 horas",
-            "En Argentina: dólares billete, cuenta remunerada en USD, o FCI money market",
-            "No invertir el fondo de emergencia en activos de riesgo"
-          ],
-          "validation": {
-            "type": "api",
-            "apiCheck": "Al menos 1 activo de tipo 'asset' creado en Patrimonio"
-          }
-        },
-        {
-          "stepId": "3.2",
-          "type": "minor",
-          "title": "¿Tenés deudas?",
-          "description": "Antes de seguir, hay que saber con qué se está lidiando.",
-          "longDescription": "Las deudas de consumo — tarjeta de crédito, préstamos personales, cuotas — tienen tasas que en Argentina pueden superar el 100% anual. La deuda crece más rápido de lo que cualquier inversión puede rendir. No es una tragedia tener deuda. Pero hay que saber exactamente cuánto es, a qué tasa, y con quién. El primer paso es verlo.",
-          "appInstruction": "Patrimonio → Nuevo pasivo → cargá cada deuda con su nombre y monto actual. Si no tenés deudas, tocá 'No tengo deudas'.",
-          "validation": {
-            "type": "api_or_acknowledged",
-            "apiCheck": "Al menos 1 pasivo (liability) cargado en Patrimonio con currentAmount > 0",
-            "fallback": "Botón 'No tengo deudas, continuar' — guardado en localStorage como { '3.2-no-debt': true }"
-          }
-        },
-        {
-          "stepId": "3.3",
-          "type": "minor",
-          "title": "Fondo de emergencia completo",
-          "description": "3 a 6 meses de gastos. Tu verdadero escudo.",
-          "longDescription": "Con el fondo inicial armado y tus deudas visibles, ahora construís el fondo real. 3 meses de gastos esenciales como mínimo, 6 meses como ideal. Este fondo te da tiempo: si perdés el trabajo, no entrás en pánico en el primer mes. En Argentina, el desafío es que los pesos pierden valor. Opciones: dolarizar una parte, plazo fijo UVA, o FCI de ahorro con rendimiento por encima de la inflación.",
-          "appInstruction": "Seguidor de Ahorro → creá un objetivo 'Fondo de emergencia completo' → calculá 3 veces tus gastos mensuales fijos y poné eso como meta.",
-          "teachingConcepts": [
-            "Cuánto necesitás: multiplicá tus gastos fijos mensuales por 3 (mínimo) o por 6 (ideal)",
-            "Dónde guardarlo en Argentina: dólar billete, FCI money market, plazo fijo UVA",
-            "La diferencia entre fondo de emergencia y ahorro para metas: no se toca para vacaciones ni consumo"
-          ],
-          "validation": {
-            "type": "api",
-            "apiCheck": "Al menos 1 objetivo de ahorro creado en Seguidor de Ahorro",
-            "prereq": "3.1 completado"
-          }
-        },
-        {
-          "stepId": "3.4",
-          "type": "minor",
-          "title": "Liquidá tus deudas",
-          "description": "El interés trabaja para vos o contra vos. Elegí.",
-          "longDescription": "Con el fondo de emergencia construido, ahora atacás las deudas. Dos métodos: Bola de nieve — pagás primero la deuda más chica, ganás momentum psicológico y vas tachando. Avalancha — pagás primero la deuda con mayor tasa, pagás menos interés total. En Argentina con tasas altísimas, la avalancha tiene sentido matemático. Pero si necesitás motivación, la bola de nieve también funciona.",
-          "appInstruction": "Patrimonio → seleccioná cada pasivo → actualizá el saldo a medida que vas pagando → el objetivo es llegar a $0 en todos.",
-          "conditional": true,
-          "conditionalNote": "Este paso solo se muestra si el usuario tiene pasivos en Patrimonio o marcó que tiene deudas en 3.2. Si eligió 'No tengo deudas', este paso se salta automáticamente.",
-          "teachingConcepts": [
-            "Método bola de nieve: deuda más chica primero — velocidad y momentum",
-            "Método avalancha: deuda con mayor tasa primero — menor costo total de interés",
-            "Tasa efectiva anual (TEA) en Argentina: cómo calcular el costo real de una deuda"
-          ],
-          "validation": {
-            "type": "api_or_acknowledged",
-            "apiCheck": "Todos los pasivos cargados tienen currentAmount = 0",
-            "fallback": "Botón 'Liquidé todas mis deudas' — guardado en localStorage como { '3.4-debt-cleared': true }"
-          }
-        },
-        {
-          "stepId": "3.5",
-          "type": "minor",
-          "title": "Cómo salir de la deuda",
-          "description": "Las herramientas y la mentalidad para liberarse.",
-          "longDescription": "Independientemente de si tenés deuda ahora o no, esto conviene entenderlo. La deuda de consumo es el mayor obstáculo a la libertad financiera. No porque sea un fracaso moral — sino porque el interés compuesto trabaja en tu contra con fuerza brutal. Conocer los métodos y la psicología detrás de salir de deuda te prepara para no volver a entrar.",
-          "appInstruction": "Si tenés deudas cargadas en Patrimonio, elegí un método (bola de nieve o avalancha) y comprometete con él.",
-          "teachingConcepts": [
-            "El interés compuesto en tu contra: ejemplo con tarjeta al 120% TEA",
-            "Las cuotas sin interés no son gratis: el precio está en el producto o en la oportunidad perdida",
-            "Enojarse con la deuda funciona: el comportamiento importa más que la matemática"
-          ],
-          "validation": {
-            "type": "acknowledged",
-            "button": "Entendido, siguiente apacheta"
-          }
-        },
-        {
-          "stepId": "3.6",
-          "type": "minor",
-          "title": "Métodos para ahorrar",
-          "description": "El ahorro no es lo que sobra. Es lo primero que separás.",
-          "longDescription": "Pagarte a vos mismo primero: el día que te depositan el sueldo, antes de pagar cualquier otra cosa, transferís tu porcentaje de ahorro a una cuenta o instrumento separado. Si esperás a ver qué sobra al final del mes, no va a sobrar nada. El ahorro automático convierte la intención en hábito.",
-          "appInstruction": "Seguidor de Ahorro → creá metas para cada objetivo que tengas (viaje, electrodoméstico, emprendimiento) → definí cuánto podés aportar por mes.",
-          "teachingConcepts": [
-            "Págate primero: ahorrá antes de gastar, no con lo que sobra",
-            "Automatización: transferencia automática el día de cobro",
-            "En Argentina: usar instrumentos que al menos empaten la inflación (FCI, UVA)"
-          ],
-          "validation": {
-            "type": "api",
-            "apiCheck": "2 o más objetivos de ahorro creados en Seguidor de Ahorro"
-          }
-        }
-      ]
-    },
-
-    {
-      "id": "stage-4",
-      "chapter": "Capítulo 4: Lo que enseña el camino",
-      "tagline": "El interés compuesto no perdona — ni a favor ni en contra.",
-      "principle": "Muy pocos ahorran el 25% de sus ingresos. Menos aún invierten el 25% de lo que ahorran. Los que lo hacen, con tiempo, llegan a donde los demás no pueden.",
-      "appFeatures": ["patrimonio", "seguidor-ahorro"],
-      "steps": [
-        {
-          "stepId": "4.0",
-          "type": "major",
-          "title": "El secreto que pocos aplican",
-          "description": "Ahorrar e invertir consistentemente es lo que separa a los que llegan.",
-          "longDescription": "La mayoría de las personas no ahorra sistemáticamente. De las que ahorran, muy pocas invierten. Y de las que invierten, casi ninguna mantiene el hábito en el tiempo. Pero el interés compuesto — la capacidad de que los rendimientos generen nuevos rendimientos — es exponencial, no lineal. Una pequeña diferencia en el porcentaje de ahorro o en el tiempo sostenido produce resultados enormes a 10 o 20 años. Esto no requiere ser rico para empezar. Requiere empezar.",
-          "appInstruction": "Patrimonio → revisá tu patrimonio neto. Ese número tiene que crecer cada mes. Ese es el objetivo.",
-          "teachingConcepts": [
-            "Interés compuesto: el rendimiento sobre el rendimiento previo",
-            "Efecto del tiempo: duplicar el tiempo casi cuadruplica el resultado final",
-            "El 25/25: ahorrar el 25% del ingreso e invertir el 25% de ese ahorro"
-          ],
-          "validation": {
-            "type": "acknowledged",
-            "button": "Entendido, siguiente apacheta"
-          }
-        },
-        {
-          "stepId": "4.1",
-          "type": "minor",
-          "title": "Invertí el 15% de tus ingresos",
-          "description": "Hacé trabajar a tu dinero.",
-          "longDescription": "Con el fondo de emergencia completo y sin deudas (o con el plan en marcha), arrancás a invertir. El objetivo mínimo: 15% de tu ingreso mensual. No todo junto — de a poco, consistentemente. En Argentina, el primer objetivo de una inversión es ganarle a la inflación. Después, construir patrimonio real en pesos constantes o en dólares.",
-          "appInstruction": "Patrimonio → Nuevo activo → registrá tu primera inversión con nombre, tipo y monto. Actualizalo mes a mes.",
-          "teachingConcepts": [
-            "Plazo fijo tradicional vs. UVA: nominal vs. rendimiento real",
-            "FCI: fondos comunes de inversión — money market, ahorro, renta mixta, renta variable",
-            "Cedears: acciones de empresas globales cotizando en pesos",
-            "Bonos soberanos y corporativos en pesos y en dólares",
-            "Dólar MEP: acceso legal a dólares sin restricciones"
-          ],
-          "validation": {
-            "type": "api",
-            "apiCheck": "Al menos 1 activo de tipo 'asset' en Patrimonio con movimientos de aporte registrados"
-          }
-        },
-        {
-          "stepId": "4.2",
-          "type": "minor",
-          "title": "Planeá 5 años adelante",
-          "description": "En Argentina no se planea a largo plazo. Eso es exactamente por qué hacerlo es una ventaja.",
-          "longDescription": "La incertidumbre económica hace que la mayoría viva mirando solo el mes que viene. Pero las decisiones financieras más importantes tienen horizonte de años: ¿qué querés tener o hacer en 5 años? ¿Un departamento? ¿Un negocio propio? ¿Educación? ¿Independencia? Un objetivo con número y fecha cambia cómo tomás decisiones hoy.",
-          "appInstruction": "Seguidor de Ahorro → creá un objetivo de largo plazo → poné una fecha objetivo a más de 12 meses → la app te dice cuánto aportar por mes.",
-          "teachingConcepts": [
-            "Planeamiento a largo plazo en contexto inflacionario: trabajar con dólares o UVA como unidad",
-            "La diferencia entre un deseo y una meta: número + fecha = meta",
-            "Cómo la inflación argentina afecta el planeamiento a largo plazo"
-          ],
-          "validation": {
-            "type": "api",
-            "apiCheck": "Al menos 1 objetivo de ahorro creado con fecha objetivo a más de 12 meses en el futuro"
-          }
-        },
-        {
-          "stepId": "4.3",
-          "type": "minor",
-          "title": "Mejorá tu calidad de vida con intención",
-          "description": "El dinero es un medio. La calidad de vida es el fin.",
-          "longDescription": "Seguir el mapa no es vivir de privaciones. Es gastar con intención: más en lo que importa, menos en lo que no. Las personas que planean bien no gastan menos — a veces gastan más, pero en lo que eligieron. La calidad de vida mejora cuando el dinero fluye hacia lo que vos decidís, no hacia donde te lleva el impulso o la costumbre.",
-          "appInstruction": "Revisá tu historial y tu presupuesto. ¿Hay categorías donde gastás más de lo que querías? ¿Hay cosas que valorás y no estás priorizando?",
-          "validation": {
-            "type": "acknowledged",
-            "button": "Lo voy a pensar, siguiente apacheta"
-          }
-        }
-      ]
-    },
-
-    {
-      "id": "stage-5",
-      "chapter": "Capítulo 5: Libertad — La cima",
-      "tagline": "Construí lo que dura.",
-      "principle": "La libertad financiera no es ser rico. Es que tus activos generen suficiente para cubrir tu vida sin depender de trabajo activo. Desde ahí, podés elegir.",
-      "appFeatures": ["patrimonio", "seguidor-ahorro", "presupuesto"],
-      "steps": [
-        {
-          "stepId": "5.0",
-          "type": "major",
-          "title": "Construí tu portafolio",
-          "description": "Diversificación: no apostés todo a un solo resultado.",
-          "longDescription": "Un portafolio es una colección de activos que trabajan juntos. Ningún instrumento gana siempre — pero una cartera diversificada pierde menos en las malas y captura crecimiento en las buenas. La regla simple para empezar: algo líquido en pesos, algo en dólares, algo que crezca con el tiempo.",
-          "appInstruction": "Patrimonio → asegurate de tener al menos 3 tipos de activos distintos cargados.",
-          "teachingConcepts": [
-            "Correlación de activos: por qué no todo sube y baja junto",
-            "Liquidez vs. rendimiento: el equilibrio entre tener acceso y hacer crecer",
-            "Rebalanceo: ajustar la cartera cuando los pesos se desalinean del plan original"
-          ],
-          "validation": {
-            "type": "api",
-            "apiCheck": "3 o más activos distintos cargados en Patrimonio"
-          }
-        },
-        {
-          "stepId": "5.1",
-          "type": "minor",
-          "title": "Ahorrá para emprender",
-          "description": "En Argentina, el emprendimiento es un camino real hacia la libertad.",
-          "longDescription": "En Argentina, el emprendimiento es uno de los caminos más accesibles hacia la independencia financiera. No hace falta una idea revolucionaria — hace falta capital inicial y un plan. Si tenés una idea, ponele número: ¿cuánto necesitás para arrancar? Ese es tu próximo objetivo de ahorro.",
-          "appInstruction": "Seguidor de Ahorro → creá un objetivo 'Capital para emprender' → poné el monto que necesitarías para arrancar tu proyecto.",
-          "validation": {
-            "type": "acknowledged_or_api",
-            "apiCheck": "Objetivo de ahorro con nombre relacionado a emprendimiento en Seguidor de Ahorro",
-            "fallback": "Botón 'No planeo emprender ahora, continuar'"
-          }
-        },
-        {
-          "stepId": "5.2",
-          "type": "minor",
-          "title": "Tu fondo de retiro",
-          "description": "El Estado no alcanza. Construí el tuyo.",
-          "longDescription": "El sistema previsional argentino (ANSES) probablemente no sea suficiente cuando llegues a retirarte. No es una crítica — es una realidad que hay que planear. Empezar a construir un fondo de retiro propio desde los 30 años, con un porcentaje fijo del ingreso, hace una diferencia exponencial a los 60.",
-          "appInstruction": "Patrimonio → creá un activo llamado 'Fondo de retiro'. Seguidor de Ahorro → creá una meta de retiro con fecha estimada.",
-          "teachingConcepts": [
-            "Regla del 4%: a retiro, retirás máximo el 4% de tu portafolio por año para que dure",
-            "Cuánto necesitás para retirarte: tus gastos anuales ÷ 0.04 = patrimonio objetivo",
-            "Horizonte temporal: a más años de distancia, más agresiva puede ser la inversión"
-          ],
-          "validation": {
-            "type": "api",
-            "apiCheck": "Al menos 1 activo o meta de seguidor-ahorro relacionada a retiro creada"
-          }
-        },
-        {
-          "stepId": "5.3",
-          "type": "chapter",
-          "title": "La cima",
-          "description": "Libertad financiera: tus activos cubren tu vida.",
-          "longDescription": "Llegaste. No porque hayas terminado — el camino no termina. Sino porque entendiste los principios, los aplicaste, y tenés el hábito. La libertad financiera es el punto donde tus ingresos pasivos (rendimientos, alquileres, dividendos) cubren tus gastos. Desde ahí, el trabajo es una elección, no una obligación. Construí riqueza y aportá a los demás.",
-          "appInstruction": "Revisá tu patrimonio neto. ¿Está creciendo mes a mes? ¿Tus activos superan tus pasivos por un margen creciente? Eso es la dirección correcta.",
-          "validation": {
-            "type": "api_and_acknowledged",
-            "apiCheck": "netWorth positivo en Patrimonio Y al menos 90 días de movimientos registrados",
-            "button": "Apacheta colocada"
-          }
-        }
-      ]
-    }
-  ],
-
-  "unlockLogicPrinciples": {
-    "summary": "Los pasos se desbloquean por acciones reales en la app. Para pasos conceptuales, por botón de acknowledgment. El progreso se guarda en localStorage por stepId en primera instancia, migrable a API.",
-    "validationTypes": {
-      "api": "Verificación automática contra datos reales del usuario via server actions existentes",
-      "acknowledged": "El usuario toca un botón de confirmación. Guardado en localStorage: { [stepId]: { completed: true, date: ISO } }",
-      "api_or_acknowledged": "Se valida por API si los datos existen, o por botón de opción alternativa (ej: 'No tengo deudas')",
-      "pwa_or_acknowledged": "Se valida si hay suscripción push registrada, o por botón skip",
-      "children_completed": "Paso padre: se completa cuando todos sus sub-pasos están completos",
-      "api_and_acknowledged": "Ambas condiciones requeridas",
-      "acknowledged_or_api": "Se valida por acknowledgment o por detección automática en API"
-    },
-    "apiDataNeeded": [
-      "user.balance — para validar 1.1.1",
-      "movements count por tipo (income/expense) y por mes — para 1.1.2, 1.1.3, 1.1.4",
-      "movements total count y date of first movement — para 2.3, 5.3",
-      "CategoryBudget: categorías con budget > 0 — para 2.1, 2.2",
-      "FinancialElements: assets count, liabilities count, netWorth, date of first asset — para 3.1, 3.2, 3.4, 5.0, 5.3",
-      "Seguidor de ahorro: goals count, goals with future target date — para 3.3, 3.6, 4.2, 5.1, 5.2",
-      "Push subscriptions: count — para 1.0"
-    ],
-    "sequencingRules": [
-      "Los pasos dentro de un capítulo se desbloquean secuencialmente",
-      "Un capítulo se desbloquea cuando el capítulo anterior está completo",
-      "Los pasos condicionales (3.4) se saltan automáticamente si la condición no aplica",
-      "El paso activo actual siempre se muestra primero y con más detalle",
-      "Los pasos completados son visibles pero de-enfatizados",
-      "Los pasos futuros muestran título e ícono pero no detalle completo"
-    ]
-  },
-
-  "designPrinciples": {
-    "theMapIsAPath": "El mapa es un sendero, no una lista de tareas. La metáfora es visual: sendero de montaña, no to-do list.",
-    "currentStepIsHero": "El paso en el que está el usuario es el más prominente, el más detallado, el que tiene la instrucción de app más clara.",
-    "futureStepsAreMystery": "Los pasos bloqueados muestran título e ícono pero no el contenido completo — la curiosidad motiva.",
-    "completedStepsAreMemory": "Los pasos completados son visibles pero de-enfatizados — son apachetas ya colocadas.",
-    "mobileFirst": "La mayoría de los usuarios están en el celular. La tarjeta del mapa tiene que sentirse como una guía, no como un documento.",
-    "noInfiniteScroll": "No es un scroll vertical de todos los pasos. Es una vista enfocada: un paso a la vez, con contexto de dónde estás en el camino total."
-  },
-
-  "contentPrinciples": {
-    "everyStepHas": [
-      "stepId: identificador único para localStorage y futura API",
-      "type: 'major' (hito principal) | 'minor' (sub-paso) | 'chapter' (cierre de etapa conceptual)",
-      "title: título humano, no jerga financiera",
-      "description: una línea — qué vas a entender o hacer",
-      "longDescription: el contenido real de la lección",
-      "appInstruction: qué hacer exactamente en la app, con path de navegación",
-      "validation: cómo se verifica que el paso está completo",
-      "teachingConcepts (opcional): conceptos económicos cubiertos en este paso"
-    ],
-    "languageRules": [
-      "Usá vos (segunda persona informal argentina), no tú ni usted",
-      "Directo: 'Anotá tu ingreso', no 'Te recomendamos que registres tus ingresos'",
-      "Nombrá la realidad argentina: inflación, peso, dólar, cuotas, ANSES",
-      "No voz pasiva en instrucciones",
-      "Oraciones cortas. Una idea por oración."
-    ]
-  }
+	"meta": {
+		"description": "Teaching context for the Apacheta financial journey map. Defines philosophy, principles, step structure, validation logic, and notification plan.",
+		"lastUpdated": "2026-06-11"
+	},
+	"metaphor": {
+		"apacheta": "A stone cairn left by travelers on the trails of the Sierras Cordobesas. Near Córdoba city — where the humid pampa meets the foot of the Sierras Chicas — hikers place a stone on existing cairns as they pass: an offering, a mark of progress, a signal to those who follow that the path is real. In Apacheta the app, each milestone is one of these cairns: a marker you build by taking real financial actions, visible proof that you moved forward.",
+		"geography": "Córdoba, Argentina. The city sits on the Humid Pampa plains, at the foot of the Sierras Chicas (Sierras Cordobesas), average height 550m. The Río Suquía and the La Cañada stream cross the landscape. Native vegetation: espinillo, algarrobo, molle, tala. The financial journey mirrors the physical one: starting on the flat pampa, crossing the river, climbing gently through the sierras foothills, reaching the hilltop.",
+		"journey": "Financial health is a trail through the sierras, not a destination you teleport to. The map shows the full path from the pampa to the hilltop. Progress is earned step by step, apacheta by apacheta.",
+		"tone": "Calm, honest, direct. Not motivational-poster language. Acknowledges that Argentina's economy is hard. Celebrates small wins as real wins. Uses vos."
+	},
+	"teachingPhilosophy": {
+		"coreRule": "Gastá menos de lo que ganás. Todo lo demás es técnica.",
+		"grandmaPrinciples": [
+			"Gastá menos de lo que ganás",
+			"Dale un nombre a cada peso",
+			"Gastá en papel antes de gastar en la realidad",
+			"Enojate con las deudas y las cuotas",
+			"La gente no se hace rica con tarjetas de crédito ni cuotas"
+		],
+		"babyStepsAdaptedForArgentina": [
+			"1. Fondo de emergencia inicial (~$500–$1000 USD equivalente) — antes de atacar la deuda",
+			"2. Fondo de emergencia completo: 3 a 6 meses de gastos",
+			"3. Salí de todas las deudas (menos hipoteca)",
+			"4. Invertí el 15% de tus ingresos",
+			"5. Ahorrá para metas a largo plazo (educación, emprendimiento)",
+			"6. Construí patrimonio y aportá a los demás"
+		],
+		"learnByDoing": "Cada paso del mapa requiere una acción real dentro de la app. La lección es la acción.",
+		"progressiveUnlocking": "No se puede saltear pasos. Entender el interés compuesto no sirve si todavía no sabés adónde va tu dinero. Primero los cimientos.",
+		"contextIsArgentina": "La inflación es real. El peso pierde valor. El dólar importa. Plazo fijo UVA, FCI, Cedears y el dólar MEP son el kit local. El mapa enseña con esta realidad, no a pesar de ella.",
+		"noShaming": "La deuda no es un fracaso moral. Gastar no es debilidad. El mapa arranca desde donde el usuario está, no desde donde debería haber estado.",
+		"progressTracking": "Cada paso tiene una condición de validación. Para pasos conceptuales sin acción verificable en la API, el usuario confirma con un botón 'Entendido, siguiente apacheta'. El progreso se guarda en localStorage por stepId en primera instancia, migrable a API."
+	},
+	"stages": [
+		{
+			"id": "stage-1",
+			"chapter": "Capítulo 1: Conoce el camino",
+			"tagline": "El primer paso es mirar.",
+			"principle": "No podés mejorar lo que no ves. Antes de cualquier plan, hay que saber dónde está el dinero.",
+			"appFeatures": [
+				"inicio"
+			],
+			"steps": [
+				{
+					"stepId": "1.0",
+					"type": "major",
+					"title": "Primera Apacheta",
+					"description": "**Bienvenido al camino. Acá empieza todo.**",
+					"longDescription": "**El mapa** te va a guiar en tu camino financiero. Con el tiempo vas a tener una imagen más clara de cómo manejás tu dinero — frustraciones incluidas. **El siguiente paso**: instalá la app y activá las notificaciones para que el camino te acompañe.",
+					"appInstruction": "Cómo instalar Apacheta en tu celular:\n\n**Android (Chrome)**: tocá el menú ⋮ → \"Instalar app\" o \"Agregar a pantalla de inicio\".\n\n**iOS (Safari)**: tocá el botón de compartir ↑ → \"Agregar a inicio\".\n\nUna vez instalada, activá las notificaciones con el botón de abajo.",
+					"validation": {
+						"type": "pwa_or_acknowledged",
+						"apiCheck": "getSubscriptionNotifications() retorna 1 o más resultados (suscripción push existe)",
+						"fallback": "Botón 'Ya lo hice, continuar' si el usuario no quiere notificaciones ahora"
+					}
+				},
+				{
+					"stepId": "1.1",
+					"type": "major",
+					"title": "Empezá a registrar",
+					"description": "El que no sabe guardar es pobre aunque etc.",
+					"longDescription": "La mayoría de las personas no sabe a dónde va su dinero. Anotar cada movimiento — por pequeño que sea — cambia eso. Este hábito, sostenido en el tiempo, va a cambiar cómo tomás decisiones con el dinero.",
+					"appInstruction": "Seguí los sub-pasos para configurar tu punto de partida.",
+					"validation": {
+						"type": "children_completed",
+						"description": "Completado cuando todos los sub-pasos 1.1.1 a 1.1.4 están completos."
+					}
+				},
+				{
+					"stepId": "1.1.1",
+					"type": "minor",
+					"title": "Conocé el Centro de Ayuda",
+					"description": "Si en algún momento no sabés cómo seguir, está ahí.",
+					"longDescription": "Antes de arrancar. Existe un Centro de Ayuda dentro de la app. Ahí encontrás explicaciones de cada paso del mapa, instrucciones detalladas de cada función, y respuestas a las preguntas más frecuentes. No es obligatorio leerlo todo ahora — es un recurso para cuando surjan dudas en el camino.",
+					"appInstruction": "Menú lateral → Ayuda. Está siempre disponible, en cualquier momento del recorrido.",
+					"validation": {
+						"type": "acknowledged",
+						"button": "Entendido, siguiente apacheta"
+					}
+				},
+				{
+					"stepId": "1.1.2",
+					"type": "minor",
+					"component": "income-with-import",
+					"title": "Anotá tu balance",
+					"description": "¿Cuánto entra este mes? Ese es el techo de todo lo demás.",
+					"longDescription": "Lo ideal es arrancar con todos tus movimientos del mes: revisá el historial de tu banco y sumá lo que recordés en efectivo. Si ya tenías algo anotado en un Excel, podés importarlo directo. Y si eso se siente como demasiado por ahora, anotá solo tu saldo actual — después te recordamos seguir registrando.",
+					"appInstruction": "Importar desde Excel: usá el botón de importar para subir tus movimientos ya anotados.\n\nCargar manualmente: Inicio → Anotá tu movimiento → tipo Ingreso o Gasto → elegí o creá una categoría → ingresá el monto con la fecha correcta.\n\nSolo el saldo: poné tu balance actual en el banco y empezá desde hoy.",
+					"validation": {
+						"type": "api",
+						"apiCheck": "Al menos 1 movimiento de tipo 'income' este mes",
+						"prereq": "user.balance !== 0 (1.1.1 completo)"
+					}
+				},
+				{
+					"stepId": "1.1.3",
+					"type": "minor",
+					"title": "Seguí registrando",
+					"description": "El hábito empieza acá: **anotá 5 movimientos para continuar**.",
+					"longDescription": "Un día de registro no sirve. Una semana ya empieza a revelar algo. Un mes te da un cuadro completo. El desafío ahora es sostener el hábito: anotar cada gasto el día que sucede, no a fin de mes de memoria. Para pasar al siguiente paso necesitás tener al menos 5 movimientos registrados — no importa si son de hoy o de días anteriores.",
+					"appInstruction": "Inicio → tarjeta de registro rápido → anotá cada gasto con su categoría y fecha. Necesitás 5 movimientos registrados para continuar.\n\nSi querés que la app te recuerde: Configuración → Notificaciones → recordatorio diario.",
+					"notificationNote": "Las notificaciones se configuran en la página de Configuración, no inline en este paso. El usuario puede activarlas o desactivarlas cuando quiera.",
+					"validation": {
+						"type": "api",
+						"apiCheck": "5 o más movimientos de tipo 'expense' registrados en total"
+					}
+				},
+				{
+					"stepId": "1.2",
+					"type": "chapter",
+					"title": "Gastá menos de lo que ganás",
+					"description": "La regla de la abuela. La única regla que importa.",
+					"longDescription": "Esto no es matemática. Es comportamiento. Si gastás más de lo que ganás — aunque sea poquito, aunque sea en cuotas — estás construyendo una deuda que crece sola. Si gastás menos, tenés un sobrante. Y ese sobrante es el material con el que se construye cualquier libertad financiera. No hay app, ni inversión, ni truco que reemplace esta regla. Todo lo demás que vas a aprender en este camino es una técnica para aplicarla mejor.",
+					"appInstruction": "Revisá tu balance en Inicio. ¿Tu balance creció o bajó desde que empezaste a registrar?",
+					"validation": {
+						"type": "acknowledged",
+						"button": "Entendido, siguiente apacheta"
+					}
+				}
+			]
+		},
+		{
+			"id": "stage-2",
+			"chapter": "Capítulo 2: Presupuesto — Gestiona tus recursos",
+			"tagline": "Dale un nombre a cada peso antes de gastarlo.",
+			"principle": "Un presupuesto no es una restricción. Es un plan para gastar en lo que importa y no gastar en lo que no importa.",
+			"appFeatures": [
+				"presupuesto",
+				"historial"
+			],
+			"futureNote": "Se agregarán más gráficos y guías dentro de Presupuesto e Historial para que el usuario entienda sus patrones visualmente mientras avanza en el mapa.",
+			"steps": [
+				{
+					"stepId": "2.0",
+					"type": "major",
+					"title": "Hacé un presupuesto",
+					"description": "Antes de que empiece el mes, cada peso ya tiene un destino.",
+					"longDescription": "Un presupuesto de base cero significa que tu ingreso menos todos tus gastos planeados da cero. Cada peso tiene un nombre: alquiler, comida, transporte, ahorro. No sobra plata sin nombre porque la plata sin nombre siempre se gasta en algo que no importa. Esto no es restricción — es intención.",
+					"appInstruction": "Presupuesto → configurá un límite para cada categoría de gasto que tengas.",
+					"teachingConcepts": [
+						"Presupuesto de base cero: ingreso - todos los destinos = 0",
+						"Regla 50/30/20: 50% necesidades, 30% deseos, 20% ahorro/deuda",
+						"Gastá en papel primero: definí el presupuesto antes de que empiece el mes"
+					],
+					"validation": {
+						"type": "acknowledged",
+						"button": "Entendido, voy a hacerlo"
+					}
+				},
+				{
+					"stepId": "2.1",
+					"type": "minor",
+					"title": "Dale un nombre a cada peso",
+					"description": "Asigná un límite a cada categoría de gasto.",
+					"longDescription": "Entrá a Presupuesto y poné un número en al menos 3 categorías de gasto. No tiene que ser perfecto — el primer presupuesto nunca lo es. Lo importante es que exista. El mes que viene lo ajustás con lo que aprendiste este mes.",
+					"appInstruction": "Presupuesto → seleccioná una categoría → asigná un monto máximo mensual → repetí para al menos 3 categorías.",
+					"validation": {
+						"type": "api",
+						"apiCheck": "3 o más categorías con budget > 0 en CategoryBudget del mes actual"
+					}
+				},
+				{
+					"stepId": "2.2",
+					"type": "minor",
+					"title": "Sabé cuánto te queda",
+					"description": "El presupuesto solo sirve si lo mirás mientras gastás.",
+					"longDescription": "Configuraste tus límites. Ahora cada vez que gastás en una categoría, el presupuesto te muestra cuánto te queda. La sugerencia de gasto diario te dice: si dividís lo que resta entre los días que faltan, ¿cuánto podés gastar por día sin pasarte? Este número te ayuda a tomar decisiones en el momento.",
+					"appInstruction": "Presupuesto → mirá la barra de progreso de cada categoría y la sugerencia de gasto diario.",
+					"validation": {
+						"type": "api",
+						"apiCheck": "Al menos 1 gasto registrado en una categoría que tiene presupuesto asignado"
+					}
+				},
+				{
+					"stepId": "2.3",
+					"type": "minor",
+					"title": "HOLA HICE HASTA ACA ESPERAME Revisá tu historial",
+					"description": "Los patrones solo aparecen cuando tenés suficientes datos.",
+					"longDescription": "Tu historial de gastos es un espejo. Filtrarlo por categoría revela dónde va más plata de lo que creías. Este es el input más honesto para ajustar tu presupuesto el mes que viene. No te juzgues — usá lo que ves para decidir mejor.",
+					"appInstruction": "Historial → filtrá por categoría → identificá dónde gastaste más de lo planeado.",
+					"validation": {
+						"type": "api",
+						"apiCheck": "10 o más movimientos registrados en total"
+					}
+				},
+				{
+					"stepId": "2.4",
+					"type": "chapter",
+					"title": "Gastá en papel antes que en la realidad",
+					"description": "El próximo mes, planealo antes de que empiece.",
+					"longDescription": "El presupuesto más poderoso es el que hacés antes de que empiece el mes. No a fin de mes mirando qué pasó — antes de que empiece, decidiendo qué va a pasar. Sentate unos minutos antes del primero de cada mes y asigná cada peso de tu ingreso esperado. El mes que viene va a ser diferente.",
+					"appInstruction": "Antes de fin de mes → Presupuesto → actualizá los límites para el mes siguiente según lo que aprendiste.",
+					"validation": {
+						"type": "acknowledged",
+						"button": "Lo voy a hacer, siguiente apacheta"
+					}
+				}
+			]
+		},
+		{
+			"id": "stage-3",
+			"chapter": "Capítulo 3: Protección — Antes de crecer, protegerse",
+			"tagline": "Construí el escudo. Después escalá.",
+			"principle": "Sin fondo de emergencia, cualquier imprevisto te manda de vuelta a cero. Sin salir de la deuda, el interés te roba el futuro.",
+			"appFeatures": [
+				"patrimonio",
+				"seguidor-ahorro"
+			],
+			"notificationPlan": {
+				"budgetAlerts": [
+					"80% de una categoría gastado → 'Te queda poco en [categoría] este mes'",
+					"100% de una categoría alcanzado → 'Llegaste al límite de [categoría]. Revisá si podés ajustar'",
+					"5 días antes de fin de mes con más del 30% restante → 'Todavía tenés margen en tu presupuesto, ¿estás anotando todo?'"
+				],
+				"savingsAlerts": [
+					"Meta de ahorro al 50% → 'Llegaste a la mitad de [nombre del objetivo]'",
+					"Meta de ahorro al 100% → '¡Completaste [nombre]! Apacheta colocada'",
+					"Mensual → 'Tu patrimonio neto este mes: [número]'"
+				],
+				"debtAlerts": [
+					"Pasivo reducido en más del 20% → 'Estás liquidando [deuda], seguí así'",
+					"Pasivo llegando a $0 → 'Casi libre de esta deuda'"
+				]
+			},
+			"steps": [
+				{
+					"stepId": "3.0",
+					"type": "major",
+					"title": "Conocé tu patrimonio",
+					"description": "El número real: lo que tenés menos lo que debés.",
+					"longDescription": "El patrimonio neto es el único número financiero que importa a largo plazo. Es simple: todo lo que tenés (activos) menos todo lo que debés (pasivos). Puede ser negativo al principio — eso no es un fracaso, es el punto de partida honesto. El objetivo del camino es que ese número crezca, mes a mes.",
+					"appInstruction": "Patrimonio → explorá la página. Vas a ver tus activos, tus pasivos, y tu patrimonio neto.",
+					"validation": {
+						"type": "acknowledged",
+						"button": "Entendí, voy a empezar a cargarlo"
+					}
+				},
+				{
+					"stepId": "3.1",
+					"type": "minor",
+					"title": "Fondo de emergencia inicial",
+					"description": "Antes de atacar deudas: un colchón mínimo para no volver a endeudarte.",
+					"longDescription": "Antes de pagar deudas agresivamente, necesitás un fondo mínimo de emergencia — el equivalente a unos $500–$1000 USD en pesos o dólares. ¿Por qué? Porque si no tenés ese colchón, cualquier emergencia (el auto, la salud, un electrodoméstico) te va a hacer volver al crédito. Es un escudo, no una inversión. Guardalo en algo líquido: caja de ahorro, billetera virtual, o efectivo dolarizado.",
+					"appInstruction": "Patrimonio → Nuevo activo → nombralo 'Fondo de emergencia inicial' → ingresá el monto que tenés ahorrado para esto.",
+					"teachingConcepts": [
+						"Liquidez: el fondo de emergencia tiene que estar disponible en 24 horas",
+						"En Argentina: dólares billete, cuenta remunerada en USD, o FCI money market",
+						"No invertir el fondo de emergencia en activos de riesgo"
+					],
+					"validation": {
+						"type": "api",
+						"apiCheck": "Al menos 1 activo de tipo 'asset' creado en Patrimonio"
+					}
+				},
+				{
+					"stepId": "3.2",
+					"type": "minor",
+					"title": "¿Tenés deudas?",
+					"description": "Antes de seguir, hay que saber con qué se está lidiando.",
+					"longDescription": "Las deudas de consumo — tarjeta de crédito, préstamos personales, cuotas — tienen tasas que en Argentina pueden superar el 100% anual. La deuda crece más rápido de lo que cualquier inversión puede rendir. No es una tragedia tener deuda. Pero hay que saber exactamente cuánto es, a qué tasa, y con quién. El primer paso es verlo.",
+					"appInstruction": "Patrimonio → Nuevo pasivo → cargá cada deuda con su nombre y monto actual. Si no tenés deudas, tocá 'No tengo deudas'.",
+					"validation": {
+						"type": "api_or_acknowledged",
+						"apiCheck": "Al menos 1 pasivo (liability) cargado en Patrimonio con currentAmount > 0",
+						"fallback": "Botón 'No tengo deudas, continuar' — guardado en localStorage como { '3.2-no-debt': true }"
+					}
+				},
+				{
+					"stepId": "3.3",
+					"type": "minor",
+					"title": "Fondo de emergencia completo",
+					"description": "3 a 6 meses de gastos. Tu verdadero escudo.",
+					"longDescription": "Con el fondo inicial armado y tus deudas visibles, ahora construís el fondo real. 3 meses de gastos esenciales como mínimo, 6 meses como ideal. Este fondo te da tiempo: si perdés el trabajo, no entrás en pánico en el primer mes. En Argentina, el desafío es que los pesos pierden valor. Opciones: dolarizar una parte, plazo fijo UVA, o FCI de ahorro con rendimiento por encima de la inflación.",
+					"appInstruction": "Seguidor de Ahorro → creá un objetivo 'Fondo de emergencia completo' → calculá 3 veces tus gastos mensuales fijos y poné eso como meta.",
+					"teachingConcepts": [
+						"Cuánto necesitás: multiplicá tus gastos fijos mensuales por 3 (mínimo) o por 6 (ideal)",
+						"Dónde guardarlo en Argentina: dólar billete, FCI money market, plazo fijo UVA",
+						"La diferencia entre fondo de emergencia y ahorro para metas: no se toca para vacaciones ni consumo"
+					],
+					"validation": {
+						"type": "api",
+						"apiCheck": "Al menos 1 objetivo de ahorro creado en Seguidor de Ahorro",
+						"prereq": "3.1 completado"
+					}
+				},
+				{
+					"stepId": "3.4",
+					"type": "minor",
+					"title": "Liquidá tus deudas",
+					"description": "El interés trabaja para vos o contra vos. Elegí.",
+					"longDescription": "Con el fondo de emergencia construido, ahora atacás las deudas. Dos métodos: Bola de nieve — pagás primero la deuda más chica, ganás momentum psicológico y vas tachando. Avalancha — pagás primero la deuda con mayor tasa, pagás menos interés total. En Argentina con tasas altísimas, la avalancha tiene sentido matemático. Pero si necesitás motivación, la bola de nieve también funciona.",
+					"appInstruction": "Patrimonio → seleccioná cada pasivo → actualizá el saldo a medida que vas pagando → el objetivo es llegar a $0 en todos.",
+					"conditional": true,
+					"conditionalNote": "Este paso solo se muestra si el usuario tiene pasivos en Patrimonio o marcó que tiene deudas en 3.2. Si eligió 'No tengo deudas', este paso se salta automáticamente.",
+					"teachingConcepts": [
+						"Método bola de nieve: deuda más chica primero — velocidad y momentum",
+						"Método avalancha: deuda con mayor tasa primero — menor costo total de interés",
+						"Tasa efectiva anual (TEA) en Argentina: cómo calcular el costo real de una deuda"
+					],
+					"validation": {
+						"type": "api_or_acknowledged",
+						"apiCheck": "Todos los pasivos cargados tienen currentAmount = 0",
+						"fallback": "Botón 'Liquidé todas mis deudas' — guardado en localStorage como { '3.4-debt-cleared': true }"
+					}
+				},
+				{
+					"stepId": "3.5",
+					"type": "minor",
+					"title": "Cómo salir de la deuda",
+					"description": "Las herramientas y la mentalidad para liberarse.",
+					"longDescription": "Independientemente de si tenés deuda ahora o no, esto conviene entenderlo. La deuda de consumo es el mayor obstáculo a la libertad financiera. No porque sea un fracaso moral — sino porque el interés compuesto trabaja en tu contra con fuerza brutal. Conocer los métodos y la psicología detrás de salir de deuda te prepara para no volver a entrar.",
+					"appInstruction": "Si tenés deudas cargadas en Patrimonio, elegí un método (bola de nieve o avalancha) y comprometete con él.",
+					"teachingConcepts": [
+						"El interés compuesto en tu contra: ejemplo con tarjeta al 120% TEA",
+						"Las cuotas sin interés no son gratis: el precio está en el producto o en la oportunidad perdida",
+						"Enojarse con la deuda funciona: el comportamiento importa más que la matemática"
+					],
+					"validation": {
+						"type": "acknowledged",
+						"button": "Entendido, siguiente apacheta"
+					}
+				},
+				{
+					"stepId": "3.6",
+					"type": "minor",
+					"title": "Métodos para ahorrar",
+					"description": "El ahorro no es lo que sobra. Es lo primero que separás.",
+					"longDescription": "Pagarte a vos mismo primero: el día que te depositan el sueldo, antes de pagar cualquier otra cosa, transferís tu porcentaje de ahorro a una cuenta o instrumento separado. Si esperás a ver qué sobra al final del mes, no va a sobrar nada. El ahorro automático convierte la intención en hábito.",
+					"appInstruction": "Seguidor de Ahorro → creá metas para cada objetivo que tengas (viaje, electrodoméstico, emprendimiento) → definí cuánto podés aportar por mes.",
+					"teachingConcepts": [
+						"Págate primero: ahorrá antes de gastar, no con lo que sobra",
+						"Automatización: transferencia automática el día de cobro",
+						"En Argentina: usar instrumentos que al menos empaten la inflación (FCI, UVA)"
+					],
+					"validation": {
+						"type": "api",
+						"apiCheck": "2 o más objetivos de ahorro creados en Seguidor de Ahorro"
+					}
+				}
+			]
+		},
+		{
+			"id": "stage-4",
+			"chapter": "Capítulo 4: Lo que enseña el camino",
+			"tagline": "El interés compuesto no perdona — ni a favor ni en contra.",
+			"principle": "Muy pocos ahorran el 25% de sus ingresos. Menos aún invierten el 25% de lo que ahorran. Los que lo hacen, con tiempo, llegan a donde los demás no pueden.",
+			"appFeatures": [
+				"patrimonio",
+				"seguidor-ahorro"
+			],
+			"steps": [
+				{
+					"stepId": "4.0",
+					"type": "major",
+					"title": "El secreto que pocos aplican",
+					"description": "Ahorrar e invertir consistentemente es lo que separa a los que llegan.",
+					"longDescription": "La mayoría de las personas no ahorra sistemáticamente. De las que ahorran, muy pocas invierten. Y de las que invierten, casi ninguna mantiene el hábito en el tiempo. Pero el interés compuesto — la capacidad de que los rendimientos generen nuevos rendimientos — es exponencial, no lineal. Una pequeña diferencia en el porcentaje de ahorro o en el tiempo sostenido produce resultados enormes a 10 o 20 años. Esto no requiere ser rico para empezar. Requiere empezar.",
+					"appInstruction": "Patrimonio → revisá tu patrimonio neto. Ese número tiene que crecer cada mes. Ese es el objetivo.",
+					"teachingConcepts": [
+						"Interés compuesto: el rendimiento sobre el rendimiento previo",
+						"Efecto del tiempo: duplicar el tiempo casi cuadruplica el resultado final",
+						"El 25/25: ahorrar el 25% del ingreso e invertir el 25% de ese ahorro"
+					],
+					"validation": {
+						"type": "acknowledged",
+						"button": "Entendido, siguiente apacheta"
+					}
+				},
+				{
+					"stepId": "4.1",
+					"type": "minor",
+					"title": "Invertí el 15% de tus ingresos",
+					"description": "Hacé trabajar a tu dinero.",
+					"longDescription": "Con el fondo de emergencia completo y sin deudas (o con el plan en marcha), arrancás a invertir. El objetivo mínimo: 15% de tu ingreso mensual. No todo junto — de a poco, consistentemente. En Argentina, el primer objetivo de una inversión es ganarle a la inflación. Después, construir patrimonio real en pesos constantes o en dólares.",
+					"appInstruction": "Patrimonio → Nuevo activo → registrá tu primera inversión con nombre, tipo y monto. Actualizalo mes a mes.",
+					"teachingConcepts": [
+						"Plazo fijo tradicional vs. UVA: nominal vs. rendimiento real",
+						"FCI: fondos comunes de inversión — money market, ahorro, renta mixta, renta variable",
+						"Cedears: acciones de empresas globales cotizando en pesos",
+						"Bonos soberanos y corporativos en pesos y en dólares",
+						"Dólar MEP: acceso legal a dólares sin restricciones"
+					],
+					"validation": {
+						"type": "api",
+						"apiCheck": "Al menos 1 activo de tipo 'asset' en Patrimonio con movimientos de aporte registrados"
+					}
+				},
+				{
+					"stepId": "4.2",
+					"type": "minor",
+					"title": "Planeá 5 años adelante",
+					"description": "En Argentina no se planea a largo plazo. Eso es exactamente por qué hacerlo es una ventaja.",
+					"longDescription": "La incertidumbre económica hace que la mayoría viva mirando solo el mes que viene. Pero las decisiones financieras más importantes tienen horizonte de años: ¿qué querés tener o hacer en 5 años? ¿Un departamento? ¿Un negocio propio? ¿Educación? ¿Independencia? Un objetivo con número y fecha cambia cómo tomás decisiones hoy.",
+					"appInstruction": "Seguidor de Ahorro → creá un objetivo de largo plazo → poné una fecha objetivo a más de 12 meses → la app te dice cuánto aportar por mes.",
+					"teachingConcepts": [
+						"Planeamiento a largo plazo en contexto inflacionario: trabajar con dólares o UVA como unidad",
+						"La diferencia entre un deseo y una meta: número + fecha = meta",
+						"Cómo la inflación argentina afecta el planeamiento a largo plazo"
+					],
+					"validation": {
+						"type": "api",
+						"apiCheck": "Al menos 1 objetivo de ahorro creado con fecha objetivo a más de 12 meses en el futuro"
+					}
+				},
+				{
+					"stepId": "4.3",
+					"type": "minor",
+					"title": "Mejorá tu calidad de vida con intención",
+					"description": "El dinero es un medio. La calidad de vida es el fin.",
+					"longDescription": "Seguir el mapa no es vivir de privaciones. Es gastar con intención: más en lo que importa, menos en lo que no. Las personas que planean bien no gastan menos — a veces gastan más, pero en lo que eligieron. La calidad de vida mejora cuando el dinero fluye hacia lo que vos decidís, no hacia donde te lleva el impulso o la costumbre.",
+					"appInstruction": "Revisá tu historial y tu presupuesto. ¿Hay categorías donde gastás más de lo que querías? ¿Hay cosas que valorás y no estás priorizando?",
+					"validation": {
+						"type": "acknowledged",
+						"button": "Lo voy a pensar, siguiente apacheta"
+					}
+				}
+			]
+		},
+		{
+			"id": "stage-5",
+			"chapter": "Capítulo 5: Libertad — La cima",
+			"tagline": "Construí lo que dura.",
+			"principle": "La libertad financiera no es ser rico. Es que tus activos generen suficiente para cubrir tu vida sin depender de trabajo activo. Desde ahí, podés elegir.",
+			"appFeatures": [
+				"patrimonio",
+				"seguidor-ahorro",
+				"presupuesto"
+			],
+			"steps": [
+				{
+					"stepId": "5.0",
+					"type": "major",
+					"title": "Construí tu portafolio",
+					"description": "Diversificación: no apostés todo a un solo resultado.",
+					"longDescription": "Un portafolio es una colección de activos que trabajan juntos. Ningún instrumento gana siempre — pero una cartera diversificada pierde menos en las malas y captura crecimiento en las buenas. La regla simple para empezar: algo líquido en pesos, algo en dólares, algo que crezca con el tiempo.",
+					"appInstruction": "Patrimonio → asegurate de tener al menos 3 tipos de activos distintos cargados.",
+					"teachingConcepts": [
+						"Correlación de activos: por qué no todo sube y baja junto",
+						"Liquidez vs. rendimiento: el equilibrio entre tener acceso y hacer crecer",
+						"Rebalanceo: ajustar la cartera cuando los pesos se desalinean del plan original"
+					],
+					"validation": {
+						"type": "api",
+						"apiCheck": "3 o más activos distintos cargados en Patrimonio"
+					}
+				},
+				{
+					"stepId": "5.1",
+					"type": "minor",
+					"title": "Ahorrá para emprender",
+					"description": "En Argentina, el emprendimiento es un camino real hacia la libertad.",
+					"longDescription": "En Argentina, el emprendimiento es uno de los caminos más accesibles hacia la independencia financiera. No hace falta una idea revolucionaria — hace falta capital inicial y un plan. Si tenés una idea, ponele número: ¿cuánto necesitás para arrancar? Ese es tu próximo objetivo de ahorro.",
+					"appInstruction": "Seguidor de Ahorro → creá un objetivo 'Capital para emprender' → poné el monto que necesitarías para arrancar tu proyecto.",
+					"validation": {
+						"type": "acknowledged_or_api",
+						"apiCheck": "Objetivo de ahorro con nombre relacionado a emprendimiento en Seguidor de Ahorro",
+						"fallback": "Botón 'No planeo emprender ahora, continuar'"
+					}
+				},
+				{
+					"stepId": "5.2",
+					"type": "minor",
+					"title": "Tu fondo de retiro",
+					"description": "El Estado no alcanza. Construí el tuyo.",
+					"longDescription": "El sistema previsional argentino (ANSES) probablemente no sea suficiente cuando llegues a retirarte. No es una crítica — es una realidad que hay que planear. Empezar a construir un fondo de retiro propio desde los 30 años, con un porcentaje fijo del ingreso, hace una diferencia exponencial a los 60.",
+					"appInstruction": "Patrimonio → creá un activo llamado 'Fondo de retiro'. Seguidor de Ahorro → creá una meta de retiro con fecha estimada.",
+					"teachingConcepts": [
+						"Regla del 4%: a retiro, retirás máximo el 4% de tu portafolio por año para que dure",
+						"Cuánto necesitás para retirarte: tus gastos anuales ÷ 0.04 = patrimonio objetivo",
+						"Horizonte temporal: a más años de distancia, más agresiva puede ser la inversión"
+					],
+					"validation": {
+						"type": "api",
+						"apiCheck": "Al menos 1 activo o meta de seguidor-ahorro relacionada a retiro creada"
+					}
+				},
+				{
+					"stepId": "5.3",
+					"type": "chapter",
+					"title": "La cima",
+					"description": "Libertad financiera: tus activos cubren tu vida.",
+					"longDescription": "Llegaste. No porque hayas terminado — el camino no termina. Sino porque entendiste los principios, los aplicaste, y tenés el hábito. La libertad financiera es el punto donde tus ingresos pasivos (rendimientos, alquileres, dividendos) cubren tus gastos. Desde ahí, el trabajo es una elección, no una obligación. Construí riqueza y aportá a los demás.",
+					"appInstruction": "Revisá tu patrimonio neto. ¿Está creciendo mes a mes? ¿Tus activos superan tus pasivos por un margen creciente? Eso es la dirección correcta.",
+					"validation": {
+						"type": "api_and_acknowledged",
+						"apiCheck": "netWorth positivo en Patrimonio Y al menos 90 días de movimientos registrados",
+						"button": "Apacheta colocada"
+					}
+				}
+			]
+		}
+	],
+	"unlockLogicPrinciples": {
+		"summary": "Los pasos se desbloquean por acciones reales en la app. Para pasos conceptuales, por botón de acknowledgment. El progreso se guarda en localStorage por stepId en primera instancia, migrable a API.",
+		"validationTypes": {
+			"api": "Verificación automática contra datos reales del usuario via server actions existentes",
+			"acknowledged": "El usuario toca un botón de confirmación. Guardado en localStorage: { [stepId]: { completed: true, date: ISO } }",
+			"api_or_acknowledged": "Se valida por API si los datos existen, o por botón de opción alternativa (ej: 'No tengo deudas')",
+			"pwa_or_acknowledged": "Se valida si hay suscripción push registrada, o por botón skip",
+			"children_completed": "Paso padre: se completa cuando todos sus sub-pasos están completos",
+			"api_and_acknowledged": "Ambas condiciones requeridas",
+			"acknowledged_or_api": "Se valida por acknowledgment o por detección automática en API"
+		},
+		"apiDataNeeded": [
+			"user.balance — para validar 1.1.1",
+			"movements count por tipo (income/expense) y por mes — para 1.1.2, 1.1.3, 1.1.4",
+			"movements total count y date of first movement — para 2.3, 5.3",
+			"CategoryBudget: categorías con budget > 0 — para 2.1, 2.2",
+			"FinancialElements: assets count, liabilities count, netWorth, date of first asset — para 3.1, 3.2, 3.4, 5.0, 5.3",
+			"Seguidor de ahorro: goals count, goals with future target date — para 3.3, 3.6, 4.2, 5.1, 5.2",
+			"Push subscriptions: count — para 1.0"
+		],
+		"sequencingRules": [
+			"Los pasos dentro de un capítulo se desbloquean secuencialmente",
+			"Un capítulo se desbloquea cuando el capítulo anterior está completo",
+			"Los pasos condicionales (3.4) se saltan automáticamente si la condición no aplica",
+			"El paso activo actual siempre se muestra primero y con más detalle",
+			"Los pasos completados son visibles pero de-enfatizados",
+			"Los pasos futuros muestran título e ícono pero no detalle completo"
+		]
+	},
+	"designPrinciples": {
+		"theMapIsAPath": "El mapa es un sendero, no una lista de tareas. La metáfora es visual: sendero de montaña, no to-do list.",
+		"currentStepIsHero": "El paso en el que está el usuario es el más prominente, el más detallado, el que tiene la instrucción de app más clara.",
+		"futureStepsAreMystery": "Los pasos bloqueados muestran título e ícono pero no el contenido completo — la curiosidad motiva.",
+		"completedStepsAreMemory": "Los pasos completados son visibles pero de-enfatizados — son apachetas ya colocadas.",
+		"mobileFirst": "La mayoría de los usuarios están en el celular. La tarjeta del mapa tiene que sentirse como una guía, no como un documento.",
+		"noInfiniteScroll": "No es un scroll vertical de todos los pasos. Es una vista enfocada: un paso a la vez, con contexto de dónde estás en el camino total."
+	},
+	"contentPrinciples": {
+		"everyStepHas": [
+			"stepId: identificador único para localStorage y futura API",
+			"type: 'major' (hito principal) | 'minor' (sub-paso) | 'chapter' (cierre de etapa conceptual)",
+			"title: título humano, no jerga financiera",
+			"description: una línea — qué vas a entender o hacer",
+			"longDescription: el contenido real de la lección",
+			"appInstruction: qué hacer exactamente en la app, con path de navegación",
+			"validation: cómo se verifica que el paso está completo",
+			"teachingConcepts (opcional): conceptos económicos cubiertos en este paso"
+		],
+		"languageRules": [
+			"Usá vos (segunda persona informal argentina), no tú ni usted",
+			"Directo: 'Anotá tu ingreso', no 'Te recomendamos que registres tus ingresos'",
+			"Nombrá la realidad argentina: inflación, peso, dólar, cuotas, ANSES",
+			"No voz pasiva en instrucciones",
+			"Oraciones cortas. Una idea por oración."
+		]
+	}
 }
