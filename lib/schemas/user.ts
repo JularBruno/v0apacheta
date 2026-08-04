@@ -11,6 +11,7 @@ export interface User {
 	totalBudget: number;
 	notificationFrequency: NotificationFrequency;
 	mapLevel: string | null;
+	preferredCurrency: string;
 }
 
 /** User State type to reuse in forms **/

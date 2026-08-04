@@ -26,6 +26,21 @@ import {
 	Trash2,
 	X,
 	Tag,
+	PiggyBank,
+	CreditCard,
+	Wallet,
+	TrendingUp,
+	Fuel,
+	Bus,
+	Baby,
+	PawPrint,
+	Shirt,
+	Pill,
+	GraduationCap,
+	Building2,
+	Receipt,
+	ShoppingBag,
+	Landmark,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -61,6 +76,21 @@ export const availableIcons: { id: string; name: string; icon: LucideIcon }[] =
 		{ id: 'Wrench', name: 'Herramientas', icon: Wrench },
 		{ id: 'Smartphone', name: 'Teléfono', icon: Smartphone },
 		{ id: 'Laptop', name: 'Tecnología', icon: Laptop },
+		{ id: 'PiggyBank', name: 'Ahorros', icon: PiggyBank },
+		{ id: 'CreditCard', name: 'Tarjeta', icon: CreditCard },
+		{ id: 'Wallet', name: 'Billetera', icon: Wallet },
+		{ id: 'TrendingUp', name: 'Inversiones', icon: TrendingUp },
+		{ id: 'Fuel', name: 'Combustible', icon: Fuel },
+		{ id: 'Bus', name: 'Colectivo', icon: Bus },
+		{ id: 'Baby', name: 'Bebé', icon: Baby },
+		{ id: 'PawPrint', name: 'Mascotas', icon: PawPrint },
+		{ id: 'Shirt', name: 'Ropa', icon: Shirt },
+		{ id: 'Pill', name: 'Salud', icon: Pill },
+		{ id: 'GraduationCap', name: 'Educación', icon: GraduationCap },
+		{ id: 'Building2', name: 'Alquiler', icon: Building2 },
+		{ id: 'Receipt', name: 'Facturas', icon: Receipt },
+		{ id: 'ShoppingBag', name: 'Compras', icon: ShoppingBag },
+		{ id: 'Landmark', name: 'Banco', icon: Landmark },
 	];
 
 
@@ -77,6 +107,14 @@ export const availableColors = [
 	{ id: 'bg-cyan-500', class: 'bg-cyan-500', name: 'Cian', hex: '#06b6d4' },
 	{ id: 'bg-emerald-500', class: 'bg-emerald-500', name: 'Esmeralda', hex: '#10b981' },
 	{ id: 'bg-violet-500', class: 'bg-violet-500', name: 'Violeta', hex: '#8b5cf6' },
+	{ id: 'bg-teal-500', class: 'bg-teal-500', name: 'Verde azulado', hex: '#14b8a6' },
+	{ id: 'bg-lime-500', class: 'bg-lime-500', name: 'Lima', hex: '#84cc16' },
+	{ id: 'bg-amber-500', class: 'bg-amber-500', name: 'Ámbar', hex: '#f59e0b' },
+	{ id: 'bg-rose-500', class: 'bg-rose-500', name: 'Rosa fuerte', hex: '#f43f5e' },
+	{ id: 'bg-sky-500', class: 'bg-sky-500', name: 'Celeste', hex: '#0ea5e9' },
+	{ id: 'bg-fuchsia-500', class: 'bg-fuchsia-500', name: 'Fucsia', hex: '#d946ef' },
+	{ id: 'bg-slate-500', class: 'bg-slate-500', name: 'Pizarra', hex: '#64748b' },
+	{ id: 'bg-stone-500', class: 'bg-stone-500', name: 'Piedra', hex: '#78716c' },
 ];
 
 export const quickFilters = [

@@ -24,6 +24,7 @@ export async function getFinancialElementById(id: string): Promise<FinancialElem
 export async function postFinancialElement(data: {
 	name: string;
 	type: FinancialElementType;
+	currency: string;
 }): Promise<FinancialElement> {
 	const session = await getSession();
 
@@ -40,10 +41,11 @@ export async function putFinancialElement(
 	const session = await getSession();
 	if (!session?.user.id) throw new Error('User ID is missing');
 
-	return await putMethod<FinancialElements>(url, id, {
+	const result = await putMethod<FinancialElements>(url, id, {
 		...data,
 		userId: session.user.id,
 	});
+	return result;
 }
 
 export async function deleteFinancialElementById(id: string) {

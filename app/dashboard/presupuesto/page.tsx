@@ -42,9 +42,23 @@ export default function PresupuestoPage() {
 
 	const { user, loadingUser, error, budgetedCats, budgetLoading } = useDashboard();
 
-	const totalSpent = useMemo(() =>
-		budgetedCats.reduce((sum, cat) => sum + cat.totalExpenses, 0),
-		[budgetedCats]);
+
+	const categoryTotals = budgetedCats.reduce(
+		(acc, t) => {
+			acc[t.id] = (acc[t.id] || 0) + t.totalExpenses
+			return acc
+		},
+		{} as Record<string, number>,
+	)
+
+	const expenseCategories = budgetedCats.filter((c) => c.id !== "all" && c.type === TxType.EXPENSE)
+
+	const totalSpent = expenseCategories.reduce((sum, c) => sum + (categoryTotals[c.id] || 0), 0)
+
+	// const totalSpent = useMemo(() =>
+	// 	// budgetedCats.reduce((sum, cat) => if (cat.type == TxType) sum + cat.totalExpenses, 0),
+	// 	budgetedCats.reduce((sum, cat) => sum + cat.totalExpenses, 0),
+	// 	[budgetedCats]);
 
 	const totalBudgeted = useMemo(() =>
 		budgetedCats.reduce((sum, item) => item.type === TxType.EXPENSE ? sum + item.budget : sum, 0),

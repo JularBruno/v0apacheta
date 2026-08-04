@@ -7,27 +7,48 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { TrendingUp, TrendingDown, Eye, Plus, Minus } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { TxType, FinancialElementType } from "@/lib/schemas/definitions"
+import { TxType, FinancialElementType, Currency } from "@/lib/schemas/definitions"
 import { formatToBalance } from "@/lib/quick-spend-constants"
+import { useCurrencies } from "@/lib/hooks/use-currencies"
 
 interface AssetCardProps {
 	id: string
 	name: string
 	type: FinancialElementType.ASSET | FinancialElementType.LIABILITY
 	currentValue: number
+	convertedValue: number
+	currency?: string
+	mainCurrency?: string
 	change?: number
 	changePercent?: number
 	history?: Array<{ date: string; value: number }>
 }
 
-export default function AssetCard({ id, name, type, currentValue, change, changePercent, history }: AssetCardProps) {
+export default function AssetCard({
+	id,
+	name,
+	type,
+	currentValue,
+	convertedValue,
+	currency = Currency.ARS,
+	mainCurrency = Currency.ARS,
+	change,
+	changePercent,
+	history,
+}: AssetCardProps) {
 	const router = useRouter()
 	const [isExpanded, setIsExpanded] = useState(false)
+	const { data: currencies } = useCurrencies()
+
+	const currencyInfo = currencies?.find((c) => c.currency === currency)
 
 	const isAsset = type === FinancialElementType.ASSET
 	const isPositiveChange = (change || 0) >= 0
 	const valueColorClass = currentValue >= 0 ? "text-green-600" : "text-red-600"
 	const changeColorClass = isPositiveChange ? "text-green-600" : "text-red-600"
+
+	const needsConversion = currency !== mainCurrency
+	const displayValue = convertedValue
 
 	const handleIncomeClick = () => {
 		router.push(`/dashboard/patrimonio/${id}?action=${TxType.INCOME}`)
@@ -47,14 +68,24 @@ export default function AssetCard({ id, name, type, currentValue, change, change
 				<div className="flex items-start justify-between">
 					<div className="min-w-0 flex-1">
 						<CardTitle className="text-lg font-semibold text-gray-900 truncate">{name}</CardTitle>
-						<Badge variant="outline" className="mt-1 text-xs">
-							{isAsset ? "Activo" : "Pasivo"}
-						</Badge>
+						<div className="flex items-center gap-1 mt-1">
+							<Badge variant="outline" className="text-xs">
+								{isAsset ? "Activo" : "Pasivo"}
+							</Badge>
+							<Badge variant="secondary" className="text-xs">
+								{currencyInfo?.label ?? currency}
+							</Badge>
+						</div>
 					</div>
 					<div className="text-right">
 						<p className={cn("text-2xl font-bold", valueColorClass)}>
-							{formatToBalance(currentValue)}
+							{formatToBalance(displayValue)}
 						</p>
+						{needsConversion && (
+							<p className="text-xs text-gray-500">
+								{currencyInfo?.symbol ?? currency} {currentValue.toFixed(2)}
+							</p>
+						)}
 						{change !== undefined && changePercent !== undefined && (
 							<div className={cn("flex items-center justify-end gap-1 text-sm", changeColorClass)}>
 								{isPositiveChange ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}

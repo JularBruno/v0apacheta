@@ -32,7 +32,7 @@ import {
 import { MoreHorizontal } from "lucide-react";
 import IconComponent from "@/components/movements/icon-component"
 import { useDashboard } from "../dashboardContext"
-import CategoryBudgetList from "@/components/dashboard/category-budget-list"
+import CategoryBudgetList from "@/components/history/category-budget-list"
 import CategoryDonutChart from "@/components/dashboard/category-donut-chart"
 
 import {

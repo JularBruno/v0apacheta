@@ -566,8 +566,8 @@ export default function QuickSpendCard({
 						ref={submitRef}
 						data-testid="submit-button"
 						type="submit"
-						className={cn("w-full h-12 text-base font-semibold transition-opacity", currentStep < 5 && "opacity-60")}
-						disabled={isSubmitting}
+						className="w-full h-12 text-base font-semibold transition-opacity"
+						disabled={isSubmitting || !categoryId}
 					>
 						{isSubmitting
 							? <Loading />

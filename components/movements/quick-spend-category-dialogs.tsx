@@ -290,7 +290,9 @@ export function QuickSpendCategoryDialogs({
 						<DialogTitle>Gestionar Categorías</DialogTitle>
 					</DialogHeader>
 					<div className="space-y-4 py-2 max-h-96 overflow-y-auto">
-						{cats.map((cat) => {
+						{[...cats]
+							.sort((a, b) => (a.type === b.type ? 0 : a.type === TxType.INCOME ? -1 : 1))
+							.map((cat) => {
 							const isEditing = editingCategory?.id === cat.id
 							const relatedTagsCount = allTags.filter((t) => t.categoryId === cat.id).length
 
@@ -304,8 +306,16 @@ export function QuickSpendCategoryDialogs({
 										</span>
 										<div className="min-w-0 flex-1">
 											<p className="font-medium truncate">{cat.name}</p>
-											<p className="text-sm text-gray-500">
-												{cat.type === "expense" ? "Gasto" : "Ingreso"} • {relatedTagsCount} tag(s)
+											<p className="text-sm">
+												<span
+													className={cn(
+														"font-medium",
+														cat.type === TxType.EXPENSE ? "text-red-500" : "text-green-500"
+													)}
+												>
+													{cat.type === TxType.EXPENSE ? "Gasto" : "Ingreso"}
+												</span>
+												<span className="text-gray-500"> • {relatedTagsCount} tag(s)</span>
 											</p>
 										</div>
 									</div>

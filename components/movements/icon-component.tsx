@@ -32,6 +32,21 @@ import {
 	Trash2,
 	X,
 	Tag,
+	PiggyBank,
+	CreditCard,
+	Wallet,
+	TrendingUp,
+	Fuel,
+	Bus,
+	Baby,
+	PawPrint,
+	Shirt,
+	Pill,
+	GraduationCap,
+	Building2,
+	Receipt,
+	ShoppingBag,
+	Landmark,
 } from 'lucide-react';
 /**
  * REFERENCE FOR easy use in app of icons saved in API
@@ -63,7 +78,22 @@ export const iconComponents = {
 	Edit,
 	Trash2,
 	X,
-	Tag
+	Tag,
+	PiggyBank,
+	CreditCard,
+	Wallet,
+	TrendingUp,
+	Fuel,
+	Bus,
+	Baby,
+	PawPrint,
+	Shirt,
+	Pill,
+	GraduationCap,
+	Building2,
+	Receipt,
+	ShoppingBag,
+	Landmark,
 };
 
 
