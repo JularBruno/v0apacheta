@@ -23,6 +23,9 @@ export type FinancialElements = FinancialElement & {
 	currentAmount: number;
 	// currentAmount converted to the user's preferredCurrency, computed by the backend
 	convertedAmount: number;
+	// Rate used for that conversion: convertedAmount = currentAmount * conversionRate
+	// (1 when this element's currency already matches the user's preferredCurrency)
+	conversionRate: number;
 	movements: Array<Movements>;
 };
 
