@@ -253,7 +253,7 @@ export default function HistorialPage() {
 		const ok = confirm(`¿Seguro que querés borrar el movimiento "${movement.tag?.name ?? movement.description}"?`);
 		if (!ok) return;
 
-		await deleteMutation({ id: movement.id, type: movement.type, amount: movement.amount });
+		await deleteMutation({ id: movement.id, type: movement.type, amount: movement.amount, financialElementId: movement.financialElementId });
 		toast({
 			variant: "success",
 			title: "Movimiento borrado!",

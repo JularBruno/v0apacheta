@@ -53,7 +53,7 @@ export default function RecentExpenses({
 		if (!last) return;
 
 		try {
-			await deleteMutation({ id: last.id, type: last.type, amount: last.amount });
+			await deleteMutation({ id: last.id, type: last.type, amount: last.amount, financialElementId: last.financialElementId });
 			onDeleteLatestMovement();
 		} catch (error) {
 			console.log('error ', error);

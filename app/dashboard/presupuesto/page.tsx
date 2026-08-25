@@ -20,12 +20,10 @@ import { getBudgetByUserAndPeriod, putCategory } from "@/lib/actions/categories"
 import { CategoryBudget } from "@/lib/schemas/category"
 import IconComponent from "@/components/movements/icon-component"
 import { formatToBalance } from "@/lib/quick-spend-constants"
-import { BalanceInput } from "@/components/balance-input/balance-input-mock"
 
 import React, { useRef } from "react";
 import PaymentReminder from "@/components/payment-reminder/payment-reminder-card"
 import { useDashboard } from '@/app/dashboard/dashboardContext';
-import { putUser } from "@/lib/actions/user"
 import { useToast } from '@/hooks/use-toast';
 import Loading from "../patrimonio/[id]/loading"
 import TransactionChart from "@/components/dashboard/transaction-chart"
@@ -40,7 +38,7 @@ export default function PresupuestoPage() {
 	const updateCategory = useUpdateCategory();
 	const updateUser = useUpdateUser();
 
-	const { user, loadingUser, error, budgetedCats, budgetLoading } = useDashboard();
+	const { loadingUser, error, budgetedCats, budgetLoading } = useDashboard();
 
 
 	const categoryTotals = budgetedCats.reduce(
@@ -64,7 +62,14 @@ export default function PresupuestoPage() {
 		budgetedCats.reduce((sum, item) => item.type === TxType.EXPENSE ? sum + item.budget : sum, 0),
 		[budgetedCats]);
 
-	const userBudgetRemaining = (user?.totalBudget || 0) - totalSpent;
+	// Presupuesto Total is derived from Fuentes de Ingreso, not a value the user
+	// sets directly — see updateCategoryBudget, which keeps user.totalBudget in
+	// sync on the backend whenever an income category's budget changes.
+	const totalIncomeBudgeted = useMemo(() =>
+		budgetedCats.reduce((sum, item) => item.type === TxType.INCOME ? sum + item.budget : sum, 0),
+		[budgetedCats]);
+
+	const userBudgetRemaining = totalIncomeBudgeted - totalSpent;
 
 	const incomeOrderRef = useRef<string[] | null>(null);
 	const expenseOrderRef = useRef<string[] | null>(null);
@@ -96,33 +101,30 @@ export default function PresupuestoPage() {
 				description: `Debes poner un presupuesto mayor a cero`,
 				variant: "default",
 			})
-			// this should revert the value to the previous one 
+			// this should revert the value to the previous one
 
 			return;
 		}
 		if (cat?.budget !== budget) {
 			await updateCategory.mutateAsync({ id, data: { budget } });
 
+			// Presupuesto Total = sum of Fuentes de Ingreso — keep user.totalBudget in
+			// sync on the backend whenever an income category's budget changes.
+			if (cat?.type === TxType.INCOME) {
+				const newTotalBudget = budgetedCats.reduce(
+					(sum, item) => item.type === TxType.INCOME
+						? sum + (item.id === id ? budget : item.budget)
+						: sum,
+					0
+				);
+				await updateUser.mutateAsync({ totalBudget: newTotalBudget });
+			}
+
 			toast({
 				title: `Presupuesto actualizado`,
 				description: `Se actualizó el presupuesto`,
 				variant: "success",
 			})
-		}
-	}
-
-	async function setUserBudget(number: number) {
-		if (user?.totalBudget !== number) {
-			try {
-				await updateUser.mutateAsync({ totalBudget: number });
-				toast({
-					title: `Presupuesto actualizado`,
-					description: `Se actualizó tu presupuesto personal`,
-					variant: "success",
-				})
-			} catch (error) {
-				console.log(error);
-			}
 		}
 	}
 
@@ -143,11 +145,7 @@ export default function PresupuestoPage() {
 						<div className="text-center">
 							<p className="text-sm text-gray-500">Presupuesto Total</p>
 							{loadingUser ? <Loading></Loading> :
-								<BalanceInput
-									id='user-budget'
-									defaultValue={user?.totalBudget || 0}
-									onBlur={(value) => setUserBudget(value)}
-								/>
+								<p className="text-2xl font-bold text-gray-900">{formatToBalance(totalIncomeBudgeted)}</p>
 							}
 						</div>
 						<div className="text-center">

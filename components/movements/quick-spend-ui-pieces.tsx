@@ -2,6 +2,7 @@
 "use client"
 
 import type React from "react"
+import { useState } from "react"
 import { UseFormRegister } from "react-hook-form";
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -13,16 +14,19 @@ import {
 	Settings,
 	Plus,
 	Calendar,
+	Clock,
 	ChevronUp,
 	ChevronDown,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 import { formatToBalance } from "@/lib/quick-spend-constants"
-import { getCurrentDateTimeInfo } from "@/lib/dateUtils"
+import { formatDateInputForDisplay, getCurrentDateTimeInfo } from "@/lib/dateUtils"
 import { MovementFormData } from "@/lib/schemas/movement";
 import IconComponent from "./icon-component";
 import { TxType } from "@/lib/schemas/definitions";
+import { DayCalendar } from "@/components/ui/day-calendar";
+import { TimePicker } from "@/components/ui/time-picker";
 
 
 type CategoryHeaderProps = {
@@ -340,12 +344,33 @@ export function DateTimeRow({
 	setCustomTime
 }: DateTimeRowProps
 ) {
+	// Each picker opens independently, from its own input's icon — closed by default
+	// so opening "Fecha y hora" doesn't dump both a day grid and a time grid at once.
+	const [showDatePicker, setShowDatePicker] = useState(false)
+	const [showTimePicker, setShowTimePicker] = useState(false)
+
 	return (
 		<div className="space-y-2 pb-4" >
 			<button
 				type="button"
-				onClick={() => { setShowDateTime(!showDateTime); setCustomDate(customDate); setCustomTime(customTime); }}
-				className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+				onClick={() => {
+					const next = !showDateTime
+					setShowDateTime(next)
+					setCustomDate(customDate)
+					setCustomTime(customTime)
+					// Opening "Fecha y hora" surfaces both pickers right away — the per-input icons
+					// still let you collapse just one afterwards.
+					if (next) {
+						setShowDatePicker(true)
+						setShowTimePicker(true)
+					}
+				}}
+				className={cn(
+					"flex items-center gap-2 text-sm rounded-md border px-3 py-2 transition-colors",
+					showDateTime
+						? "border-primary-300 bg-primary-50 text-coffee-bean-800"
+						: "border-border text-muted-foreground hover:text-foreground hover:bg-muted",
+				)}
 			>
 				<Calendar className="w-4 h-4" />
 				<span>Fecha y hora</span>
@@ -360,9 +385,39 @@ export function DateTimeRow({
 				)}
 			</button>
 			{showDateTime && (
-				<div className="flex gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
-					<Input type="date" value={customDate} onChange={(e) => setCustomDate(e.target.value)} className="flex-1" />
-					<Input type="time" value={customTime} onChange={(e) => setCustomTime(e.target.value)} className="w-28" />
+				<div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
+					<div className="flex gap-2">
+						{/* Not a native <input type="date"> on purpose: its displayed text is drawn by the
+						    browser using the OS/browser locale, which we can't override (Chrome/Safari
+						    ignore the page's lang here) — it was showing mm/dd/yyyy. This button fully
+						    controls its own text via formatDateInputForDisplay, so it's always dd/mm/yyyy. */}
+						<button
+							type="button"
+							onClick={() => setShowDatePicker((v) => !v)}
+							className="flex h-10 flex-1 items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-left text-base ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:text-sm"
+						>
+							<span className={cn(!customDate && "text-muted-foreground")}>
+								{customDate ? formatDateInputForDisplay(customDate) : "Elegir fecha"}
+							</span>
+							<Calendar className="w-4 h-4 text-muted-foreground shrink-0" />
+						</button>
+						<div className="relative w-28 shrink-0">
+							<Input
+								type="time"
+								value={customTime}
+								onChange={(e) => setCustomTime(e.target.value)}
+								className="pr-8 [&::-webkit-calendar-picker-indicator]:opacity-0"
+							/>
+							<button
+								type="button"
+								onClick={() => setShowTimePicker((v) => !v)}
+								className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+								aria-label="Elegir hora"
+							>
+								<Clock className="w-4 h-4" />
+							</button>
+						</div>
+					</div>
 					<Button
 						type="button"
 						variant="ghost"
@@ -375,6 +430,16 @@ export function DateTimeRow({
 					>
 						Ahora
 					</Button>
+
+					{/* Mobile: single column, stacked (TimePicker above DayCalendar since it's listed first).
+					    Desktop (sm:): a 12-col grid, TimePicker taking 4 and DayCalendar the remaining 8 —
+					    side by side, each actually filling its share instead of splitting evenly. */}
+					{(showTimePicker || showDatePicker) && (
+						<div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+							{showTimePicker && <TimePicker value={customTime} onSelect={setCustomTime} className="sm:col-span-4" />}
+							{showDatePicker && <DayCalendar value={customDate} onSelect={setCustomDate} className="sm:col-span-8" />}
+						</div>
+					)}
 				</div>
 			)}
 		</div>

@@ -34,7 +34,7 @@ import { postMovement } from "@/lib/actions/movements";
 
 import { QuickSpendCategoryDialogs } from "./quick-spend-category-dialogs"
 import { CategoryHeaderDesktop, CategoryHeaderMobile, CategoryGrid, TagRow, DateTimeRow } from "./quick-spend-ui-pieces"
-import { getCurrentDateTimeInfo } from "@/lib/dateUtils";
+import { formatDateInputLocal, getCurrentDateTimeInfo } from "@/lib/dateUtils";
 import QuickSpendSkeleton from "./quick-spend-skeleton";
 import { Loading } from "@/components/ui/loading"
 import { BalanceInput } from "../balance-input/balance-input-form";
@@ -62,11 +62,26 @@ export default function QuickSpendCard({
 	initialType,
 	financialElementId,
 	onCancel,
+	initialValues,
 }: {
 	onAdd: (data: Movement) => void
 	initialType?: TxType
 	financialElementId?: string,
 	onCancel?: () => void
+	/**
+	 * Prefills the form — used by bulk-load to seed a movement parsed from AI JSON.
+	 * Only applied once, at mount (useState initializers / react-hook-form defaultValues
+	 * aren't reactive), so the caller must remount via a changing `key` prop to move to
+	 * the next item. Category is intentionally not prefillable here: a bank's own
+	 * category tag doesn't map reliably onto the user's categories, so it stays a manual pick.
+	 */
+	initialValues?: {
+		type?: TxType
+		amount?: number
+		tagName?: string
+		/** ISO datetime for the movement's real date — enables "elegir fecha" and seeds it. */
+		date?: string
+	}
 }) {
 	const { toast } = useToast();
 
@@ -94,7 +109,7 @@ export default function QuickSpendCard({
 	 */
 	// type selection and useful for when opening modal with an already selected option
 	// const [type, setType] = useState<TxType>(initialType || TxType.EXPENSE)
-	const [type, setType] = useState<TxType>(initialType || TxType.EXPENSE)
+	const [type, setType] = useState<TxType>(initialValues?.type || initialType || TxType.EXPENSE)
 
 	// Switch between "gasto" (expense) and "ingreso" (income) types
 	// and make sure a valid category is selected for the new type
@@ -207,7 +222,7 @@ export default function QuickSpendCard({
 			if (!confirmDelete) return;
 		}
 
-		deleteCategory(catId, {
+		deleteCategory({ id: catId, type: cat.type }, {
 			onSuccess: () => {
 				// Handle UI updates only
 				console.log('success ', catId);
@@ -274,11 +289,14 @@ export default function QuickSpendCard({
 
 	/**
 	 * showDateTime component variables required to chose specific time on movement
+	 * When initialValues.date is given (e.g. bulk-load), start with that date already
+	 * chosen and visible — these are historical movements, "now" would be wrong.
 	 */
-	const [showDateTime, setShowDateTime] = useState(false);
+	const initialDate = initialValues?.date ? new Date(initialValues.date) : undefined
+	const [showDateTime, setShowDateTime] = useState(!!initialDate);
 
-	const [customDate, setCustomDate] = useState(getCurrentDateTimeInfo().dateInput);
-	const [customTime, setCustomTime] = useState(getCurrentDateTimeInfo().timeInput)
+	const [customDate, setCustomDate] = useState(initialDate ? formatDateInputLocal(initialDate) : getCurrentDateTimeInfo().dateInput);
+	const [customTime, setCustomTime] = useState(initialDate ? initialDate.toTimeString().slice(0, 5) : getCurrentDateTimeInfo().timeInput)
 
 	/** Form zod validator, values, handlers, errors and loading */
 	const {
@@ -297,15 +315,15 @@ export default function QuickSpendCard({
 			type: type,
 			categoryId: '',
 			// tagId: '',
-			tagName: '',
-			amount: undefined,
+			tagName: initialValues?.tagName || '',
+			amount: initialValues?.amount,
 			description: ''
 		}
 	});
 
 	// FOLLOWING STEPS of the form for user experience
 	const watchedAmount = watch('amount');
-	const [descriptionDone, setDescriptionDone] = useState(false);
+	const [descriptionDone, setDescriptionDone] = useState(!!initialValues?.tagName);
 	const currentStep = useMemo(() => {
 		if (!categoryId) return 2;
 		if (!(tagId || descriptionDone)) return 3;
@@ -357,7 +375,12 @@ export default function QuickSpendCard({
 
 		setTagId(t.id)
 		setDescriptionDone(true);
-		setValue('amount', t.amount || 0); // Update form amount too
+		// A tag's own amount is just a convenient guess for manual entry (e.g. "Café" -> $500).
+		// When we already know the real amount (bulk-load from a bank movement), keep it —
+		// the tag is only being used here to categorize/describe, not to reprice the movement.
+		if (initialValues?.amount === undefined) {
+			setValue('amount', t.amount || 0);
+		}
 		setValue('tagName', t.name); // Update form amount too
 
 		// inputAmountRef.current?.focus()

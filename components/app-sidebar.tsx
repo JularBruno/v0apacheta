@@ -1,6 +1,6 @@
 
 import type * as React from "react"
-import { Home, Settings, HelpCircle, PiggyBank, Heart, Split, FileSpreadsheet, DollarSign, Map, History, Package, Wallet, LogOut } from "lucide-react" // Added Map, History, Package
+import { Home, Settings, HelpCircle, PiggyBank, Heart, Split, FileSpreadsheet, DollarSign, Map, History, Package, Wallet, LogOut, Bot } from "lucide-react" // Added Map, History, Package
 import { usePathname } from "next/navigation"
 import { useTransition } from 'react';
 
@@ -56,6 +56,11 @@ const toolsMenuItems = [
 		title: "Importar desde Excel",
 		url: "/dashboard/importar",
 		icon: FileSpreadsheet,
+	},
+	{
+		title: "Carga masiva con IA",
+		url: "/dashboard/carga-masiva",
+		icon: Bot,
 	},
 	// {
 	// 	title: "Acomodar Balance",
