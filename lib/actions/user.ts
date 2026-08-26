@@ -108,6 +108,7 @@ export async function putUser(
 		balance?: number;
 		notificationFrequency?: NotificationFrequency;
 		mapLevel?: string;
+		preferredCurrency?: string;
 	},
 ): Promise<User> {
 	const session = await getSession();

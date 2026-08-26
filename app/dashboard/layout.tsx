@@ -8,7 +8,8 @@ import { Separator } from "@/components/ui/separator"
 import { usePathname } from "next/navigation" // Import usePathname for dynamic title
 import { Toaster } from "@/components/ui/toaster"
 import { DashboardProvider } from '@/app/dashboard/dashboardContext';
-import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
+import { QueryClientProvider, QueryClient, QueryCache } from '@tanstack/react-query';
+import { toast } from '@/hooks/use-toast';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
 	const pathname = usePathname()
@@ -50,7 +51,36 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 		}
 	}
 
-	const [queryClient] = useState(() => new QueryClient());
+	// Global net for data-fetch failures for react query client
+	// swallows query errors internally, without this a failed fetch just silently renders as "no data"
+	const [queryClient] = useState(() => {
+		// this for error, Several queries typically fire together on a dashboard page 
+		let lastErrorToastAt = 0;
+		const TOAST_THROTTLE_MS = 5000;
+
+		return new QueryClient({
+			defaultOptions: {
+				queries: {
+					// Default is 3 retries with growing backoff 
+					retry: 1,
+					retryDelay: 1000,
+				},
+			},
+			queryCache: new QueryCache({
+				onError: () => {
+					const now = Date.now();
+					if (now - lastErrorToastAt < TOAST_THROTTLE_MS) return;
+					lastErrorToastAt = now;
+
+					toast({
+						title: 'No pudimos cargar tus datos',
+						description: 'Ocurrió un error de conexión. Intentá de nuevo en unos segundos.',
+						variant: 'destructive',
+					});
+				},
+			}),
+		});
+	});
 
 	return (
 		<QueryClientProvider client={queryClient}>

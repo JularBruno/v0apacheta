@@ -7,21 +7,20 @@ export default function manifest(): MetadataRoute.Manifest {
 		description: 'Tu guía financiera personal',
 		start_url: '/dashboard/mapa',
 		display: 'standalone',
-		background_color: '#1a1a1a',
-		theme_color: '#1a1a1a',
+		background_color: '#ffffff',
+		theme_color: '#ffffff',
 		icons: [
 			{
-				// actual size: 192x192 ✓
 				src: '/iconwbg-192x192.png',
 				sizes: '192x192',
 				type: 'image/png',
-				purpose: 'any maskable',
+				purpose: 'any',
 			},
 			{
-				// TODO: regenerate as true 512x512 (currently 176x176)
-				src: '/icon-512x512.png',
-				sizes: '176x176',
+				src: '/iconwbg-512x512.png',
+				sizes: '512x512',
 				type: 'image/png',
+				purpose: 'any',
 			},
 		],
 	}

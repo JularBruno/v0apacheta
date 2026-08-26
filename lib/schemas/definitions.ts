@@ -12,3 +12,9 @@ export enum FinancialElementType {
 	ASSET = 'asset',
 	LIABILITY = 'liability',
 }
+
+export enum Currency {
+	ARS = 'ARS',
+	USD = 'USD',
+	NOK = 'NOK',
+}

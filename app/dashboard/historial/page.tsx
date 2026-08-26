@@ -32,7 +32,7 @@ import {
 import { MoreHorizontal } from "lucide-react";
 import IconComponent from "@/components/movements/icon-component"
 import { useDashboard } from "../dashboardContext"
-import CategoryBudgetList from "@/components/dashboard/category-budget-list"
+import CategoryBudgetList from "@/components/history/category-budget-list"
 import CategoryDonutChart from "@/components/dashboard/category-donut-chart"
 
 import {
@@ -231,7 +231,10 @@ export default function HistorialPage() {
 			filtered = filtered.filter((m) => m.type === selectedType);
 		}
 		if (searchTerm) {
-			filtered = filtered.filter((m) => m.tag.name.toLowerCase().includes(searchTerm.toLowerCase()));
+			const term = searchTerm.toLowerCase();
+			filtered = filtered.filter((m) =>
+				(m.tag?.name ?? m.description ?? '').toLowerCase().includes(term)
+			);
 		}
 		return filtered;
 	}, [movements, selectedCategory, selectedType, searchTerm]);
@@ -247,14 +250,14 @@ export default function HistorialPage() {
 	const movementsAverage = useMemo(() => movementsTotal / (filteredMovements.length || 1), [movementsTotal, filteredMovements.length]);
 
 	const deleteSelectedMovement = async (movement: Movements) => {
-		const ok = confirm(`¿Seguro que querés borrar el movimiento "${movement.tag.name}"?`);
+		const ok = confirm(`¿Seguro que querés borrar el movimiento "${movement.tag?.name ?? movement.description}"?`);
 		if (!ok) return;
 
-		await deleteMutation({ id: movement.id, type: movement.type, amount: movement.amount });
+		await deleteMutation({ id: movement.id, type: movement.type, amount: movement.amount, financialElementId: movement.financialElementId });
 		toast({
 			variant: "success",
 			title: "Movimiento borrado!",
-			description: `Se eliminó el movimiento ${movement.tag.name} y se actualizó tu balance`,
+			description: `Se eliminó el movimiento ${movement.tag?.name ?? movement.description} y se actualizó tu balance`,
 		});
 	};
 
@@ -503,12 +506,12 @@ export default function HistorialPage() {
 																	<div
 																		className={cn(
 																			"w-10 h-10 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0",
-																			movement.category.color,
+																			movement.category?.color ?? (movement.type === TxType.INCOME ? "bg-emerald-500" : "bg-gray-400"),
 																		)}
 																	>
 																		<IconComponent icon={movement.category?.icon} className="w-5 h-5 text-white" />
 																	</div>
-																	<p className="font-semibold text-sm text-gray-900 line-clamp-2 flex-1">{movement.tag.name}</p>
+																	<p className="font-semibold text-sm text-gray-900 line-clamp-2 flex-1">{movement.tag?.name ?? movement.description}</p>
 																</div>
 
 																{/* Bottom row: Date (left) + Amount (right) */}

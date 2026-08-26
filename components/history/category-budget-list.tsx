@@ -6,14 +6,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { CategoryBudget } from "@/lib/schemas/category"
+import { TxType } from "@/lib/schemas/definitions"
 import { availableColors, formatToBalance } from "@/lib/quick-spend-constants"
 import { getMonthName } from "@/lib/dateUtils"
+import { useDashboard } from "@/app/dashboard/dashboardContext"
 
 export default function CategoryBudgetList({ budgetedCategories, label }: { budgetedCategories: CategoryBudget[], label?: string }) {
 	const [expanded, setExpanded] = useState(false)
 	const VISIBLE_COUNT = 5
 
 	// const expenses = budgetedCategories.filter((t) => t.type === TxType.EXPENSE)
+
+	const { user } = useDashboard();
 
 	const categoryTotals = budgetedCategories.reduce(
 		(acc, t) => {
@@ -23,10 +27,15 @@ export default function CategoryBudgetList({ budgetedCategories, label }: { budg
 		{} as Record<string, number>,
 	)
 
-	const totalBudget = budgetedCategories
-		.filter((c) => c.id !== "all" && c.budget > 0)
-		.reduce((sum, c) => sum + c.budget, 0)
-	const totalSpent = Object.values(categoryTotals).reduce((sum, a) => sum + a, 0)
+	const expenseCategories = budgetedCategories.filter((c) => c.id !== "all" && c.type === TxType.EXPENSE)
+
+	const totalBudget = user?.totalBudget ?? 0;
+
+	// const totalBudget = expenseCategories
+	// 	.filter((c) => c.budget > 0)
+	// 	.reduce((sum, c) => sum + c.budget, 0)
+
+	const totalSpent = expenseCategories.reduce((sum, c) => sum + (categoryTotals[c.id] || 0), 0)
 
 	const items = budgetedCategories
 		.filter((c) => c.id !== "all" && (c.budget > 0 || categoryTotals[c.id]))

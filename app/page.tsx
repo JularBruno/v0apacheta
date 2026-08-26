@@ -16,6 +16,19 @@ export default function Home() {
 			{/* <Features /> */}
 			<FAQ />
 			{/* <Footer /> */}
+			<section className="py-20">
+				<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+					<a href="https://malvinas.argentinadatos.com/" target="_blank" rel="noopener noreferrer">
+						<img
+							src="https://malvinas.argentinadatos.com/header.png"
+							width={1500}
+							height={500}
+							alt="Islas Malvinas Argentinas — Portada de perfil"
+							className="w-full h-auto rounded-xl"
+						/>
+					</a>
+				</div>
+			</section>
 		</main>
 	)
 }

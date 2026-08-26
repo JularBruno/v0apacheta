@@ -13,6 +13,7 @@ import EditTransactionModal from "@/components/assets/edit-transaction-modal"
 import DeleteConfirmationModal from "@/components/assets/delete-confirmation-modal"
 import { FinancialElementType, TxType } from "@/lib/schemas/definitions";
 import { useFinancialElementById } from "@/lib/hooks/use-financial-element-by-id"
+import { useCurrencies } from "@/lib/hooks/use-currencies"
 import { useDeleteFinancialElement } from "@/lib/hooks/use-delete-financial-element"
 import { useDeletePatrimonyMovement } from "@/lib/hooks/use-delete-financial-element-movement"
 import { FinancialElement, FinancialElements } from "@/lib/schemas/financialElement"
@@ -36,9 +37,12 @@ export default function AssetDetailPage() {
 
 	const queryClient = useQueryClient()
 
-	const { data: asset, isLoading, isError } = useFinancialElementById(assetId)
+	const { data: asset, isLoading, isError, refetch } = useFinancialElementById(assetId)
 	const { mutateAsync: deleteMutation } = useDeleteFinancialElement()
 	const { mutateAsync: deleteMovementMutation } = useDeletePatrimonyMovement(assetId)
+	const { data: currencies } = useCurrencies()
+
+	const currencyInfo = currencies?.find((c) => c.currency === asset?.currency)
 
 	const [showQuickSpend, setShowQuickSpend] = useState(false)
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -143,7 +147,21 @@ export default function AssetDetailPage() {
 		<Loading />
 	);
 
-	if (isError || !asset) return (
+	// isError (fetch failed, e.g. 500/network) is a different situation than the
+	// query succeeding with nothing — don't tell the user "not found" for a server error.
+	if (isError) return (
+		<div className="flex items-center justify-center min-h-[400px]">
+			<div className="text-center">
+				<p className="text-gray-500 mb-4">No pudimos cargar este elemento.</p>
+				<div className="flex gap-3 justify-center">
+					<Button variant="outline" onClick={() => refetch()}>Reintentar</Button>
+					<Button onClick={() => router.push("/dashboard/patrimonio")}>Volver a la lista</Button>
+				</div>
+			</div>
+		</div>
+	);
+
+	if (!asset) return (
 		<div className="flex items-center justify-center min-h-[400px]">
 			<div className="text-center">
 				<p className="text-gray-500 mb-4">Elemento financiero no encontrado</p>
@@ -164,7 +182,12 @@ export default function AssetDetailPage() {
 				</Button>
 				<div className="min-w-0 flex-1">
 					<h1 className="text-2xl font-bold text-gray-900 truncate">{asset?.name}</h1>
-					<p className="text-sm text-gray-500 capitalize">{asset?.type === FinancialElementType.ASSET ? "Activo" : "Pasivo"}</p>
+					<div className="flex items-center gap-2 mt-1">
+						<p className="text-sm text-gray-500 capitalize">{asset?.type === FinancialElementType.ASSET ? "Activo" : "Pasivo"}</p>
+						<Badge variant="secondary" className="text-xs">
+							{currencyInfo?.label ?? asset?.currency}
+						</Badge>
+					</div>
 				</div>
 				<div className="flex gap-2">
 					<Button variant="outline" size="icon" onClick={() => setIsEditModalOpen(true)}>
@@ -182,7 +205,7 @@ export default function AssetDetailPage() {
 					<div className="text-center">
 						<p className="text-sm text-gray-500 mb-2">Valor Actual</p>
 						<p className={cn("text-4xl font-bold", valueColorClass)}>
-							{formatToBalance(currentAmount)}
+							{currencyInfo?.symbol ?? ""} {formatToBalance(currentAmount)}
 						</p>
 					</div>
 				</CardContent>

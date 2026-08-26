@@ -8,13 +8,39 @@
 export const getNow = () => new Date();
 
 /**
+ * Formats a Date as "YYYY-MM-DD" using its LOCAL calendar date — the value
+ * <input type="date"> expects. Deliberately not toISOString().split('T')[0]:
+ * that reads the UTC date, which silently shifts by a day near midnight in any
+ * timezone behind UTC (all of Argentina, e.g. 2026-08-08T01:56Z is still
+ * 2026-08-07 on the wall clock here).
+ */
+export const formatDateInputLocal = (date: Date) => {
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, '0');
+	const day = String(date.getDate()).padStart(2, '0');
+	return `${year}-${month}-${day}`;
+};
+
+/**
+ * Formats a "YYYY-MM-DD" input value for display as "dd/mm/yyyy". Appending
+ * "T00:00:00" forces JS to parse it as LOCAL midnight instead of UTC midnight —
+ * a bare "YYYY-MM-DD" is parsed as UTC per spec, which is the same shift bug
+ * formatDateInputLocal exists to avoid. Hardcodes 'es-AR' to match how the rest
+ * of the app already formats dates (see the locale discussion on quick-spend-ui-pieces.tsx).
+ */
+export const formatDateInputForDisplay = (value: string) => {
+	if (!value) return '';
+	return new Date(`${value}T00:00:00`).toLocaleDateString('es-AR');
+};
+
+/**
  * Get current date info for HTML inputs (date and time fields)
  * Used in quickspend card for setting input values
  */
 export const getCurrentDateTimeInfo = () => {
 	const d = new Date();
 	return {
-		dateInput: d.toISOString().split('T')[0], // "2026-01-08"
+		dateInput: formatDateInputLocal(d), // "2026-01-08"
 		timeInput: d.toTimeString().slice(0, 5), // "14:30"
 	};
 };

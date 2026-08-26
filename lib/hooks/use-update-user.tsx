@@ -8,6 +8,7 @@ type UpdateUserData = {
 	balance?: number;
 	notificationFrequency?: NotificationFrequency;
 	mapLevel?: string;
+	preferredCurrency?: string;
 };
 
 export function useUpdateUser() {

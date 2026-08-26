@@ -6,7 +6,7 @@ export function useCreateFinancialElement() {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: (data: { name: string; type: FinancialElementType }) =>
+		mutationFn: (data: { name: string; type: FinancialElementType; currency: string }) =>
 			postFinancialElement(data),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['financial-elements-patrimony'] });
