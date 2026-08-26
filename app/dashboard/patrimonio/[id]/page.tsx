@@ -37,7 +37,7 @@ export default function AssetDetailPage() {
 
 	const queryClient = useQueryClient()
 
-	const { data: asset, isLoading, isError } = useFinancialElementById(assetId)
+	const { data: asset, isLoading, isError, refetch } = useFinancialElementById(assetId)
 	const { mutateAsync: deleteMutation } = useDeleteFinancialElement()
 	const { mutateAsync: deleteMovementMutation } = useDeletePatrimonyMovement(assetId)
 	const { data: currencies } = useCurrencies()
@@ -147,7 +147,21 @@ export default function AssetDetailPage() {
 		<Loading />
 	);
 
-	if (isError || !asset) return (
+	// isError (fetch failed, e.g. 500/network) is a different situation than the
+	// query succeeding with nothing — don't tell the user "not found" for a server error.
+	if (isError) return (
+		<div className="flex items-center justify-center min-h-[400px]">
+			<div className="text-center">
+				<p className="text-gray-500 mb-4">No pudimos cargar este elemento.</p>
+				<div className="flex gap-3 justify-center">
+					<Button variant="outline" onClick={() => refetch()}>Reintentar</Button>
+					<Button onClick={() => router.push("/dashboard/patrimonio")}>Volver a la lista</Button>
+				</div>
+			</div>
+		</div>
+	);
+
+	if (!asset) return (
 		<div className="flex items-center justify-center min-h-[400px]">
 			<div className="text-center">
 				<p className="text-gray-500 mb-4">Elemento financiero no encontrado</p>

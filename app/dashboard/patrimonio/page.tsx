@@ -4,7 +4,7 @@ import { useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus } from "lucide-react"
+import { Plus, RotateCw } from "lucide-react"
 import AssetCard from "@/components/assets/asset-card"
 import AssetFormModal from "@/components/assets/asset-form-modal"
 import { useFinancialElements } from "@/lib/hooks/use-financial-elements"
@@ -18,7 +18,7 @@ import { Loading } from "@/components/ui/loading"
 
 export default function AssetsPage() {
 	const queryClient = useQueryClient();
-	const { data, isLoading } = useFinancialElements();
+	const { data, isLoading, isError, refetch } = useFinancialElements();
 
 	const { data: currencies } = useCurrencies();
 	const { data: profile } = useProfile();
@@ -81,62 +81,76 @@ export default function AssetsPage() {
 				</Button>
 			</div>
 
-			{/* Summary Cards */}
-			<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-				<Card>
-					<CardHeader className="pb-2">
-						<CardTitle className="text-sm font-medium text-gray-600">Total Activos</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<p className="text-2xl font-bold text-green-600">{formatToBalance(totalAssets)}</p>
-					</CardContent>
-				</Card>
-				<Card>
-					<CardHeader className="pb-2">
-						<CardTitle className="text-sm font-medium text-gray-600">Total Pasivos</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<p className="text-2xl font-bold text-red-600">{formatToBalance(totalLiabilities)}</p>
-					</CardContent>
-				</Card>
-				<Card>
-					<CardHeader className="pb-2">
-						<CardTitle className="text-sm font-medium text-gray-600">Patrimonio Neto</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<p className={`text-2xl font-bold ${netWorth >= 0 ? "text-green-600" : "text-red-600"}`}>
-							{formatToBalance(netWorth)}
-						</p>
-					</CardContent>
-				</Card>
-			</div>
-
-			{/* Assets Grid */}
 			{isLoading ? (
 				<Loading />
-			) : assets.length === 0 ? (
+			) : isError ? (
+				// Don't show $0 totals or "you have nothing" here — that's misleading on a
+				// fetch failure, not an actual empty patrimony.
 				<div className="flex flex-col items-center justify-center py-16 text-center">
-					<p className="text-muted-foreground text-sm">Todavía no tenés elementos financieros.</p>
-					<Button variant="outline" className="mt-4" onClick={() => setIsModalOpen(true)}>
-						<Plus className="w-4 h-4 mr-2" />
-						Agregar tu primer elemento
+					<p className="text-muted-foreground text-sm">No pudimos cargar tu patrimonio.</p>
+					<Button variant="outline" className="mt-4" onClick={() => refetch()}>
+						<RotateCw className="w-4 h-4 mr-2" />
+						Reintentar
 					</Button>
 				</div>
 			) : (
-				<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-					{assets.map((asset) => (
-						<AssetCard
-							key={asset.id}
-							id={asset.id}
-							name={asset.name}
-							type={asset.type}
-							currentValue={asset.currentAmount}
-							convertedValue={asset.convertedAmount}
-							currency={asset.currency}
-							mainCurrency={mainCurrency}
-						/>
-					))}
-				</div>
+				<>
+					{/* Summary Cards */}
+					<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+						<Card>
+							<CardHeader className="pb-2">
+								<CardTitle className="text-sm font-medium text-gray-600">Total Activos</CardTitle>
+							</CardHeader>
+							<CardContent>
+								<p className="text-2xl font-bold text-green-600">{formatToBalance(totalAssets)}</p>
+							</CardContent>
+						</Card>
+						<Card>
+							<CardHeader className="pb-2">
+								<CardTitle className="text-sm font-medium text-gray-600">Total Pasivos</CardTitle>
+							</CardHeader>
+							<CardContent>
+								<p className="text-2xl font-bold text-red-600">{formatToBalance(totalLiabilities)}</p>
+							</CardContent>
+						</Card>
+						<Card>
+							<CardHeader className="pb-2">
+								<CardTitle className="text-sm font-medium text-gray-600">Patrimonio Neto</CardTitle>
+							</CardHeader>
+							<CardContent>
+								<p className={`text-2xl font-bold ${netWorth >= 0 ? "text-green-600" : "text-red-600"}`}>
+									{formatToBalance(netWorth)}
+								</p>
+							</CardContent>
+						</Card>
+					</div>
+
+					{/* Assets Grid */}
+					{assets.length === 0 ? (
+						<div className="flex flex-col items-center justify-center py-16 text-center">
+							<p className="text-muted-foreground text-sm">Todavía no tenés elementos financieros.</p>
+							<Button variant="outline" className="mt-4" onClick={() => setIsModalOpen(true)}>
+								<Plus className="w-4 h-4 mr-2" />
+								Agregar tu primer elemento
+							</Button>
+						</div>
+					) : (
+						<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+							{assets.map((asset) => (
+								<AssetCard
+									key={asset.id}
+									id={asset.id}
+									name={asset.name}
+									type={asset.type}
+									currentValue={asset.currentAmount}
+									convertedValue={asset.convertedAmount}
+									currency={asset.currency}
+									mainCurrency={mainCurrency}
+								/>
+							))}
+						</div>
+					)}
+				</>
 			)}
 
 			{/* Add Asset Modal */}
