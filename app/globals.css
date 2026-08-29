@@ -59,6 +59,27 @@
 		/* ash grey */
 		--chart-5: 337 25% 35%;
 		/* medium coffee */
+
+		/* --- Trail map "world" palette (illustrated, intentionally outside the token system) --- */
+		--map-parchment-light: #efe3c4;
+		--map-parchment-mid: #d8bd82;
+		--map-parchment-deep: #c19a4c;
+		--map-parchment-edge: #c9a96e;
+		--map-ink: #2d1a0e;
+		--map-rock: #5a3e2b;
+		--map-rock-highlight: #7a5a40;
+		--map-scrub: #6b7a3a;
+		--map-river: #8aadb8;
+		--map-river-light: #aacdd8;
+		--map-trail-open: #8b3a2a;
+		--map-trail-locked: #9a7a60;
+		--map-fog: #dcc99e;
+		--map-fog-deep: #cdb880;
+		--map-ridge: #b8945a;
+		--map-node-idle: #c8baa0;
+		--map-node-idle-stroke: #a09070;
+		--map-node-locked: #b0a080;
+		--map-node-locked-stroke: #8a7050;
 	}
 
 	.dark {
@@ -110,12 +131,32 @@
 	body {
 		background-color: hsl(var(--background));
 		color: hsl(var(--foreground));
-		font-family: Inter, system-ui, -apple-system, sans-serif;
+		font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 	}
 }
 
 html {
 	scroll-behavior: smooth;
+}
+
+/* Trail map — pulse ring on the traveller's current cairn.
+   CSS can't animate the SVG `r` attribute, so we scale the <g> instead. */
+@keyframes trail-map-pulse {
+	0%, 100% { opacity: 0.5; transform: scale(1); }
+	50% { opacity: 0.08; transform: scale(1.28); }
+}
+
+.trail-map-pulse {
+	transform-box: fill-box;
+	transform-origin: center;
+	animation: trail-map-pulse 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.trail-map-pulse {
+		animation: none;
+		opacity: 0.4;
+	}
 }
 
 
