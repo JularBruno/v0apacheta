@@ -1,11 +1,18 @@
 import type { Metadata, Viewport } from 'next'
-import { Manrope } from 'next/font/google'
+import { Manrope, DM_Mono } from 'next/font/google'
 import './globals.css'
 
 const manrope = Manrope({
 	subsets: ['latin'],
 	display: 'swap',
 	variable: '--font-sans',
+})
+
+const dmMono = DM_Mono({
+	subsets: ['latin'],
+	weight: ['400', '500'],
+	display: 'swap',
+	variable: '--font-mono',
 })
 
 export const viewport: Viewport = {
@@ -33,7 +40,7 @@ export default function RootLayout({
 	children: React.ReactNode
 }>) {
 	return (
-		<html lang="en" className={manrope.variable}>
+		<html lang="es" className={`${manrope.variable} ${dmMono.variable}`}>
 			<body>{children}</body>
 		</html>
 	)

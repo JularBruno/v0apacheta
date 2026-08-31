@@ -139,26 +139,6 @@ html {
 	scroll-behavior: smooth;
 }
 
-/* Trail map — pulse ring on the traveller's current cairn.
-   CSS can't animate the SVG `r` attribute, so we scale the <g> instead. */
-@keyframes trail-map-pulse {
-	0%, 100% { opacity: 0.5; transform: scale(1); }
-	50% { opacity: 0.08; transform: scale(1.28); }
-}
-
-.trail-map-pulse {
-	transform-box: fill-box;
-	transform-origin: center;
-	animation: trail-map-pulse 2.4s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.trail-map-pulse {
-		animation: none;
-		opacity: 0.4;
-	}
-}
-
 
 /* Sidebar mobile fixes */
 @media (max-width: 768px) {

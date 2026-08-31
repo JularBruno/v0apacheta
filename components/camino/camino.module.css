@@ -1,0 +1,155 @@
+/* Structural styles for the /camino scroll trail.
+   Colors: --map-* tokens (parchment world) from globals.css for the ground and
+   trail; shadcn tokens for card + text. Typography/spacing utilities stay in
+   the TSX as Tailwind classes. */
+
+.trail {
+	position: relative;
+	overflow: hidden;
+}
+
+/* placeholder ground — the real illustrated map replaces this later */
+.bg {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	pointer-events: none;
+	background:
+		radial-gradient(150% 38% at 50% 0%, color-mix(in srgb, var(--map-parchment-mid) 55%, transparent), transparent 70%),
+		radial-gradient(120% 30% at 50% 100%, color-mix(in srgb, var(--map-parchment-mid) 45%, transparent), transparent 60%),
+		linear-gradient(180deg, var(--map-parchment-light), var(--map-parchment-mid) 55%, var(--map-parchment-light));
+}
+
+.svg {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 1;
+	pointer-events: none;
+	overflow: visible;
+}
+.svg path {
+	fill: none;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+.full {
+	stroke: var(--map-trail-open);
+	stroke-width: 2.4;
+	stroke-dasharray: 2 9;
+	opacity: 0.45;
+}
+.walked {
+	stroke: var(--map-trail-open);
+	stroke-width: 3.2;
+	opacity: 0.95;
+}
+
+.station {
+	position: relative;
+	z-index: 2;
+	min-height: 60vh;
+}
+.station:first-child {
+	min-height: 40vh;
+}
+.station:last-child {
+	min-height: 48vh;
+}
+
+.cairn {
+	position: absolute;
+	top: 50%;
+	width: 64px;
+	height: 64px;
+	transform: translate(-50%, -50%);
+	display: grid;
+	place-items: center;
+	color: hsl(var(--primary));
+	transition: color 0.5s ease, opacity 0.5s ease;
+}
+.cairn svg {
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+	filter: drop-shadow(0 3px 5px rgba(27, 14, 19, 0.22));
+}
+.station:not(.reached) .cairn {
+	opacity: 0.5;
+	color: var(--map-ink);
+}
+.station.here .cairn {
+	color: hsl(var(--primary));
+}
+
+.badge {
+	position: absolute;
+	right: -8px;
+	top: -8px;
+	min-width: 22px;
+	height: 22px;
+	padding: 0 5px;
+	border-radius: 999px;
+	display: grid;
+	place-items: center;
+	font-family: var(--font-mono, ui-monospace, monospace);
+	font-size: 11px;
+	font-weight: 500;
+	background: hsl(var(--foreground));
+	color: hsl(var(--background));
+}
+
+.halo {
+	position: absolute;
+	inset: -13px;
+	border-radius: 999px;
+	border: 2px solid hsl(var(--primary));
+	opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+	.station.here .halo {
+		animation: cairnPulse 2.6s ease-in-out infinite;
+	}
+}
+@keyframes cairnPulse {
+	0%, 100% { transform: scale(1); opacity: 0.5; }
+	50% { transform: scale(1.4); opacity: 0; }
+}
+
+.card {
+	position: absolute;
+	top: 50%;
+	width: min(340px, 62vw);
+	background: hsl(var(--card) / 0.82);
+	backdrop-filter: blur(7px);
+	border: 1px solid var(--map-parchment-edge);
+	border-radius: 15px;
+	padding: 15px 16px 16px;
+	box-shadow: 0 2px 0 var(--map-parchment-edge), 0 16px 34px -18px rgba(27, 14, 19, 0.22);
+	opacity: 0;
+	transform: translateY(-42%);
+	transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.card.in {
+	opacity: 1;
+}
+
+.left .cairn { left: 23%; }
+.right .cairn { left: 77%; }
+.left .card { left: 27%; transform: translate(-14px, -42%); }
+.right .card { right: 27%; transform: translate(14px, -42%); }
+.left .card.in,
+.right .card.in { transform: translate(0, -42%); }
+
+@media (prefers-reduced-motion: reduce) {
+	.card {
+		opacity: 1;
+		transform: translateY(-42%) !important;
+		transition: none;
+	}
+	.station.here .halo {
+		animation: none;
+		opacity: 0.4;
+	}
+}

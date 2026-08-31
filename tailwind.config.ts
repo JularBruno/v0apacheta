@@ -139,6 +139,7 @@ const config: Config = {
 			},
 			fontFamily: {
 				sans: ['var(--font-sans)', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+				mono: ['var(--font-mono)', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
 			},
 		},
 	},
