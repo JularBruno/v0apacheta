@@ -29,7 +29,7 @@ export default function ChapterStation({ chapter, index, reached, here, inView }
 				<span className={styles.badge}>{String(chapter.n).padStart(2, "0")}</span>
 			</div>
 
-			<article className={cn(styles.card, inView && styles.in)}>
+			<article data-card className={cn(styles.card, inView && styles.in)}>
 				<p className="font-mono text-[11px] font-medium uppercase tracking-[0.13em] text-primary/90">
 					{chapter.label}
 				</p>

@@ -1,23 +1,16 @@
 /* Structural styles for the /camino scroll trail.
    Colors: --map-* tokens (parchment world) from globals.css for the ground and
-   trail; shadcn tokens for card + text. Typography/spacing utilities stay in
-   the TSX as Tailwind classes. */
+   scenery; shadcn tokens for cards + text. Typography/spacing stay in the TSX
+   as Tailwind classes. */
 
-.trail {
+/* the whole page is the map: one parchment ground + scenery behind everything */
+.page {
 	position: relative;
 	overflow: hidden;
-}
-
-/* placeholder ground — the real illustrated map replaces this later */
-.bg {
-	position: absolute;
-	inset: 0;
-	z-index: 0;
-	pointer-events: none;
 	background:
-		radial-gradient(150% 38% at 50% 0%, color-mix(in srgb, var(--map-parchment-mid) 55%, transparent), transparent 70%),
-		radial-gradient(120% 30% at 50% 100%, color-mix(in srgb, var(--map-parchment-mid) 45%, transparent), transparent 60%),
-		linear-gradient(180deg, var(--map-parchment-light), var(--map-parchment-mid) 55%, var(--map-parchment-light));
+		radial-gradient(120% 22% at 50% 0%, color-mix(in srgb, var(--map-parchment-mid) 40%, transparent), transparent 70%),
+		radial-gradient(140% 26% at 50% 100%, color-mix(in srgb, var(--map-parchment-mid) 42%, transparent), transparent 65%),
+		linear-gradient(180deg, var(--map-parchment-light), var(--map-parchment-mid) 50%, var(--map-parchment-light));
 }
 
 .sceneryBack,
@@ -26,15 +19,21 @@
 	inset: 0;
 	width: 100%;
 	height: 100%;
+	z-index: 1;
 	pointer-events: none;
 	overflow: visible;
 	will-change: transform;
 }
-.sceneryBack {
-	z-index: 1;
+
+.content {
+	position: relative;
+	z-index: 2;
 }
-.sceneryFront {
-	z-index: 3;
+
+/* the trail section: an isolated layer so the path sits under the stations */
+.trail {
+	position: relative;
+	isolation: isolate;
 }
 
 .svg {
@@ -42,7 +41,7 @@
 	inset: 0;
 	width: 100%;
 	height: 100%;
-	z-index: 2;
+	z-index: 0;
 	pointer-events: none;
 	overflow: visible;
 }
@@ -53,33 +52,33 @@
 }
 .full {
 	stroke: var(--map-trail-open);
-	stroke-width: 2.4;
+	stroke-width: 2.6;
 	stroke-dasharray: 2 9;
-	opacity: 0.45;
+	opacity: 0.5;
 }
 .walked {
 	stroke: var(--map-trail-open);
-	stroke-width: 3.2;
+	stroke-width: 3.4;
 	opacity: 0.95;
 }
 
 .station {
 	position: relative;
-	z-index: 4;
-	min-height: 60vh;
+	z-index: 1;
+	min-height: 58vh;
 }
 .station:first-child {
-	min-height: 40vh;
+	min-height: 38vh;
 }
 .station:last-child {
-	min-height: 48vh;
+	min-height: 46vh;
 }
 
 .cairn {
 	position: absolute;
 	top: 50%;
-	width: 64px;
-	height: 64px;
+	width: 62px;
+	height: 62px;
 	transform: translate(-50%, -50%);
 	display: grid;
 	place-items: center;
@@ -89,8 +88,8 @@
 .cairn svg {
 	width: 100%;
 	height: 100%;
-	overflow: visible;
-	filter: drop-shadow(0 3px 5px rgba(27, 14, 19, 0.22));
+	overflow: hidden;
+	filter: drop-shadow(0 3px 5px rgba(27, 14, 19, 0.28));
 }
 .station:not(.reached) .cairn {
 	opacity: 0.5;
@@ -137,13 +136,13 @@
 .card {
 	position: absolute;
 	top: 50%;
-	width: min(340px, 62vw);
-	background: hsl(var(--card) / 0.82);
+	width: min(330px, 60vw);
+	background: hsl(var(--card) / 0.86);
 	backdrop-filter: blur(7px);
 	border: 1px solid var(--map-parchment-edge);
 	border-radius: 15px;
 	padding: 15px 16px 16px;
-	box-shadow: 0 2px 0 var(--map-parchment-edge), 0 16px 34px -18px rgba(27, 14, 19, 0.22);
+	box-shadow: 0 2px 0 var(--map-parchment-edge), 0 18px 36px -20px rgba(27, 14, 19, 0.3);
 	opacity: 0;
 	transform: translateY(-42%);
 	transition: opacity 0.6s ease, transform 0.6s ease;
@@ -154,10 +153,23 @@
 
 .left .cairn { left: 23%; }
 .right .cairn { left: 77%; }
-.left .card { left: 27%; transform: translate(-14px, -42%); }
-.right .card { right: 27%; transform: translate(14px, -42%); }
+.left .card { left: 28%; transform: translate(-14px, -42%); }
+.right .card { right: 28%; transform: translate(14px, -42%); }
 .left .card.in,
 .right .card.in { transform: translate(0, -42%); }
+
+/* phones: pull cairns to the edges and cards off them so they don't overlap */
+@media (max-width: 560px) {
+	.cairn {
+		width: 50px;
+		height: 50px;
+	}
+	.left .cairn { left: 15%; }
+	.right .cairn { left: 85%; }
+	.left .card { left: 33%; }
+	.right .card { right: 33%; }
+	.card { width: 62vw; }
+}
 
 @media (prefers-reduced-motion: reduce) {
 	.card {

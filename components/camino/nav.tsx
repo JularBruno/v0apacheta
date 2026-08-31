@@ -3,7 +3,7 @@ import ApachetaCairn from "@/components/apacheta-cairn"
 
 export default function CaminoNav() {
 	return (
-		<header className="sticky top-0 z-50 flex h-14 items-center border-b border-border bg-background/85 backdrop-blur-sm">
+		<header className="sticky top-0 z-50 flex h-14 items-center border-b border-[color:var(--map-parchment-edge)] bg-[color:var(--map-parchment-light)]/80 backdrop-blur-sm">
 			<div className="mx-auto flex w-full max-w-2xl items-center justify-between px-5 sm:px-6">
 				<Link href="/camino" className="flex items-center gap-2.5">
 					<ApachetaCairn className="h-6 w-6 text-primary" />

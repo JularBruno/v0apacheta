@@ -1,19 +1,30 @@
 "use client"
 
-import { useEffect, useMemo, useRef } from "react"
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react"
 import type { TrailGeometry } from "./use-trail"
 import styles from "./camino.module.css"
 
 /**
- * Procedural hand-drawn scenery for the trail — rocks, espinillo trees, scrub
- * and the Río Suquía, scattered along the path and through the empty margins.
- * Seeded so it stays put across renders; two parallax layers (behind and in
- * front of the trail line). Placement clears the cairns and their cards.
+ * Procedural hand-drawn scenery for the whole page — rocks, espinillo trees,
+ * scrub and the Río Suquía, scattered along the trail and through every empty
+ * margin (behind the hero and the summit too). Seeded so it stays put; two
+ * parallax layers behind all content. Placement clears the hero, the summit,
+ * every cairn and every card.
  */
 
 const SEED = 20260613
 
 type Sprite = { x: number; y: number; s: number; r: number }
+type Rect = { x: number; y: number; w: number; h: number }
+type Point = { x: number; y: number }
+
+interface Layout {
+	width: number
+	height: number
+	trail: Point[]
+	cairns: Point[]
+	clears: Rect[]
+}
 
 function mulberry32(seed: number) {
 	let a = seed >>> 0
@@ -27,29 +38,26 @@ function mulberry32(seed: number) {
 
 interface Scene {
 	river: string
-	ridge: string
 	trees: Sprite[]
 	rocks: Sprite[]
 	scrub: Sprite[]
 }
 
-function generate(g: TrailGeometry): Scene {
-	const { width: W, height: H, trailPoints: TP, cairns } = g
+function generate({ width: W, height: H, trail: TP, cairns, clears }: Layout): Scene {
 	const rnd = mulberry32(SEED)
 	const rand = (a: number, b: number) => a + rnd() * (b - a)
 
-	// keep clear of each cairn and the card that floats beside it
-	const blocked = (x: number, y: number, pad: number) =>
-		cairns.some((c) => {
-			if (Math.hypot(c.x - x, c.y - y) < pad + 30) return true
-			if (Math.abs(y - c.y) > 130) return false
-			return c.side === "left" ? x > c.x - 24 && x < c.x + 360 : x < c.x + 24 && x > c.x - 360
-		})
+	const blocked = (x: number, y: number, pad: number) => {
+		for (const c of cairns) if (Math.hypot(c.x - x, c.y - y) < pad + 34) return true
+		for (const r of clears) {
+			if (x > r.x - pad && x < r.x + r.w + pad && y > r.y - pad && y < r.y + r.h + pad) return true
+		}
+		return false
+	}
 
-	// scatter near the trail: pick a sampled point, step perpendicular to it
 	function alongTrail(count: number, near: number, far: number, pad: number): Sprite[] {
 		const out: Sprite[] = []
-		for (let tries = 0; out.length < count && tries < count * 10; tries++) {
+		for (let tries = 0; out.length < count && tries < count * 12; tries++) {
 			const i = 1 + Math.floor(rnd() * (TP.length - 2))
 			const p = TP[i]
 			const a = TP[i - 1]
@@ -62,57 +70,48 @@ function generate(g: TrailGeometry): Scene {
 			const off = rand(near, far) * (rnd() < 0.5 ? 1 : -1)
 			const x = p.x + nx * off + rand(-14, 14)
 			const y = p.y + ny * off + rand(-14, 14)
-			if (x < 10 || x > W - 10 || y < -40 || y > H + 40) continue
+			if (x < 12 || x > W - 12 || y < 24 || y > H - 24) continue
 			if (blocked(x, y, pad)) continue
 			out.push({ x, y, s: rand(0.7, 1.3), r: rnd() })
 		}
 		return out
 	}
 
-	// fill the outer gutters
-	function margins(count: number, pad: number): Sprite[] {
+	function fill(count: number, pad: number): Sprite[] {
 		const out: Sprite[] = []
-		for (let tries = 0; out.length < count && tries < count * 10; tries++) {
-			const left = rnd() < 0.5
-			const x = left ? rand(6, W * 0.16) : rand(W * 0.84, W - 6)
-			const y = rand(20, H - 20)
+		for (let tries = 0; out.length < count && tries < count * 14; tries++) {
+			const x = rand(10, W - 10)
+			const y = rand(24, H - 24)
 			if (blocked(x, y, pad)) continue
-			out.push({ x, y, s: rand(0.75, 1.35), r: rnd() })
+			out.push({ x, y, s: rand(0.75, 1.4), r: rnd() })
 		}
 		return out
 	}
 
-	// Río Suquía — a soft wobble down the left edge
-	const rx = W * 0.055
-	let river = `M ${rx.toFixed(0)} -12`
-	const segs = 8
+	// Río Suquía — a soft wobble down the left edge, full page height
+	const rx = W * 0.05
+	let river = `M ${rx.toFixed(0)} -14`
+	const segs = Math.max(6, Math.round(H / 320))
 	for (let i = 1; i <= segs; i++) {
-		const y = -12 + ((H + 24) * i) / segs
-		const cx = rx + Math.sin(i * 1.4 + rnd()) * W * 0.03
-		const ex = rx + Math.sin(i * 1.9) * W * 0.02
-		river += ` S ${cx.toFixed(0)} ${(y - (H + 24) / segs / 2).toFixed(0)}, ${ex.toFixed(0)} ${y.toFixed(0)}`
+		const y = -14 + ((H + 28) * i) / segs
+		const cx = rx + Math.sin(i * 1.4 + rnd()) * W * 0.035
+		const ex = rx + Math.sin(i * 1.9) * W * 0.024
+		river += ` S ${cx.toFixed(0)} ${(y - (H + 28) / segs / 2).toFixed(0)}, ${ex.toFixed(0)} ${y.toFixed(0)}`
 	}
 
-	// ridge silhouette near the top
-	let ridge = `M -10 74`
-	for (let x = 0; x <= W + 20; x += W / 9) {
-		ridge += ` L ${x.toFixed(0)} ${(38 + rnd() * 34).toFixed(0)}`
-	}
-	ridge += ` L ${W + 20} 0 L -10 0 Z`
-
+	const d = Math.min(3, Math.max(1, H / 1400)) // density scales with page height
 	return {
 		river,
-		ridge,
-		trees: [...alongTrail(9, 58, 150, 44), ...margins(5, 30)],
-		rocks: [...alongTrail(11, 30, 122, 28), ...margins(6, 24)],
-		scrub: [...alongTrail(15, 24, 110, 16), ...margins(8, 14)],
+		trees: [...alongTrail(Math.round(7 * d), 58, 150, 44), ...fill(Math.round(6 * d), 40)],
+		rocks: [...alongTrail(Math.round(9 * d), 30, 128, 28), ...fill(Math.round(7 * d), 30)],
+		scrub: [...alongTrail(Math.round(12 * d), 22, 118, 16), ...fill(Math.round(10 * d), 20)],
 	}
 }
 
 function Rock({ x, y, s, r }: Sprite) {
 	return (
 		<g
-			transform={`translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${(s * (0.85 + r * 0.4)).toFixed(2)})`}
+			transform={`translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${(s * (0.85 + r * 0.5)).toFixed(2)})`}
 			fill="none"
 			stroke="var(--map-rock)"
 			strokeWidth="1.2"
@@ -126,17 +125,29 @@ function Rock({ x, y, s, r }: Sprite) {
 }
 
 function Tree({ x, y, s, r }: Sprite) {
+	// espinillo / algarrobo — flat-topped canopy; a couple of silhouette variants
+	const wide = r > 0.55
 	return (
-		<g transform={`translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${(s * (0.9 + r * 0.3)).toFixed(2)})`}>
-			<line x1="0" y1="0" x2={(r * 3 - 1.5).toFixed(1)} y2="-15" stroke="var(--map-rock)" strokeWidth="1.7" strokeLinecap="round" />
-			<path
-				d="M -17,-15 C -15,-24 15,-24 17,-15 C 22,-14 22,-9 13,-9 L -13,-9 C -22,-9 -22,-14 -17,-15 Z"
-				fill="none"
-				stroke="var(--map-foliage)"
-				strokeWidth="1.5"
-				strokeLinejoin="round"
-			/>
-			<path d="M -11,-14 C -6,-18 6,-18 11,-14" fill="none" stroke="var(--map-foliage)" strokeWidth="1" opacity="0.65" />
+		<g transform={`translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${(s * (0.9 + r * 0.45)).toFixed(2)})`}>
+			<line x1="0" y1="0" x2={(r * 3 - 1.5).toFixed(1)} y2="-16" stroke="var(--map-rock)" strokeWidth="1.7" strokeLinecap="round" />
+			{wide ? (
+				<path
+					d="M -19,-16 C -17,-25 17,-25 19,-16 C 24,-15 24,-10 14,-10 L -14,-10 C -24,-10 -24,-15 -19,-16 Z"
+					fill="none"
+					stroke="var(--map-foliage)"
+					strokeWidth="1.5"
+					strokeLinejoin="round"
+				/>
+			) : (
+				<path
+					d="M -13,-15 C -12,-24 12,-24 13,-15 C 17,-14 17,-10 9,-10 L -9,-10 C -17,-10 -17,-14 -13,-15 Z"
+					fill="none"
+					stroke="var(--map-foliage)"
+					strokeWidth="1.5"
+					strokeLinejoin="round"
+				/>
+			)}
+			<path d="M -10,-15 C -5,-19 5,-19 10,-15" fill="none" stroke="var(--map-foliage)" strokeWidth="1" opacity="0.6" />
 		</g>
 	)
 }
@@ -158,27 +169,62 @@ function Scrub({ x, y, s }: Sprite) {
 	)
 }
 
-export default function Scenery({ geometry }: { geometry: TrailGeometry | null }) {
+export default function Scenery({
+	pageRef,
+	geometry,
+}: {
+	pageRef: RefObject<HTMLDivElement | null>
+	geometry: TrailGeometry | null
+}) {
 	const backRef = useRef<SVGSVGElement>(null)
 	const frontRef = useRef<SVGSVGElement>(null)
+	const [layout, setLayout] = useState<Layout | null>(null)
 
-	const scene = useMemo(() => (geometry ? generate(geometry) : null), [geometry])
+	// measure the whole page once the trail geometry is known
+	useEffect(() => {
+		const page = pageRef.current
+		if (!page || !geometry) return
 
+		const measure = () => {
+			const pr = page.getBoundingClientRect()
+			const toLocal = (el: Element): Rect => {
+				const r = el.getBoundingClientRect()
+				return { x: r.left - pr.left, y: r.top - pr.top, w: r.width, h: r.height }
+			}
+			const trailEl = page.querySelector("[data-trail]")
+			const trailTop = trailEl ? trailEl.getBoundingClientRect().top - pr.top : 0
+
+			setLayout({
+				width: page.clientWidth,
+				height: page.offsetHeight,
+				trail: geometry.trailPoints.map((p) => ({ x: p.x, y: p.y + trailTop })),
+				cairns: geometry.cairns.map((c) => ({ x: c.x, y: c.y + trailTop })),
+				clears: Array.from(page.querySelectorAll("[data-clear],[data-card]")).map(toLocal),
+			})
+		}
+
+		measure()
+		// cards fade/settle after mount — re-measure once more
+		const t = window.setTimeout(measure, 400)
+		return () => window.clearTimeout(t)
+	}, [pageRef, geometry])
+
+	const scene = useMemo(() => (layout ? generate(layout) : null), [layout])
+
+	// parallax
 	useEffect(() => {
 		const back = backRef.current
 		const front = frontRef.current
-		if (!back || !front) return
+		const host = back?.parentElement
+		if (!back || !front || !host) return
 		if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
-
-		const host = back.parentElement
-		if (!host) return
 
 		let raf = 0
 		const apply = () => {
 			raf = 0
 			const p = -host.getBoundingClientRect().top
 			back.style.transform = `translate3d(0, ${(p * 0.08).toFixed(1)}px, 0)`
-			front.style.transform = `translate3d(0, ${(-p * 0.05).toFixed(1)}px, 0)`
+			front.style.transform = `translate3d(0, ${(p * 0.15).toFixed(1)}px, 0)`
 		}
 		const onScroll = () => {
 			if (!raf) raf = requestAnimationFrame(apply)
@@ -191,13 +237,12 @@ export default function Scenery({ geometry }: { geometry: TrailGeometry | null }
 		}
 	}, [scene])
 
-	if (!geometry || !scene) return null
-	const vb = `0 0 ${geometry.width} ${geometry.height}`
+	if (!layout || !scene) return null
+	const vb = `0 0 ${layout.width} ${layout.height}`
 
 	return (
 		<>
 			<svg ref={backRef} className={styles.sceneryBack} viewBox={vb} aria-hidden="true">
-				<path d={scene.ridge} fill="var(--map-ridge)" opacity="0.2" />
 				<path d={scene.river} fill="none" stroke="var(--map-river)" strokeWidth="5" strokeLinecap="round" opacity="0.4" />
 				<path
 					d={scene.river}
@@ -216,8 +261,8 @@ export default function Scenery({ geometry }: { geometry: TrailGeometry | null }
 			</svg>
 
 			<svg ref={frontRef} className={styles.sceneryFront} viewBox={vb} aria-hidden="true">
-				{scene.scrub.map((s, i) => (
-					<Scrub key={`s${i}`} {...s} />
+				{scene.scrub.map((sp, i) => (
+					<Scrub key={`s${i}`} {...sp} />
 				))}
 			</svg>
 		</>
