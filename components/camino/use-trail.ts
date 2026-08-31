@@ -7,6 +7,17 @@ interface Point {
 	y: number
 }
 
+export interface TrailGeometry {
+	/** the trail path `d`, in a `0 0 width height` coordinate space */
+	pathD: string
+	width: number
+	height: number
+	/** points sampled along the trail, for placing scenery near the path */
+	trailPoints: Point[]
+	/** cairn centres + which side of the trail they sit on */
+	cairns: Array<Point & { side: "left" | "right" }>
+}
+
 interface Args {
 	trailRef: RefObject<HTMLDivElement | null>
 	fullRef: RefObject<SVGPathElement | null>
@@ -42,6 +53,7 @@ export function useTrail({ trailRef, fullRef, walkedRef, count }: Args) {
 	const [activeIndex, setActiveIndex] = useState(0)
 	const [reachedCount, setReachedCount] = useState(0)
 	const [inView, setInView] = useState<boolean[]>(() => Array(count).fill(false))
+	const [geometry, setGeometry] = useState<TrailGeometry | null>(null)
 
 	const geo = useRef({ len: 0, anchorsY: [] as number[], anchorsL: [] as number[] })
 
@@ -107,6 +119,17 @@ export function useTrail({ trailRef, fullRef, walkedRef, count }: Args) {
 				anchorsY: [0, ...nodes.map((n) => n.y), h],
 				anchorsL: [0, ...nodes.map(lenNear), len],
 			}
+
+			const trailPoints: Point[] = []
+			for (let i = 0; i <= N; i += 16) trailPoints.push(sample[i])
+			setGeometry({
+				pathD: d,
+				width: w,
+				height: h,
+				trailPoints,
+				cairns: nodes.map((n) => ({ x: n.x, y: n.y, side: n.x < w / 2 ? "left" : "right" })),
+			})
+
 			update()
 		}
 
@@ -196,5 +219,5 @@ export function useTrail({ trailRef, fullRef, walkedRef, count }: Args) {
 		}
 	}, [trailRef, fullRef, walkedRef, count])
 
-	return { activeIndex, reachedCount, inView }
+	return { activeIndex, reachedCount, inView, geometry }
 }

@@ -6,6 +6,7 @@ import { CHAPTERS, CLOSING, HERO } from "@/lib/trail/chapters"
 import CaminoNav from "./nav"
 import CaminoFooter from "./camino-footer"
 import ChapterStation from "./chapter-station"
+import Scenery from "./scenery"
 import { useTrail } from "./use-trail"
 import styles from "./camino.module.css"
 
@@ -22,7 +23,7 @@ export default function CaminoLanding() {
 	const fullRef = useRef<SVGPathElement>(null)
 	const walkedRef = useRef<SVGPathElement>(null)
 
-	const { activeIndex, reachedCount, inView } = useTrail({
+	const { activeIndex, reachedCount, inView, geometry } = useTrail({
 		trailRef,
 		fullRef,
 		walkedRef,
@@ -69,6 +70,7 @@ export default function CaminoLanding() {
 
 			<div ref={trailRef} className={styles.trail}>
 				<div className={styles.bg} aria-hidden="true" />
+				<Scenery geometry={geometry} />
 				<svg className={styles.svg} aria-hidden="true">
 					<path ref={fullRef} className={styles.full} />
 					<path ref={walkedRef} className={styles.walked} />
