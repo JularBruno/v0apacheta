@@ -6,13 +6,13 @@ import styles from "./camino.module.css"
 
 /**
  * Procedural scenery layered over the ground texture — hand-drawn espinillo
- * tree sprites scattered along the trail and through every empty margin (behind
- * the hero and the summit too). Seeded so it stays put; two parallax layers
- * behind all content. Placement clears the hero, the summit, every cairn and
- * every card.
+ * tree and granite-boulder sprites, scattered along the trail and through every
+ * empty margin (behind the hero and the summit too). Seeded so it stays put;
+ * two parallax layers behind all content. Placement clears the hero, the
+ * summit, every cairn and every card.
  *
  * Small ground detail (pebbles, grass, contour lines) lives in the tiling
- * ground texture now, not here. Rocks are coming as sprites.
+ * ground texture, not here.
  */
 
 const SEED = 20260613
@@ -41,6 +41,7 @@ function mulberry32(seed: number) {
 
 interface Scene {
 	trees: Sprite[]
+	rocks: Sprite[]
 }
 
 function generate({ width: W, height: H, trail: TP, cairns, clears }: Layout): Scene {
@@ -90,7 +91,8 @@ function generate({ width: W, height: H, trail: TP, cairns, clears }: Layout): S
 
 	const d = Math.min(3, Math.max(1, H / 1400)) // density scales with page height
 	return {
-		trees: [...alongTrail(Math.round(8 * d), 58, 158, 46), ...fill(Math.round(7 * d), 42)],
+		trees: [...alongTrail(Math.round(7 * d), 58, 158, 46), ...fill(Math.round(6 * d), 42)],
+		rocks: [...alongTrail(Math.round(5 * d), 40, 140, 34), ...fill(Math.round(5 * d), 32)],
 	}
 }
 
@@ -108,9 +110,21 @@ const TREE_SPRITES = [
 	{ src: "/scenery/trees/tree-8.webp", w: 240, h: 199 },
 ]
 
-function Tree({ x, y, s, r }: Sprite) {
-	const sprite = TREE_SPRITES[Math.min(TREE_SPRITES.length - 1, Math.floor(r * TREE_SPRITES.length))]
-	const h = 92 * s // trees read a step bigger than the ~62px cairns
+const ROCK_SPRITES = [
+	{ src: "/scenery/rocks/rock-1.webp", w: 240, h: 160 },
+	{ src: "/scenery/rocks/rock-2.webp", w: 240, h: 146 },
+	{ src: "/scenery/rocks/rock-3.webp", w: 240, h: 156 },
+	{ src: "/scenery/rocks/rock-4.webp", w: 240, h: 152 },
+	{ src: "/scenery/rocks/rock-5.webp", w: 240, h: 131 },
+	{ src: "/scenery/rocks/rock-6.webp", w: 240, h: 181 },
+	{ src: "/scenery/rocks/rock-7.webp", w: 240, h: 155 },
+	{ src: "/scenery/rocks/rock-8.webp", w: 240, h: 156 },
+]
+
+/** A hand-drawn sprite, bottom-centre anchored on its placement point. */
+function Sprite2D({ set, base, x, y, s, r }: { set: typeof TREE_SPRITES; base: number } & Sprite) {
+	const sprite = set[Math.min(set.length - 1, Math.floor(r * set.length))]
+	const h = base * s
 	const w = h * (sprite.w / sprite.h)
 	return (
 		<image
@@ -123,6 +137,10 @@ function Tree({ x, y, s, r }: Sprite) {
 		/>
 	)
 }
+
+// trees read a step bigger than the ~62px cairns; rock clusters sit low and wide
+const Tree = (p: Sprite) => <Sprite2D set={TREE_SPRITES} base={92} {...p} />
+const Rock = (p: Sprite) => <Sprite2D set={ROCK_SPRITES} base={58} {...p} />
 
 export default function Scenery({
 	pageRef,
@@ -195,13 +213,17 @@ export default function Scenery({
 	if (!layout || !scene) return null
 	const vb = `0 0 ${layout.width} ${layout.height}`
 
-	// smaller trees sit further back (less parallax); bigger ones nearer (more)
+	// smaller trees sit further back (less parallax); bigger ones nearer (more).
+	// rock clusters are ground features — all in the back layer.
 	const sorted = [...scene.trees].sort((a, b) => a.s - b.s)
 	const mid = Math.ceil(sorted.length / 2)
 
 	return (
 		<>
 			<svg ref={backRef} className={styles.sceneryBack} viewBox={vb} aria-hidden="true">
+				{scene.rocks.map((rk, i) => (
+					<Rock key={`rk${i}`} {...rk} />
+				))}
 				{sorted.slice(0, mid).map((t, i) => (
 					<Tree key={`tb${i}`} {...t} />
 				))}
