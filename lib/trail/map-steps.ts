@@ -23,6 +23,7 @@ export interface MapNode {
 	longDescription: string
 	appInstruction?: string
 	teachingConcepts: string[]
+	validation: { type: string; button?: string }
 	status: StepStatus
 }
 
@@ -34,6 +35,7 @@ interface RawStep {
 	longDescription: string
 	appInstruction?: string
 	teachingConcepts?: string[]
+	validation?: { type?: string; button?: string }
 }
 interface RawStage {
 	id: string
@@ -61,6 +63,10 @@ const flat = stages.flatMap((stage, si) =>
 		longDescription: step.longDescription,
 		appInstruction: step.appInstruction,
 		teachingConcepts: step.teachingConcepts ?? [],
+		validation: {
+			type: step.validation?.type ?? "acknowledged",
+			button: step.validation?.button,
+		},
 	})),
 )
 

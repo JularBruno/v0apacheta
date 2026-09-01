@@ -33,6 +33,15 @@
 .content {
 	position: relative;
 	z-index: 2;
+	/* clear the docked step sheet (mobile peek) */
+	padding-bottom: 230px;
+}
+@media (min-width: 768px) {
+	.content {
+		padding-bottom: 0;
+		/* clear the right-hand panel */
+		padding-right: 400px;
+	}
 }
 
 .trail {
@@ -218,6 +227,24 @@
 	.left .label { left: calc(22% + 40px); }
 	.right .label { right: calc(22% + 40px); }
 	.label { font-size: 12px; }
+}
+
+/* transient hint when tapping a locked step */
+.toast {
+	position: fixed;
+	left: 50%;
+	bottom: calc(24px + env(safe-area-inset-bottom));
+	transform: translateX(-50%);
+	z-index: 60;
+	max-width: 88vw;
+	padding: 10px 16px;
+	border-radius: 999px;
+	background: hsl(var(--foreground));
+	color: hsl(var(--background));
+	font-size: 13px;
+	font-weight: 600;
+	text-align: center;
+	box-shadow: 0 10px 30px -10px rgba(27, 14, 19, 0.5);
 }
 
 @media (prefers-reduced-motion: reduce) {
