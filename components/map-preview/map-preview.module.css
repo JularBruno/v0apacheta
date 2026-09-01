@@ -1,0 +1,225 @@
+/* Map preview mockup — self-contained. Borrows the parchment/trail look from
+   the /camino landing (components/camino/camino.module.css). Not shared on
+   purpose: this is a throwaway visual. */
+
+.page {
+	position: relative;
+	overflow: hidden;
+	min-height: 100vh;
+	background-color: var(--map-parchment-light);
+	background-image:
+		linear-gradient(180deg,
+			color-mix(in srgb, var(--map-parchment-light) 55%, transparent) 0%,
+			color-mix(in srgb, var(--map-parchment-mid) 40%, transparent) 50%,
+			color-mix(in srgb, var(--map-parchment-light) 55%, transparent) 100%),
+		url("/scenery/ground.webp");
+	background-size: 100% 100%, 680px auto;
+	background-repeat: no-repeat, repeat;
+	background-blend-mode: multiply, normal;
+}
+
+.sceneryBack,
+.sceneryFront {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 1;
+	pointer-events: none;
+	overflow: visible;
+	will-change: transform;
+}
+
+.content {
+	position: relative;
+	z-index: 2;
+}
+
+.trail {
+	position: relative;
+	isolation: isolate;
+	padding: 12vh 0 16vh;
+}
+
+.svg {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 0;
+	pointer-events: none;
+	overflow: visible;
+}
+.svg path {
+	fill: none;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+.full {
+	stroke: var(--map-trail-open);
+	stroke-width: 2.4;
+	stroke-dasharray: 2 9;
+	opacity: 0.4;
+}
+.walked {
+	stroke: var(--map-trail-open);
+	stroke-width: 3.4;
+	opacity: 0.95;
+}
+
+/* --- stations: one per step, height by type --- */
+.station {
+	position: relative;
+	z-index: 1;
+}
+.minor {
+	min-height: 12vh;
+}
+.major {
+	min-height: 16vh;
+}
+.chapter {
+	min-height: 22vh;
+}
+
+.stageTag {
+	position: absolute;
+	left: 50%;
+	top: 0;
+	transform: translate(-50%, -50%);
+	padding: 3px 12px;
+	border-radius: 999px;
+	background: var(--map-parchment-light);
+	border: 1px solid var(--map-parchment-edge);
+	font-family: var(--font-mono, ui-monospace, monospace);
+	font-size: 10px;
+	letter-spacing: 0.13em;
+	text-transform: uppercase;
+	color: var(--map-ink);
+	white-space: nowrap;
+}
+
+/* --- cairn marker --- */
+.cairn {
+	position: absolute;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	display: grid;
+	place-items: center;
+	padding: 0;
+	border: 0;
+	background: none;
+	cursor: pointer;
+	color: hsl(var(--primary));
+	transition: color 0.4s ease, opacity 0.4s ease, transform 0.15s ease;
+}
+.cairn svg {
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	filter: drop-shadow(0 3px 5px rgba(27, 14, 19, 0.28));
+}
+.cairn:not(:disabled):hover {
+	transform: translate(-50%, -50%) scale(1.06);
+}
+.cairn:disabled {
+	cursor: default;
+}
+
+.minor .cairn { width: 42px; height: 42px; }
+.major .cairn { width: 56px; height: 56px; }
+.chapter .cairn { width: 78px; height: 78px; }
+
+.left .cairn { left: 32%; }
+.right .cairn { left: 68%; }
+
+/* --- states --- */
+.completed .cairn { color: hsl(var(--primary)); opacity: 0.78; }
+
+.current .cairn {
+	color: hsl(var(--primary));
+	transform: translate(-50%, -50%) scale(1.22);
+}
+.current .cairn:not(:disabled):hover {
+	transform: translate(-50%, -50%) scale(1.28);
+}
+/* soft disc behind the current cairn */
+.current .cairn::before {
+	content: "";
+	position: absolute;
+	inset: -30%;
+	border-radius: 999px;
+	background: radial-gradient(circle, hsl(var(--primary) / 0.28), transparent 70%);
+}
+
+/* upcoming steps — a ghosted cairn fading into the distance */
+.locked .cairn {
+	color: var(--map-ink);
+	opacity: 0.42;
+}
+.locked .cairn svg {
+	filter: none;
+}
+
+/* pulse ring on the current node */
+.halo {
+	position: absolute;
+	inset: -14px;
+	border-radius: 999px;
+	border: 2px solid hsl(var(--primary));
+	opacity: 0;
+	pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+	.current .halo {
+		animation: cairnPulse 2.6s ease-in-out infinite;
+	}
+}
+@keyframes cairnPulse {
+	0%, 100% { transform: scale(1); opacity: 0.5; }
+	50% { transform: scale(1.45); opacity: 0; }
+}
+
+/* selected ring (click feedback) */
+.isSelected .cairn::after {
+	content: "";
+	position: absolute;
+	inset: -10px;
+	border-radius: 999px;
+	border: 2px dashed var(--map-ink);
+	opacity: 0.55;
+}
+
+/* title chip — shows for the current node and any selected node */
+.label {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	max-width: min(230px, 46vw);
+	padding: 6px 11px;
+	border-radius: 10px;
+	background: hsl(var(--card) / 0.9);
+	backdrop-filter: blur(4px);
+	border: 1px solid var(--map-parchment-edge);
+	box-shadow: 0 8px 20px -12px rgba(27, 14, 19, 0.4);
+	font-size: 13px;
+	font-weight: 700;
+	line-height: 1.2;
+	color: hsl(var(--foreground));
+}
+.left .label { left: calc(32% + 44px); }
+.right .label { right: calc(32% + 44px); }
+.chapter.left .label { left: calc(32% + 52px); }
+.chapter.right .label { right: calc(32% + 52px); }
+
+@media (max-width: 560px) {
+	.left .cairn { left: 22%; }
+	.right .cairn { left: 78%; }
+	.left .label { left: calc(22% + 40px); }
+	.right .label { right: calc(22% + 40px); }
+	.label { font-size: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.current .halo { animation: none; opacity: 0.4; }
+}
