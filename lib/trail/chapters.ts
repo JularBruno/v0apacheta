@@ -64,16 +64,14 @@ export const CHAPTERS: Chapter[] = [
 ]
 
 export const HERO = {
-	eyebrow: "El camino · Sierras de Córdoba",
-	title: "Las apachetas guían.",
-	titleAccent: "Vos ponés las piedras.",
-	body: "Cada capítulo es una acción real con tu plata. La hacés, dejás una apacheta, y el camino se dibuja atrás tuyo.",
-	cta: "Poné tu primera piedra",
+	title: "Las apachetas",
+	titleAccent: "guiarán tu camino.",
+	body: "Seguí el camino para salir de deudas, ahorrar más y construir patrimonio.",
+	cta: "Comenzá tu camino",
 	scrollHint: "Bajá para recorrerlo",
 }
 
 export const CLOSING = {
-	eyebrow: "Kilómetro cero",
 	title: "Tu primera piedra te espera.",
 	body: "Empezás hoy, desde donde estás. Sin tecnicismos, sin vergüenza.",
 	cta: "Comenzá tu camino",
