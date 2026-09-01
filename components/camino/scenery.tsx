@@ -6,13 +6,13 @@ import styles from "./camino.module.css"
 
 /**
  * Procedural scenery layered over the ground texture — hand-drawn espinillo
- * tree sprites and the Río Suquía, scattered along the trail and through every
- * empty margin (behind the hero and the summit too). Seeded so it stays put;
- * two parallax layers behind all content. Placement clears the hero, the
- * summit, every cairn and every card.
+ * tree sprites scattered along the trail and through every empty margin (behind
+ * the hero and the summit too). Seeded so it stays put; two parallax layers
+ * behind all content. Placement clears the hero, the summit, every cairn and
+ * every card.
  *
  * Small ground detail (pebbles, grass, contour lines) lives in the tiling
- * ground texture now, not here.
+ * ground texture now, not here. Rocks are coming as sprites.
  */
 
 const SEED = 20260613
@@ -40,7 +40,6 @@ function mulberry32(seed: number) {
 }
 
 interface Scene {
-	river: string
 	trees: Sprite[]
 }
 
@@ -89,20 +88,8 @@ function generate({ width: W, height: H, trail: TP, cairns, clears }: Layout): S
 		return out
 	}
 
-	// Río Suquía — a soft wobble down the left edge, full page height
-	const rx = W * 0.05
-	let river = `M ${rx.toFixed(0)} -14`
-	const segs = Math.max(6, Math.round(H / 320))
-	for (let i = 1; i <= segs; i++) {
-		const y = -14 + ((H + 28) * i) / segs
-		const cx = rx + Math.sin(i * 1.4 + rnd()) * W * 0.035
-		const ex = rx + Math.sin(i * 1.9) * W * 0.024
-		river += ` S ${cx.toFixed(0)} ${(y - (H + 28) / segs / 2).toFixed(0)}, ${ex.toFixed(0)} ${y.toFixed(0)}`
-	}
-
 	const d = Math.min(3, Math.max(1, H / 1400)) // density scales with page height
 	return {
-		river,
 		trees: [...alongTrail(Math.round(8 * d), 58, 158, 46), ...fill(Math.round(7 * d), 42)],
 	}
 }
@@ -215,15 +202,6 @@ export default function Scenery({
 	return (
 		<>
 			<svg ref={backRef} className={styles.sceneryBack} viewBox={vb} aria-hidden="true">
-				<path d={scene.river} fill="none" stroke="var(--map-river)" strokeWidth="5" strokeLinecap="round" opacity="0.4" />
-				<path
-					d={scene.river}
-					fill="none"
-					stroke="var(--map-river-light)"
-					strokeWidth="1.6"
-					strokeLinecap="round"
-					opacity="0.35"
-				/>
 				{sorted.slice(0, mid).map((t, i) => (
 					<Tree key={`tb${i}`} {...t} />
 				))}
