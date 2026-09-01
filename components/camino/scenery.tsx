@@ -124,31 +124,33 @@ function Rock({ x, y, s, r }: Sprite) {
 	)
 }
 
+// Hand-drawn espinillo/algarrobo sprites, sliced from a generated sheet — see
+// scripts/slice-sprite-sheet.mjs. Sizes are each sprite's trimmed pixel bbox,
+// used to keep its aspect ratio when scaled.
+const TREE_SPRITES = [
+	{ src: "/scenery/trees/tree-1.webp", w: 390, h: 286 },
+	{ src: "/scenery/trees/tree-2.webp", w: 412, h: 272 },
+	{ src: "/scenery/trees/tree-3.webp", w: 412, h: 338 },
+	{ src: "/scenery/trees/tree-4.webp", w: 379, h: 354 },
+	{ src: "/scenery/trees/tree-5.webp", w: 347, h: 273 },
+	{ src: "/scenery/trees/tree-6.webp", w: 412, h: 299 },
+	{ src: "/scenery/trees/tree-7.webp", w: 377, h: 322 },
+	{ src: "/scenery/trees/tree-8.webp", w: 343, h: 288 },
+]
+
 function Tree({ x, y, s, r }: Sprite) {
-	// espinillo / algarrobo — flat-topped canopy; a couple of silhouette variants
-	const wide = r > 0.55
+	const sprite = TREE_SPRITES[Math.min(TREE_SPRITES.length - 1, Math.floor(r * TREE_SPRITES.length))]
+	const h = 54 * s
+	const w = h * (sprite.w / sprite.h)
 	return (
-		<g transform={`translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${(s * (0.9 + r * 0.45)).toFixed(2)})`}>
-			<line x1="0" y1="0" x2={(r * 3 - 1.5).toFixed(1)} y2="-16" stroke="var(--map-rock)" strokeWidth="1.7" strokeLinecap="round" />
-			{wide ? (
-				<path
-					d="M -19,-16 C -17,-25 17,-25 19,-16 C 24,-15 24,-10 14,-10 L -14,-10 C -24,-10 -24,-15 -19,-16 Z"
-					fill="none"
-					stroke="var(--map-foliage)"
-					strokeWidth="1.5"
-					strokeLinejoin="round"
-				/>
-			) : (
-				<path
-					d="M -13,-15 C -12,-24 12,-24 13,-15 C 17,-14 17,-10 9,-10 L -9,-10 C -17,-10 -17,-14 -13,-15 Z"
-					fill="none"
-					stroke="var(--map-foliage)"
-					strokeWidth="1.5"
-					strokeLinejoin="round"
-				/>
-			)}
-			<path d="M -10,-15 C -5,-19 5,-19 10,-15" fill="none" stroke="var(--map-foliage)" strokeWidth="1" opacity="0.6" />
-		</g>
+		<image
+			href={sprite.src}
+			x={(x - w / 2).toFixed(1)}
+			y={(y - h).toFixed(1)}
+			width={w.toFixed(1)}
+			height={h.toFixed(1)}
+			preserveAspectRatio="xMidYMax meet"
+		/>
 	)
 }
 
