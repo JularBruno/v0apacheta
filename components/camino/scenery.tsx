@@ -5,11 +5,14 @@ import type { TrailGeometry } from "./use-trail"
 import styles from "./camino.module.css"
 
 /**
- * Procedural hand-drawn scenery for the whole page — rocks, espinillo trees,
- * scrub and the Río Suquía, scattered along the trail and through every empty
- * margin (behind the hero and the summit too). Seeded so it stays put; two
- * parallax layers behind all content. Placement clears the hero, the summit,
- * every cairn and every card.
+ * Procedural scenery layered over the ground texture — hand-drawn espinillo
+ * tree sprites and the Río Suquía, scattered along the trail and through every
+ * empty margin (behind the hero and the summit too). Seeded so it stays put;
+ * two parallax layers behind all content. Placement clears the hero, the
+ * summit, every cairn and every card.
+ *
+ * Small ground detail (pebbles, grass, contour lines) lives in the tiling
+ * ground texture now, not here.
  */
 
 const SEED = 20260613
@@ -39,8 +42,6 @@ function mulberry32(seed: number) {
 interface Scene {
 	river: string
 	trees: Sprite[]
-	rocks: Sprite[]
-	scrub: Sprite[]
 }
 
 function generate({ width: W, height: H, trail: TP, cairns, clears }: Layout): Scene {
@@ -102,45 +103,27 @@ function generate({ width: W, height: H, trail: TP, cairns, clears }: Layout): S
 	const d = Math.min(3, Math.max(1, H / 1400)) // density scales with page height
 	return {
 		river,
-		trees: [...alongTrail(Math.round(7 * d), 58, 150, 44), ...fill(Math.round(6 * d), 40)],
-		rocks: [...alongTrail(Math.round(9 * d), 30, 128, 28), ...fill(Math.round(7 * d), 30)],
-		scrub: [...alongTrail(Math.round(12 * d), 22, 118, 16), ...fill(Math.round(10 * d), 20)],
+		trees: [...alongTrail(Math.round(8 * d), 58, 158, 46), ...fill(Math.round(7 * d), 42)],
 	}
-}
-
-function Rock({ x, y, s, r }: Sprite) {
-	return (
-		<g
-			transform={`translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${(s * (0.85 + r * 0.5)).toFixed(2)})`}
-			fill="none"
-			stroke="var(--map-rock)"
-			strokeWidth="1.2"
-			strokeLinejoin="round"
-		>
-			<path d="M -18,7 C -16,-3 -6,-9 4,-5 C 13,-1 15,7 10,13 C 4,20 -15,17 -18,9 Z" />
-			<path d="M -3,-6 C -1,-15 9,-18 17,-15 C 25,-11 25,-3 19,1 C 13,6 -3,3 -3,-3 Z" />
-			<line x1="-9" y1="6" x2="-7" y2="11" strokeWidth="0.7" stroke="var(--map-rock-highlight)" />
-		</g>
-	)
 }
 
 // Hand-drawn espinillo/algarrobo sprites, sliced from a generated sheet — see
 // scripts/slice-sprite-sheet.mjs. Sizes are each sprite's trimmed pixel bbox,
 // used to keep its aspect ratio when scaled.
 const TREE_SPRITES = [
-	{ src: "/scenery/trees/tree-1.webp", w: 390, h: 286 },
-	{ src: "/scenery/trees/tree-2.webp", w: 412, h: 272 },
-	{ src: "/scenery/trees/tree-3.webp", w: 412, h: 338 },
-	{ src: "/scenery/trees/tree-4.webp", w: 379, h: 354 },
-	{ src: "/scenery/trees/tree-5.webp", w: 347, h: 273 },
-	{ src: "/scenery/trees/tree-6.webp", w: 412, h: 299 },
-	{ src: "/scenery/trees/tree-7.webp", w: 377, h: 322 },
-	{ src: "/scenery/trees/tree-8.webp", w: 343, h: 288 },
+	{ src: "/scenery/trees/tree-1.webp", w: 240, h: 178 },
+	{ src: "/scenery/trees/tree-2.webp", w: 240, h: 232 },
+	{ src: "/scenery/trees/tree-3.webp", w: 240, h: 209 },
+	{ src: "/scenery/trees/tree-4.webp", w: 195, h: 240 },
+	{ src: "/scenery/trees/tree-5.webp", w: 240, h: 190 },
+	{ src: "/scenery/trees/tree-6.webp", w: 217, h: 240 },
+	{ src: "/scenery/trees/tree-7.webp", w: 240, h: 204 },
+	{ src: "/scenery/trees/tree-8.webp", w: 240, h: 199 },
 ]
 
 function Tree({ x, y, s, r }: Sprite) {
 	const sprite = TREE_SPRITES[Math.min(TREE_SPRITES.length - 1, Math.floor(r * TREE_SPRITES.length))]
-	const h = 54 * s
+	const h = 92 * s // trees read a step bigger than the ~62px cairns
 	const w = h * (sprite.w / sprite.h)
 	return (
 		<image
@@ -151,23 +134,6 @@ function Tree({ x, y, s, r }: Sprite) {
 			height={h.toFixed(1)}
 			preserveAspectRatio="xMidYMax meet"
 		/>
-	)
-}
-
-function Scrub({ x, y, s }: Sprite) {
-	return (
-		<g
-			transform={`translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s.toFixed(2)})`}
-			stroke="var(--map-scrub)"
-			strokeWidth="1.1"
-			fill="none"
-			strokeLinecap="round"
-		>
-			<path d="M 0,0 C -2,-8 -4,-13 -3,-18" />
-			<path d="M 4,0 C 5,-9 3,-14 4,-19" />
-			<path d="M 9,-1 C 11,-8 10,-12 12,-16" />
-			<path d="M -5,-1 C -8,-7 -7,-11 -9,-15" />
-		</g>
 	)
 }
 
@@ -225,8 +191,8 @@ export default function Scenery({
 		const apply = () => {
 			raf = 0
 			const p = -host.getBoundingClientRect().top
-			back.style.transform = `translate3d(0, ${(p * 0.08).toFixed(1)}px, 0)`
-			front.style.transform = `translate3d(0, ${(p * 0.15).toFixed(1)}px, 0)`
+			back.style.transform = `translate3d(0, ${(p * 0.05).toFixed(1)}px, 0)`
+			front.style.transform = `translate3d(0, ${(p * 0.12).toFixed(1)}px, 0)`
 		}
 		const onScroll = () => {
 			if (!raf) raf = requestAnimationFrame(apply)
@@ -242,6 +208,10 @@ export default function Scenery({
 	if (!layout || !scene) return null
 	const vb = `0 0 ${layout.width} ${layout.height}`
 
+	// smaller trees sit further back (less parallax); bigger ones nearer (more)
+	const sorted = [...scene.trees].sort((a, b) => a.s - b.s)
+	const mid = Math.ceil(sorted.length / 2)
+
 	return (
 		<>
 			<svg ref={backRef} className={styles.sceneryBack} viewBox={vb} aria-hidden="true">
@@ -254,17 +224,14 @@ export default function Scenery({
 					strokeLinecap="round"
 					opacity="0.35"
 				/>
-				{scene.rocks.map((r, i) => (
-					<Rock key={`r${i}`} {...r} />
-				))}
-				{scene.trees.map((t, i) => (
-					<Tree key={`t${i}`} {...t} />
+				{sorted.slice(0, mid).map((t, i) => (
+					<Tree key={`tb${i}`} {...t} />
 				))}
 			</svg>
 
 			<svg ref={frontRef} className={styles.sceneryFront} viewBox={vb} aria-hidden="true">
-				{scene.scrub.map((sp, i) => (
-					<Scrub key={`s${i}`} {...sp} />
+				{sorted.slice(mid).map((t, i) => (
+					<Tree key={`tf${i}`} {...t} />
 				))}
 			</svg>
 		</>

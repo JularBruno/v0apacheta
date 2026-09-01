@@ -38,7 +38,7 @@ export default function CaminoLanding() {
 			<div className={styles.content}>
 				<CaminoNav />
 
-				<header data-clear className="mx-auto max-w-2xl px-5 pb-10 pt-16 sm:px-6">
+				<header data-clear className={`mx-auto max-w-2xl px-5 pb-10 pt-16 sm:px-6 ${styles.textZone}`}>
 					<p className="font-mono text-xs font-medium uppercase tracking-[0.17em] text-primary">{HERO.eyebrow}</p>
 					<h1 className="mb-4 mt-4 text-4xl font-extrabold leading-[1.05] tracking-tight text-balance sm:text-5xl">
 						{HERO.title}
@@ -88,7 +88,11 @@ export default function CaminoLanding() {
 					))}
 				</div>
 
-				<section data-clear id="empezar" className="mx-auto max-w-2xl px-5 pb-2 pt-10 text-center sm:px-6">
+				<section
+					data-clear
+					id="empezar"
+					className={`mx-auto max-w-2xl px-5 pb-2 pt-10 text-center sm:px-6 ${styles.textZone}`}
+				>
 					<p className="mb-3 font-mono text-xs font-medium uppercase tracking-[0.17em] text-primary">
 						{CLOSING.eyebrow}
 					</p>

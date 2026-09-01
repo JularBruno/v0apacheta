@@ -3,14 +3,21 @@
    scenery; shadcn tokens for cards + text. Typography/spacing stay in the TSX
    as Tailwind classes. */
 
-/* the whole page is the map: one parchment ground + scenery behind everything */
+/* the whole page is the map: a hand-drawn ground texture + scenery behind
+   everything. The gradient layer over the texture gives vertical tonal drift. */
 .page {
 	position: relative;
 	overflow: hidden;
-	background:
-		radial-gradient(120% 22% at 50% 0%, color-mix(in srgb, var(--map-parchment-mid) 40%, transparent), transparent 70%),
-		radial-gradient(140% 26% at 50% 100%, color-mix(in srgb, var(--map-parchment-mid) 42%, transparent), transparent 65%),
-		linear-gradient(180deg, var(--map-parchment-light), var(--map-parchment-mid) 50%, var(--map-parchment-light));
+	background-color: var(--map-parchment-light);
+	background-image:
+		linear-gradient(180deg,
+			color-mix(in srgb, var(--map-parchment-light) 55%, transparent) 0%,
+			color-mix(in srgb, var(--map-parchment-mid) 40%, transparent) 50%,
+			color-mix(in srgb, var(--map-parchment-light) 55%, transparent) 100%),
+		url("/scenery/ground.webp");
+	background-size: 100% 100%, 680px auto;
+	background-repeat: no-repeat, repeat;
+	background-blend-mode: multiply, normal;
 }
 
 .sceneryBack,
@@ -28,6 +35,25 @@
 .content {
 	position: relative;
 	z-index: 2;
+}
+
+/* soft parchment wash behind the hero / summit copy so it stays readable
+   over the ground texture — no hard card edge */
+.textZone {
+	position: relative;
+}
+.textZone::before {
+	content: "";
+	position: absolute;
+	inset: -10% -8%;
+	z-index: -1;
+	pointer-events: none;
+	background: radial-gradient(
+		ellipse 75% 60% at 38% 45%,
+		var(--map-parchment-light) 0%,
+		color-mix(in srgb, var(--map-parchment-light) 78%, transparent) 50%,
+		transparent 82%
+	);
 }
 
 /* the trail section: an isolated layer so the path sits under the stations */
