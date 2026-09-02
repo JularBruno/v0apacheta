@@ -1,21 +1,63 @@
-/* Map preview mockup — self-contained. Borrows the parchment/trail look from
-   the /camino landing (components/camino/camino.module.css). Not shared on
-   purpose: this is a throwaway visual. */
+/* The dashboard map — the /camino trail visual, scrolling inside its own panel.
+   Parchment tokens from globals.css. */
 
-.page {
+.frame {
 	position: relative;
+	height: calc(100dvh - 6rem);
+	border-radius: 16px;
 	overflow: hidden;
-	min-height: 100vh;
 	background-color: var(--map-parchment-light);
+}
+
+.pill {
+	position: absolute;
+	top: 12px;
+	right: 12px;
+	z-index: 30;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 12px;
+	border-radius: 999px;
+	background: hsl(var(--card) / 0.9);
+	backdrop-filter: blur(6px);
+	border: 1px solid var(--map-parchment-edge);
+	font-family: var(--font-mono, ui-monospace, monospace);
+	font-size: 12px;
+	font-weight: 500;
+	color: hsl(var(--foreground));
+	box-shadow: 0 6px 18px -10px rgba(27, 14, 19, 0.4);
+}
+
+/* the scroll container */
+.page {
+	position: absolute;
+	inset: 0;
+	overflow-y: auto;
+	overflow-x: hidden;
+	overscroll-behavior: contain;
 	background-image:
 		linear-gradient(180deg,
 			color-mix(in srgb, var(--map-parchment-light) 55%, transparent) 0%,
 			color-mix(in srgb, var(--map-parchment-mid) 40%, transparent) 50%,
 			color-mix(in srgb, var(--map-parchment-light) 55%, transparent) 100%),
 		url("/scenery/ground.webp");
-	background-size: 100% 100%, 680px auto;
-	background-repeat: no-repeat, repeat;
+	background-size: 100% 720px, 680px auto;
+	background-repeat: repeat-y, repeat;
 	background-blend-mode: multiply, normal;
+	background-attachment: local, local;
+}
+
+/* full-height content the scenery + trail sit on */
+.content {
+	position: relative;
+	padding-bottom: 232px;
+}
+@media (min-width: 768px) {
+	.content {
+		padding-bottom: 0;
+		padding-right: 400px;
+	}
 }
 
 .sceneryBack,
@@ -24,30 +66,17 @@
 	inset: 0;
 	width: 100%;
 	height: 100%;
-	z-index: 1;
+	z-index: 0;
 	pointer-events: none;
 	overflow: visible;
 	will-change: transform;
 }
 
-.content {
-	position: relative;
-	z-index: 2;
-	/* clear the docked step sheet (mobile peek) */
-	padding-bottom: 230px;
-}
-@media (min-width: 768px) {
-	.content {
-		padding-bottom: 0;
-		/* clear the right-hand panel */
-		padding-right: 400px;
-	}
-}
-
 .trail {
 	position: relative;
+	z-index: 1;
 	isolation: isolate;
-	padding: 12vh 0 16vh;
+	padding: 14vh 0 18vh;
 }
 
 .svg {
@@ -76,39 +105,15 @@
 	opacity: 0.95;
 }
 
-/* --- stations: one per step, height by type --- */
+/* --- stations --- */
 .station {
 	position: relative;
 	z-index: 1;
 }
-.minor {
-	min-height: 12vh;
-}
-.major {
-	min-height: 16vh;
-}
-.chapter {
-	min-height: 22vh;
-}
+.minor { min-height: 13vh; }
+.major { min-height: 17vh; }
+.chapter { min-height: 23vh; }
 
-.stageTag {
-	position: absolute;
-	left: 50%;
-	top: 0;
-	transform: translate(-50%, -50%);
-	padding: 3px 12px;
-	border-radius: 999px;
-	background: var(--map-parchment-light);
-	border: 1px solid var(--map-parchment-edge);
-	font-family: var(--font-mono, ui-monospace, monospace);
-	font-size: 10px;
-	letter-spacing: 0.13em;
-	text-transform: uppercase;
-	color: var(--map-ink);
-	white-space: nowrap;
-}
-
-/* --- cairn marker --- */
 .cairn {
 	position: absolute;
 	top: 50%;
@@ -152,7 +157,6 @@
 .current .cairn:not(:disabled):hover {
 	transform: translate(-50%, -50%) scale(1.28);
 }
-/* soft disc behind the current cairn */
 .current .cairn::before {
 	content: "";
 	position: absolute;
@@ -161,7 +165,7 @@
 	background: radial-gradient(circle, hsl(var(--primary) / 0.28), transparent 70%);
 }
 
-/* upcoming steps — a ghosted cairn fading into the distance */
+/* upcoming — ghosted cairn */
 .locked .cairn {
 	color: var(--map-ink);
 	opacity: 0.42;
@@ -170,7 +174,6 @@
 	filter: none;
 }
 
-/* pulse ring on the current node */
 .halo {
 	position: absolute;
 	inset: -14px;
@@ -189,7 +192,6 @@
 	50% { transform: scale(1.45); opacity: 0; }
 }
 
-/* selected ring (click feedback) */
 .isSelected .cairn::after {
 	content: "";
 	position: absolute;
@@ -199,7 +201,6 @@
 	opacity: 0.55;
 }
 
-/* title chip — shows for the current node and any selected node */
 .label {
 	position: absolute;
 	top: 50%;
@@ -229,14 +230,13 @@
 	.label { font-size: 12px; }
 }
 
-/* transient hint when tapping a locked step */
 .toast {
-	position: fixed;
+	position: absolute;
 	left: 50%;
-	bottom: calc(24px + env(safe-area-inset-bottom));
+	bottom: 20px;
 	transform: translateX(-50%);
-	z-index: 60;
-	max-width: 88vw;
+	z-index: 40;
+	max-width: 88%;
 	padding: 10px 16px;
 	border-radius: 999px;
 	background: hsl(var(--foreground));

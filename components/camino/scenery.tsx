@@ -145,9 +145,12 @@ const Rock = (p: Sprite) => <Sprite2D set={ROCK_SPRITES} base={58} {...p} />
 export default function Scenery({
 	pageRef,
 	geometry,
+	scrollHost,
 }: {
 	pageRef: RefObject<HTMLDivElement | null>
 	geometry: TrailGeometry | null
+	/** when the trail scrolls inside a container (not the window), pass it here */
+	scrollHost?: RefObject<HTMLElement | null>
 }) {
 	const backRef = useRef<SVGSVGElement>(null)
 	const frontRef = useRef<SVGSVGElement>(null)
@@ -192,10 +195,13 @@ export default function Scenery({
 		if (!back || !front || !host) return
 		if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
 
+		const container = scrollHost?.current ?? null
+		const scrollTarget: Window | HTMLElement = container ?? window
+
 		let raf = 0
 		const apply = () => {
 			raf = 0
-			const p = -host.getBoundingClientRect().top
+			const p = container ? container.scrollTop : -host.getBoundingClientRect().top
 			back.style.transform = `translate3d(0, ${(p * 0.05).toFixed(1)}px, 0)`
 			front.style.transform = `translate3d(0, ${(p * 0.12).toFixed(1)}px, 0)`
 		}
@@ -203,12 +209,12 @@ export default function Scenery({
 			if (!raf) raf = requestAnimationFrame(apply)
 		}
 		apply()
-		window.addEventListener("scroll", onScroll, { passive: true })
+		scrollTarget.addEventListener("scroll", onScroll, { passive: true })
 		return () => {
-			window.removeEventListener("scroll", onScroll)
+			scrollTarget.removeEventListener("scroll", onScroll)
 			if (raf) cancelAnimationFrame(raf)
 		}
-	}, [scene])
+	}, [scene, scrollHost])
 
 	if (!layout || !scene) return null
 	const vb = `0 0 ${layout.width} ${layout.height}`

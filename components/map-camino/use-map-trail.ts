@@ -29,17 +29,20 @@ interface Args {
 	trailRef: RefObject<HTMLDivElement | null>
 	fullRef: RefObject<SVGPathElement | null>
 	walkedRef: RefObject<SVGPathElement | null>
+	/** index of the unlocked ("you are here") step */
 	currentIndex: number
+	/** trail count — rebuild when it changes */
+	count: number
 }
 
 /**
- * Draws a curve through the cairns, fills it solid up to the current step
- * (dotted after), and scrolls to the current step once on mount. Static — no
- * scroll mechanic. Returns geometry for `<Scenery>`.
+ * Curve through the cairns, solid up to the current step (dotted after), and
+ * scroll to the current step once. SSR / jsdom safe. Returns geometry for
+ * `<Scenery>`.
  */
-export function useMapTrail({ trailRef, fullRef, walkedRef, currentIndex }: Args) {
+export function useMapTrail({ trailRef, fullRef, walkedRef, currentIndex, count }: Args) {
 	const [geometry, setGeometry] = useState<TrailGeometry | null>(null)
-	const scrolledToCurrent = useRef(false)
+	const scrolledTo = useRef<number | null>(null)
 
 	useEffect(() => {
 		const trail = trailRef.current
@@ -65,11 +68,7 @@ export function useMapTrail({ trailRef, fullRef, walkedRef, currentIndex }: Args
 			})
 			if (nodes.length < 2) return
 
-			const pts: Point[] = [
-				{ x: nodes[0].x, y: 0 },
-				...nodes,
-				{ x: nodes[nodes.length - 1].x, y: h },
-			]
+			const pts: Point[] = [{ x: nodes[0].x, y: 0 }, ...nodes, { x: nodes[nodes.length - 1].x, y: h }]
 			const d = smoothPath(pts)
 			full!.setAttribute("d", d)
 			walked!.setAttribute("d", d)
@@ -98,7 +97,7 @@ export function useMapTrail({ trailRef, fullRef, walkedRef, currentIndex }: Args
 				return (len * best) / N
 			}
 
-			const cur = nodes[Math.min(currentIndex, nodes.length - 1)]
+			const cur = nodes[Math.min(Math.max(currentIndex, 0), nodes.length - 1)]
 			walked!.style.strokeDashoffset = String(len - lenNear(cur))
 
 			const trailPoints: Point[] = []
@@ -111,9 +110,9 @@ export function useMapTrail({ trailRef, fullRef, walkedRef, currentIndex }: Args
 				cairns: nodes.map((n) => ({ x: n.x, y: n.y, side: n.x < w / 2 ? "left" : "right" })),
 			})
 
-			if (!scrolledToCurrent.current) {
-				scrolledToCurrent.current = true
-				const el = cairnEls[Math.min(currentIndex, cairnEls.length - 1)]
+			if (scrolledTo.current !== currentIndex) {
+				scrolledTo.current = currentIndex
+				const el = cairnEls[Math.min(Math.max(currentIndex, 0), cairnEls.length - 1)]
 				requestAnimationFrame(() => el?.scrollIntoView({ block: "center", behavior: "auto" }))
 			}
 		}
@@ -132,7 +131,7 @@ export function useMapTrail({ trailRef, fullRef, walkedRef, currentIndex }: Args
 			window.removeEventListener("resize", onResize)
 			window.clearTimeout(resizeTimer)
 		}
-	}, [trailRef, fullRef, walkedRef, currentIndex])
+	}, [trailRef, fullRef, walkedRef, currentIndex, count])
 
 	return { geometry }
 }

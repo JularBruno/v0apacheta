@@ -1,8 +1,8 @@
 /* Step detail — bottom sheet on mobile, right panel on desktop.
-   Mockup styling; borrows the parchment tokens. */
+   Positioned within the map frame (not the viewport). */
 
 .backdrop {
-	position: fixed;
+	position: absolute;
 	inset: 0;
 	z-index: 45;
 	background: rgba(27, 14, 19, 0.32);
@@ -17,30 +17,24 @@
 }
 
 .sheet {
-	position: fixed;
+	position: absolute;
 	left: 0;
 	right: 0;
 	bottom: 0;
 	z-index: 50;
 	display: flex;
 	flex-direction: column;
-	height: 86vh;
+	height: 88%;
 	background: var(--map-parchment-light);
 	border-top: 1px solid var(--map-parchment-edge);
 	border-radius: 20px 20px 0 0;
 	box-shadow: 0 -12px 40px -12px rgba(27, 14, 19, 0.35);
 	transition: transform 0.34s cubic-bezier(0.32, 0.72, 0, 1);
-	--peek: 214px;
+	--peek: 258px;
 }
-.sheet[data-state="closed"] {
-	transform: translateY(100%);
-}
-.sheet[data-state="peek"] {
-	transform: translateY(calc(100% - var(--peek)));
-}
-.sheet[data-state="open"] {
-	transform: translateY(0);
-}
+.sheet[data-state="closed"] { transform: translateY(100%); }
+.sheet[data-state="peek"] { transform: translateY(calc(100% - var(--peek))); }
+.sheet[data-state="open"] { transform: translateY(0); }
 
 .handle {
 	flex: none;
@@ -80,13 +74,18 @@
 	background: rgba(27, 14, 19, 0.06);
 }
 
+.head {
+	flex: none;
+	padding: 2px 20px 14px;
+}
 .body {
 	flex: 1;
 	min-height: 0;
 	overflow-y: auto;
 	overscroll-behavior: contain;
 	-webkit-overflow-scrolling: touch;
-	padding: 4px 20px calc(28px + env(safe-area-inset-bottom));
+	border-top: 1px solid var(--map-parchment-edge);
+	padding: 16px 20px 28px;
 }
 
 .meta {
@@ -142,11 +141,14 @@
 }
 
 .action {
-	margin: 16px 0 4px;
+	margin-top: 14px;
+	display: grid;
+	gap: 8px;
 }
 .primaryBtn {
 	display: inline-flex;
 	align-items: center;
+	justify-content: center;
 	gap: 8px;
 	border: 0;
 	border-radius: 12px;
@@ -157,19 +159,42 @@
 	color: hsl(var(--primary-foreground));
 	cursor: pointer;
 }
-.primaryBtn:hover {
+.primaryBtn:hover:not(:disabled) {
 	background: var(--primary-500, #5d9990);
 }
-.autoNote {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	border-radius: 12px;
-	border: 1px dashed var(--map-parchment-edge);
-	padding: 10px 12px;
-	font-size: 0.82rem;
+.primaryBtn:disabled {
+	opacity: 0.5;
+	cursor: default;
+}
+.ghostBtn {
+	border: 0;
+	background: none;
+	padding: 8px;
+	font-size: 0.85rem;
+	font-weight: 600;
 	color: var(--map-ink);
 	opacity: 0.75;
+	cursor: pointer;
+}
+.ghostBtn:hover {
+	opacity: 1;
+}
+.doneRow {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 8px;
+	font-size: 0.9rem;
+	font-weight: 700;
+	color: hsl(var(--primary));
+}
+.subNote {
+	text-align: center;
+	font-size: 0.8rem;
+	color: var(--map-ink);
+	opacity: 0.7;
+	padding: 6px;
 }
 .backBtn {
 	display: inline-flex;
@@ -177,7 +202,7 @@
 	gap: 6px;
 	border: 0;
 	background: none;
-	padding: 8px 2px;
+	padding: 8px;
 	font-size: 0.9rem;
 	font-weight: 700;
 	color: hsl(var(--primary));
@@ -272,22 +297,12 @@
 		border-radius: 0;
 		box-shadow: -12px 0 40px -16px rgba(27, 14, 19, 0.3);
 	}
-	.sheet[data-state="closed"] {
-		transform: translateX(100%);
-	}
+	.sheet[data-state="closed"] { transform: translateX(100%); }
 	.sheet[data-state="peek"],
-	.sheet[data-state="open"] {
-		transform: translateX(0);
-	}
-	.handle {
-		display: none;
-	}
-	.body {
-		padding-top: 46px;
-	}
-	.backdrop {
-		display: none;
-	}
+	.sheet[data-state="open"] { transform: translateX(0); }
+	.handle { display: none; }
+	.head { padding-top: 46px; }
+	.backdrop { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
