@@ -10,6 +10,9 @@ const nextConfig = {
 	images: {
 		unoptimized: true,
 	},
+	async redirects() {
+		return [{ source: '/camino', destination: '/', permanent: true }]
+	},
 	// experimental: {
 	// 	serverActions: true,
 	// 	dynamicIO: true,

@@ -42,7 +42,7 @@ export default function CaminoNav() {
 						>
 							<Menu className="h-5 w-5" />
 						</button>
-						<Link href="/camino">
+						<Link href="/">
 							<Brand />
 						</Link>
 					</div>
