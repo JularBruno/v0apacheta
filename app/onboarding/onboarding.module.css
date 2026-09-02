@@ -1,0 +1,106 @@
+/* Onboarding visual skin — the same parchment world as /camino and the map.
+   Only the surface; the step flow is untouched. */
+
+.page {
+	position: relative;
+	min-height: 100vh;
+	overflow: hidden;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 88px 20px 64px;
+	background-color: var(--map-parchment-light);
+	background-image:
+		linear-gradient(180deg,
+			color-mix(in srgb, var(--map-parchment-light) 55%, transparent) 0%,
+			color-mix(in srgb, var(--map-parchment-mid) 38%, transparent) 55%,
+			color-mix(in srgb, var(--map-parchment-light) 55%, transparent) 100%),
+		url("/scenery/ground.webp");
+	background-size: 100% 100%, 640px auto;
+	background-repeat: no-repeat, repeat;
+	background-blend-mode: multiply, normal;
+}
+
+/* a few hand-drawn sprites along the bottom, behind the card */
+.scene {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	pointer-events: none;
+	overflow: hidden;
+}
+.scene img {
+	position: absolute;
+	bottom: 0;
+	height: auto;
+	filter: drop-shadow(0 4px 6px rgba(27, 14, 19, 0.15));
+}
+.spriteA { left: -1%; width: 190px; }
+.spriteB { left: 12%; width: 120px; opacity: 0.9; }
+.spriteC { right: 2%; width: 210px; }
+.spriteD { right: 17%; width: 130px; opacity: 0.9; }
+@media (max-width: 640px) {
+	.spriteB, .spriteD { display: none; }
+	.spriteA { width: 130px; }
+	.spriteC { width: 140px; }
+}
+
+.card {
+	position: relative;
+	z-index: 1;
+	width: 100%;
+	max-width: 30rem;
+	overflow: hidden;
+	background: hsl(var(--card) / 0.92);
+	backdrop-filter: blur(6px);
+	border: 1px solid var(--map-parchment-edge);
+	border-radius: 20px;
+	box-shadow: 0 2px 0 var(--map-parchment-edge), 0 24px 50px -24px rgba(27, 14, 19, 0.4);
+}
+
+/* header band — sets the illustration + title apart from the form */
+.cardHeader {
+	text-align: center;
+	padding: 26px 26px 20px;
+	background: radial-gradient(
+		130% 90% at 50% 0%,
+		color-mix(in srgb, var(--map-parchment-mid) 44%, transparent),
+		transparent 74%
+	);
+	border-bottom: 1px solid var(--map-parchment-edge);
+}
+.cardBody {
+	padding: 22px 26px 26px;
+}
+@media (min-width: 640px) {
+	.cardHeader { padding: 32px 34px 22px; }
+	.cardBody { padding: 26px 34px 30px; }
+}
+
+/* the illustration, as a tinted medallion on parchment */
+.illoFrame {
+	display: grid;
+	place-items: center;
+	width: 92px;
+	height: 92px;
+	margin: 0 auto 14px;
+	border-radius: 999px;
+	background: var(--map-parchment-light);
+	border: 1px solid var(--map-parchment-edge);
+	box-shadow: inset 0 2px 6px rgba(27, 14, 19, 0.08);
+}
+.illo {
+	width: 56px;
+	height: 56px;
+	object-fit: contain;
+	filter: sepia(0.7) saturate(0.5) brightness(0.5) contrast(1.05);
+	opacity: 0.9;
+}
+
+/* the personalised-message box on step 5 */
+.mapNote {
+	border-radius: 14px;
+	border: 1px solid var(--map-parchment-edge);
+	background: color-mix(in srgb, var(--map-parchment-mid) 22%, transparent);
+	padding: 18px;
+}

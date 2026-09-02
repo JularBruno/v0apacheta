@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import AuthHeader from "@/components/auth-header"
+import styles from "./onboarding.module.css"
 
 /**
  * @title required to follow form state
@@ -176,38 +177,25 @@ export default function OnboardingPage() {
 	 */
 	return (
 
-		<div className="min-h-screen flex flex-col lg:flex-row items-center justify-center bg-gradient-to-br from-secondary to-background py-12 px-4 sm:px-6 lg:px-8">
+		<div className={styles.page}>
 			<AuthHeader />
 
-			{/* IMAGE CARD Section */}
-			<div
-				className="
-					w-full lg:w-1/2
-					max-w-md lg:max-w-lg
-					h-[420px]
-					rounded-xl
-					shadow-lg
-					mt-8 lg:mt-0 lg:mr-8
-					flex items-center justify-center
-					bg-secondary border border-border
-				"
-			>
-				<img
-					src={getImageSrc()}
-					alt="Onboarding Illustration"
-					className="max-h-64 w-auto object-contain"
-				/>
+			<div className={styles.scene} aria-hidden="true">
+				<img src="/scenery/trees/tree-3.webp" alt="" className={styles.spriteA} />
+				<img src="/scenery/rocks/rock-6.webp" alt="" className={styles.spriteB} />
+				<img src="/scenery/trees/tree-7.webp" alt="" className={styles.spriteC} />
+				<img src="/scenery/rocks/rock-2.webp" alt="" className={styles.spriteD} />
 			</div>
 
 			{/* FORM CARD Section */}
-			<div className="w-full lg:w-1/2 max-w-md lg:max-w-lg space-y-8 bg-card p-8 md:p-10 rounded-xl shadow-lg border border-border mt-8 lg:mt-0 lg:ml-8">
+			<div className={styles.card}>
 
-				{/*
-					FORM CARD HEADER
-				*/}
-				<div>
-					<h2 className="mt-6 text-center text-3xl font-bold text-foreground">Comienza tu camino</h2>
-					<p className="mt-2 text-center text-sm text-muted-foreground">
+				<div className={styles.cardHeader}>
+					<span className={styles.illoFrame}>
+						<img src={getImageSrc()} alt="" className={styles.illo} />
+					</span>
+					<h2 className="text-2xl font-bold tracking-tight text-foreground">Comienza tu camino</h2>
+					<p className="mt-1.5 text-sm text-muted-foreground">
 						{currentStep === 1 && "Cuentanos sobre ti."}
 						{currentStep === 2 && "Unas preguntas rápidas para guiarte mejor."}
 						{currentStep === 3 && "Seguimos conociendonos."}
@@ -217,10 +205,12 @@ export default function OnboardingPage() {
 					</p>
 				</div>
 
-				{/* 
-					FORM CARD Form Section, STEPS 
+				<div className={styles.cardBody}>
+
+				{/*
+					FORM CARD Form Section, STEPS
 				*/}
-				<form action={formAction} noValidate className="mt-8 space-y-6">
+				<form action={formAction} noValidate className="space-y-6">
 
 					{/* Step 1: Name */}
 					{currentStep === 1 && (
@@ -240,7 +230,7 @@ export default function OnboardingPage() {
 								/>
 								{/* client-side errors */}
 								{localErrors.name && (
-									<p className="text-red-500 text-sm">{localErrors.name}</p>
+									<p className="text-destructive text-sm">{localErrors.name}</p>
 								)}
 							</div>
 
@@ -404,11 +394,11 @@ export default function OnboardingPage() {
 					{/* Step 5: Personalized Message */}
 					{currentStep === 5 && (
 						<div className="space-y-6">
-							<div className="bg-secondary border border-border rounded-lg p-6">
+							<div className={styles.mapNote}>
 								<div className="flex items-start space-x-3">
 									<div className="flex-shrink-0">
-										<div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-											<span className="text-primary text-lg">✨</span>
+										<div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15">
+											<span className="text-lg text-primary">✨</span>
 										</div>
 									</div>
 									<div className="flex-1">
@@ -457,7 +447,7 @@ export default function OnboardingPage() {
 								<div id="email-error" aria-live="polite" aria-atomic="true">
 									{displayErrors?.email &&
 										displayErrors.email.map((error: string) => (
-											<p className="mt-2 text-sm text-red-500" key={error}>
+											<p className="mt-2 text-sm text-destructive" key={error}>
 												{error}
 											</p>
 										))}
@@ -480,7 +470,7 @@ export default function OnboardingPage() {
 								<div id="password-error" aria-live="polite" aria-atomic="true">
 									{displayErrors?.password &&
 										displayErrors.password.map((error: string) => (
-											<p className="mt-2 text-sm text-red-500" key={error}>
+											<p className="mt-2 text-sm text-destructive" key={error}>
 												{error}
 											</p>
 										))}
@@ -502,14 +492,14 @@ export default function OnboardingPage() {
 
 								{/* client-side errors */}
 								{localErrors && (
-									<p className="text-red-500 text-sm">{localErrors.name}</p>
+									<p className="text-destructive text-sm">{localErrors.name}</p>
 								)}
 							</div>
 						</div>
 					)}
 
 				</form>
-				<div className="text-center text-sm text-muted-foreground">
+				<div className="mt-6 text-center text-sm text-muted-foreground">
 					{currentStep < 5 && (
 						<>
 							Ya tenés una cuenta?{" "}
@@ -519,7 +509,8 @@ export default function OnboardingPage() {
 						</>
 					)}
 				</div>
+				</div>
 			</div>
-		</div >
+		</div>
 	)
 }
