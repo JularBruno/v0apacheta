@@ -12,7 +12,7 @@ import { useSearchParams } from 'next/navigation';
 import { Loading } from "@/components/ui/loading"
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from "@/components/ui/toaster"
-import AuthHeader from "@/components/auth-header"
+import AuthShell from "@/components/auth/auth-shell"
 
 function LoginForm() {
 
@@ -70,20 +70,13 @@ function LoginForm() {
 	);
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-secondary to-background py-12 px-4 sm:px-6 lg:px-8">
+		<AuthShell
+			title="Ingresá a Apacheta"
+			subtitle="Bienvenido de vuelta. Ingresá tus credenciales para continuar."
+		>
 			<Toaster />
-			<AuthHeader />
 
-			<div className="w-full max-w-md space-y-8 bg-card p-8 md:p-10 rounded-xl shadow-lg border border-border">
-
-				<div>
-					<h2 className="mt-6 text-center text-3xl font-bold text-foreground">Ingresa a Apacheta</h2>
-					<p className="mt-2 text-center text-sm text-muted-foreground">
-						Bienvenido de vuelta! Ingresa tus credenciales para continuar.
-					</p>
-				</div>
-
-				<form noValidate action={formAction} className="mt-8 space-y-6">
+			<form noValidate action={formAction} className="space-y-6">
 
 					<div>
 						<Label htmlFor="email">Email</Label>
@@ -135,22 +128,20 @@ function LoginForm() {
 					</div>
 
 					{errorMessage && (
-						<div className="pt-2 text-center " >
-							<p className="text-sm text-red-600">{errorMessage}</p>
+						<div className="pt-2 text-center">
+							<p className="text-sm text-destructive">{errorMessage}</p>
 						</div>
 					)}
 
 				</form>
 
-				<div className="text-center text-sm text-muted-foreground">
+				<div className="mt-6 text-center text-sm text-muted-foreground">
 					No tenés una cuenta?{" "}
 					<Link href="/onboarding" className="font-medium text-primary hover:text-primary-600">
 						Registrate
 					</Link>
 				</div>
-
-			</div>
-		</div>
+		</AuthShell>
 	)
 }
 

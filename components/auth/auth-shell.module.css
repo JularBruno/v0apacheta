@@ -1,5 +1,5 @@
-/* Onboarding visual skin — the same parchment world as /camino and the map.
-   Only the surface; the step flow is untouched. */
+/* Shared shell for the auth pages (onboarding / login / recover) — the same
+   parchment world as /camino and the map. Surface only. */
 
 .page {
 	position: relative;
@@ -95,6 +95,26 @@
 	object-fit: contain;
 	filter: sepia(0.7) saturate(0.5) brightness(0.5) contrast(1.05);
 	opacity: 0.9;
+}
+.cairn {
+	width: 64px;
+	height: 64px;
+	color: hsl(var(--primary));
+}
+
+.title {
+	font-size: 1.5rem;
+	font-weight: 700;
+	letter-spacing: -0.015em;
+	color: hsl(var(--foreground));
+	text-wrap: balance;
+}
+.subtitle {
+	margin: 6px auto 0;
+	max-width: 34ch;
+	font-size: 0.875rem;
+	line-height: 1.5;
+	color: hsl(var(--muted-foreground));
 }
 
 /* the personalised-message box on step 5 */

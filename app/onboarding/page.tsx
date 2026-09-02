@@ -9,8 +9,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
-import AuthHeader from "@/components/auth-header"
-import styles from "./onboarding.module.css"
+import AuthShell from "@/components/auth/auth-shell"
+import styles from "@/components/auth/auth-shell.module.css"
 
 /**
  * @title required to follow form state
@@ -175,41 +175,17 @@ export default function OnboardingPage() {
 	/**
 	 * ONBOARDING
 	 */
+	const subtitle =
+		currentStep === 1 ? "Cuentanos sobre ti." :
+		currentStep === 2 ? "Unas preguntas rápidas para guiarte mejor." :
+		currentStep === 3 ? "Seguimos conociendonos." :
+		currentStep === 4 ? "Casi listos, última pregunta." :
+		currentStep === 5 ? "El mapa" :
+		"Crea tu cuenta."
+
 	return (
-
-		<div className={styles.page}>
-			<AuthHeader />
-
-			<div className={styles.scene} aria-hidden="true">
-				<img src="/scenery/trees/tree-3.webp" alt="" className={styles.spriteA} />
-				<img src="/scenery/rocks/rock-6.webp" alt="" className={styles.spriteB} />
-				<img src="/scenery/trees/tree-7.webp" alt="" className={styles.spriteC} />
-				<img src="/scenery/rocks/rock-2.webp" alt="" className={styles.spriteD} />
-			</div>
-
-			{/* FORM CARD Section */}
-			<div className={styles.card}>
-
-				<div className={styles.cardHeader}>
-					<span className={styles.illoFrame}>
-						<img src={getImageSrc()} alt="" className={styles.illo} />
-					</span>
-					<h2 className="text-2xl font-bold tracking-tight text-foreground">Comienza tu camino</h2>
-					<p className="mt-1.5 text-sm text-muted-foreground">
-						{currentStep === 1 && "Cuentanos sobre ti."}
-						{currentStep === 2 && "Unas preguntas rápidas para guiarte mejor."}
-						{currentStep === 3 && "Seguimos conociendonos."}
-						{currentStep === 4 && "Casi listos, última pregunta."}
-						{currentStep === 5 && "El mapa"}
-						{currentStep === 6 && "Crea tu cuenta."}
-					</p>
-				</div>
-
-				<div className={styles.cardBody}>
-
-				{/*
-					FORM CARD Form Section, STEPS
-				*/}
+		<AuthShell title="Comienza tu camino" subtitle={subtitle} illustrationSrc={getImageSrc()}>
+				{/* STEPS */}
 				<form action={formAction} noValidate className="space-y-6">
 
 					{/* Step 1: Name */}
@@ -499,18 +475,16 @@ export default function OnboardingPage() {
 					)}
 
 				</form>
-				<div className="mt-6 text-center text-sm text-muted-foreground">
-					{currentStep < 5 && (
-						<>
-							Ya tenés una cuenta?{" "}
-							<Link href="/login" className="font-medium text-primary hover:text-primary-600">
-								Ingresa aca!
-							</Link>
-						</>
-					)}
-				</div>
-				</div>
+			<div className="mt-6 text-center text-sm text-muted-foreground">
+				{currentStep < 5 && (
+					<>
+						Ya tenés una cuenta?{" "}
+						<Link href="/login" className="font-medium text-primary hover:text-primary-600">
+							Ingresa aca!
+						</Link>
+					</>
+				)}
 			</div>
-		</div>
+		</AuthShell>
 	)
 }
