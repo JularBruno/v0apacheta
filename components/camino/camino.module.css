@@ -105,6 +105,19 @@
 .shift_left { justify-content: flex-start; padding-left: 3%; }
 .shift_right { justify-content: flex-end; padding-right: 3%; }
 
+/* desktop has tall chapter stations with whitespace to spare — tuck the
+   landmark into that gap instead of adding its full height to the scroll */
+@media (min-width: 768px) {
+	.milestone {
+		margin: -13vh 0;
+	}
+	.milestone img {
+		width: min(var(--mw, 320px), 34vw);
+	}
+	.shift_left { padding-left: 8%; }
+	.shift_right { padding-right: 8%; }
+}
+
 .station {
 	position: relative;
 	z-index: 1;
