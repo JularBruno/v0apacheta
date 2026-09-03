@@ -1,8 +1,9 @@
 "use client"
 
-import { useRef, type ReactNode } from "react"
+import { Fragment, useRef, type ReactNode } from "react"
 import Link from "next/link"
-import { CHAPTERS, CLOSING, HERO } from "@/lib/trail/chapters"
+import { cn } from "@/lib/utils"
+import { CHAPTERS, CLOSING, HERO, MILESTONES } from "@/lib/trail/chapters"
 import CaminoNav from "./nav"
 import CaminoFooter from "./camino-footer"
 import ChapterStation from "./chapter-station"
@@ -82,14 +83,25 @@ export default function CaminoLanding() {
 					</svg>
 
 					{CHAPTERS.map((chapter, i) => (
-						<ChapterStation
-							key={chapter.n}
-							chapter={chapter}
-							index={i}
-							reached={i < reachedCount}
-							here={i === activeIndex}
-							inView={inView[i]}
-						/>
+						<Fragment key={chapter.n}>
+							<ChapterStation
+								chapter={chapter}
+								index={i}
+								reached={i < reachedCount}
+								here={i === activeIndex}
+								inView={inView[i]}
+							/>
+							{MILESTONES.filter((m) => m.after === chapter.n).map((m) => (
+								<figure
+									key={m.src}
+									data-clear
+									className={cn(styles.milestone, styles[`shift_${m.shift}` as const])}
+									style={{ ["--mw" as string]: `${m.width}px` }}
+								>
+									<img src={m.src} alt="" />
+								</figure>
+							))}
+						</Fragment>
 					))}
 				</div>
 

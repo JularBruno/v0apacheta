@@ -63,6 +63,23 @@ export const CHAPTERS: Chapter[] = [
 	},
 ]
 
+/** Hand-drawn landmarks dropped on the trail after a given chapter. */
+export interface Milestone {
+	src: string
+	/** render it after the chapter with this `n` */
+	after: number
+	/** display width in px (capped to viewport) */
+	width: number
+	/** nudge off the trail centre */
+	shift: "left" | "center" | "right"
+}
+
+export const MILESTONES: Milestone[] = [
+	{ src: "/scenery/milestones/bridge.webp", after: 2, width: 400, shift: "left" },
+	{ src: "/scenery/milestones/outcrop.webp", after: 4, width: 380, shift: "right" },
+	{ src: "/scenery/milestones/summit.webp", after: 5, width: 460, shift: "center" },
+]
+
 export const HERO = {
 	title: "Las apachetas",
 	titleAccent: "guiarán tu camino.",

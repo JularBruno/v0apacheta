@@ -88,6 +88,23 @@
 	opacity: 0.95;
 }
 
+/* hand-drawn landmarks dropped between chapters, in the trail flow */
+.milestone {
+	position: relative;
+	z-index: 0;
+	display: flex;
+	margin: 4vh 0;
+	pointer-events: none;
+}
+.milestone img {
+	width: min(var(--mw, 320px), 78vw);
+	height: auto;
+	filter: drop-shadow(0 10px 16px rgba(27, 14, 19, 0.16));
+}
+.shift_center { justify-content: center; }
+.shift_left { justify-content: flex-start; padding-left: 3%; }
+.shift_right { justify-content: flex-end; padding-right: 3%; }
+
 .station {
 	position: relative;
 	z-index: 1;
