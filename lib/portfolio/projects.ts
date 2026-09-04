@@ -289,6 +289,7 @@ export const projects: Project[] = [
 		category: "Real Estate",
 		technologies: ["Next.js", "Node.js", "PostgreSQL", "TypeScript"],
 		appScreenColor: "from-zinc-700 to-black",
+		cover: "/portfolio/hermes-capital/web-01-home.png",
 
 		problema:
 			"La empresa necesitaba centralizar propiedades, oportunidades y eventos en una plataforma moderna con administración interna y presencia digital profesional.",
@@ -306,18 +307,47 @@ export const projects: Project[] = [
 			{
 				title: "Inicio",
 				description: "Landing principal con propiedades destacadas",
+				image: "/portfolio/hermes-capital/web-01-home.png",
 			},
 			{
 				title: "Catálogo de Propiedades",
 				description: "Listado y navegación de propiedades",
+				image: "/portfolio/hermes-capital/web-03-propiedades.png",
 			},
 			{
-				title: "Panel Administrativo",
-				description: "Gestión de propiedades, eventos y oportunidades",
+				title: "Propiedades en el Exterior",
+				description: "Catálogo de propiedades internacionales",
+				image: "/portfolio/hermes-capital/web-04-propiedades-extranjeras.png",
 			},
 			{
 				title: "Detalle de Propiedad",
 				description: "Vista completa con imágenes e información",
+				image: "/portfolio/hermes-capital/web-05-propiedad-detalle.png",
+			},
+			{
+				title: "Oportunidades",
+				description: "Oportunidades de inversión destacadas",
+				image: "/portfolio/hermes-capital/web-02-oportunidades.png",
+			},
+			{
+				title: "Acceso Administrativo",
+				description: "Login del panel administrativo",
+				image: "/portfolio/hermes-capital/adm-01-login.png",
+			},
+			{
+				title: "Dashboard Administrativo",
+				description: "Resumen general del panel",
+				image: "/portfolio/hermes-capital/adm-04-inicio.png",
+			},
+			{
+				title: "Gestión de Propiedades",
+				description: "Administración del catálogo de propiedades",
+				image: "/portfolio/hermes-capital/adm-02-propiedades.png",
+			},
+			{
+				title: "Contactos",
+				description: "Gestión de contactos y oportunidades",
+				image: "/portfolio/hermes-capital/adm-03-contactos.png",
 			},
 		],
 	},
