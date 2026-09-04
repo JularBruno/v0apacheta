@@ -9,8 +9,18 @@ export default function ProjectCard({ project }: { project: Project }) {
 			href={`/portfolio/${project.slug}`}
 			className="group flex flex-col overflow-hidden rounded-lg border border-gray-300 bg-card shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 		>
-			<div className={`relative aspect-[16/10] bg-gradient-to-br ${project.appScreenColor}`}>
-				{project.cover ? (
+			<div
+				className={`relative flex aspect-[16/10] items-center justify-center bg-gradient-to-br ${project.appScreenColor}`}
+			>
+				{project.logo ? (
+					<Image
+						src={project.logo}
+						alt={project.title}
+						width={96}
+						height={96}
+						className="h-20 w-20 object-contain drop-shadow-lg"
+					/>
+				) : project.cover ? (
 					<Image
 						src={project.cover}
 						alt={project.title}
