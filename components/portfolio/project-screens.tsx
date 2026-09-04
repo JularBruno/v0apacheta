@@ -9,7 +9,16 @@ export default function ProjectScreens({ project }: { project: Project }) {
 					<div
 						className={`relative aspect-[16/10] overflow-hidden rounded-lg border border-gray-300 bg-gradient-to-br ${project.appScreenColor}`}
 					>
-						{shot.image ? (
+						{shot.video ? (
+							<video
+								controls
+								preload="none"
+								poster={project.cover}
+								className="absolute inset-0 h-full w-full bg-black object-contain"
+							>
+								<source src={shot.video} />
+							</video>
+						) : shot.image ? (
 							<Image
 								src={shot.image}
 								alt={shot.title}

@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { ArrowLeft, ArrowRight } from "lucide-react"
@@ -62,7 +63,16 @@ export default async function ProjectPage({
 						{project.category}
 					</Badge>
 				</div>
-				<h1 className="mt-3 text-3xl font-extrabold leading-tight tracking-tight text-foreground sm:text-4xl">
+				<h1 className="mt-3 flex items-center gap-3 text-3xl font-extrabold leading-tight tracking-tight text-foreground sm:text-4xl">
+					{project.logo && (
+						<Image
+							src={project.logo}
+							alt=""
+							width={40}
+							height={40}
+							className="h-10 w-10 shrink-0 rounded-md object-contain"
+						/>
+					)}
 					{project.title}
 				</h1>
 				<p className="mt-3 text-lg leading-relaxed text-foreground/80">
@@ -80,9 +90,30 @@ export default async function ProjectPage({
 				</div>
 			</div>
 
-			<div
-				className={`mt-8 aspect-[16/8] w-full rounded-lg border border-gray-300 bg-gradient-to-br ${project.appScreenColor}`}
-			/>
+			{project.video ? (
+				<video
+					controls
+					preload="none"
+					poster={project.cover}
+					className="mt-8 aspect-[16/8] w-full rounded-lg border border-gray-300 bg-black object-contain"
+				>
+					<source src={project.video} />
+				</video>
+			) : project.cover ? (
+				<div className="relative mt-8 aspect-[16/8] w-full overflow-hidden rounded-lg border border-gray-300">
+					<Image
+						src={project.cover}
+						alt={project.title}
+						fill
+						sizes="(max-width: 768px) 100vw, 768px"
+						className="object-cover"
+					/>
+				</div>
+			) : (
+				<div
+					className={`mt-8 aspect-[16/8] w-full rounded-lg border border-gray-300 bg-gradient-to-br ${project.appScreenColor}`}
+				/>
+			)}
 
 			<div className="mt-12 space-y-8">
 				{NARRATIVE.map(({ key, label }) => (

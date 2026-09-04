@@ -7,6 +7,8 @@ export interface ProjectScreenshot {
 	 * When omitted, the case study renders a gradient placeholder from appScreenColor.
 	 */
 	image?: string
+	/** Optional video for this screen (takes priority over `image` when both are set). */
+	video?: string
 }
 
 export interface Project {
@@ -17,8 +19,12 @@ export interface Project {
 	technologies: string[]
 	/** Tailwind gradient stops, e.g. "from-teal-500 to-cyan-600" — see tailwind.config safelist. */
 	appScreenColor: string
-	/** Optional cover image for the grid card, relative to /public. */
+	/** Optional cover image for the grid card and case-study banner, relative to /public. */
 	cover?: string
+	/** Optional project logo, relative to /public — shown next to the title on the case study. */
+	logo?: string
+	/** Optional walkthrough/demo video for the case-study banner, relative to /public. Uses `cover` as its poster frame. */
+	video?: string
 	problema: string
 	objetivo: string
 	solucion: string
@@ -35,6 +41,9 @@ export const projects: Project[] = [
 		category: "Healthcare",
 		technologies: ["Next.js", "React Native", "Node.js", "PostgreSQL", "WebRTC"],
 		appScreenColor: "from-teal-500 to-cyan-600",
+		cover: "/portfolio/cyberpsi/Untitled.png",
+		logo: "/portfolio/cyberpsi/logoS.png",
+		video: "/portfolio/cyberpsi/zoomVideo.mp4",
 
 		problema:
 			"La demanda de atención psicológica aumentó considerablemente y no existían herramientas digitales locales enfocadas en salud mental.",
@@ -64,6 +73,11 @@ export const projects: Project[] = [
 			{
 				title: "Panel Administrativo",
 				description: "Gestión de usuarios y profesionales",
+			},
+			{
+				title: "Turnos del Profesional",
+				description: "Vista del profesional: recepción y gestión de turnos entrantes",
+				video: "/portfolio/cyberpsi/RecibirTurnos.mp4",
 			},
 		],
 	},
