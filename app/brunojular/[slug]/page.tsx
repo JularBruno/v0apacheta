@@ -50,7 +50,7 @@ export default async function ProjectPage({
 	return (
 		<main className="mx-auto max-w-3xl px-5 pb-16 pt-10 sm:px-6">
 			<Link
-				href="/portfolio"
+				href="/brunojular"
 				className="inline-flex items-center gap-1.5 font-mono text-xs tracking-wide text-muted-foreground transition-colors hover:text-foreground"
 			>
 				<ArrowLeft className="h-3.5 w-3.5" />
@@ -140,7 +140,7 @@ export default async function ProjectPage({
 			<nav className="mt-16 flex items-stretch justify-between gap-4 border-t border-border pt-6 font-mono text-xs">
 				{prev ? (
 					<Link
-						href={`/portfolio/${prev.slug}`}
+						href={`/brunojular/${prev.slug}`}
 						className="group flex flex-col gap-1 text-muted-foreground transition-colors hover:text-foreground"
 					>
 						<span className="inline-flex items-center gap-1.5">
@@ -156,7 +156,7 @@ export default async function ProjectPage({
 				)}
 				{next ? (
 					<Link
-						href={`/portfolio/${next.slug}`}
+						href={`/brunojular/${next.slug}`}
 						className="group flex flex-col items-end gap-1 text-right text-muted-foreground transition-colors hover:text-foreground"
 					>
 						<span className="inline-flex items-center gap-1.5">

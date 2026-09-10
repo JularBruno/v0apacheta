@@ -20,7 +20,7 @@ export default function PortfolioLayout({
 			<header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
 				<div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-5 sm:px-6">
 					<Link
-						href="/portfolio"
+						href="/brunojular"
 						className="text-sm font-extrabold tracking-tight text-foreground"
 					>
 						{profile.name}
@@ -28,7 +28,7 @@ export default function PortfolioLayout({
 					<a
 						href={
 							profile.links.find((l) => l.href.startsWith("mailto:"))?.href ??
-							"/portfolio"
+							"/brunojular"
 						}
 						className="font-mono text-xs tracking-wide text-muted-foreground transition-colors hover:text-foreground"
 					>

@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react"
-import PortfolioPage from "@/app/portfolio/page"
-import ProjectPage, { generateStaticParams } from "@/app/portfolio/[slug]/page"
+import PortfolioPage from "@/app/brunojular/page"
+import ProjectPage, { generateStaticParams } from "@/app/brunojular/[slug]/page"
 import {
 	getAdjacentProjects,
 	getProjectBySlug,
@@ -30,7 +30,7 @@ describe("portfolio index", () => {
 		render(<PortfolioPage />)
 		for (const project of projects) {
 			const link = screen.getByRole("link", { name: new RegExp(project.title, "i") })
-			expect(link).toHaveAttribute("href", `/portfolio/${project.slug}`)
+			expect(link).toHaveAttribute("href", `/brunojular/${project.slug}`)
 		}
 	})
 })

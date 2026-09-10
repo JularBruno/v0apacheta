@@ -11,7 +11,13 @@ const nextConfig = {
 		unoptimized: true,
 	},
 	async redirects() {
-		return [{ source: '/camino', destination: '/', permanent: true }]
+		return [
+			{ source: '/camino', destination: '/', permanent: true },
+			{ source: '/portfolio', destination: '/brunojular', permanent: true },
+			{ source: '/portfolio/:slug', destination: '/brunojular/:slug', permanent: true },
+			{ source: '/jularbruno', destination: '/brunojular', permanent: true },
+			{ source: '/jularbruno/:slug', destination: '/brunojular/:slug', permanent: true },
+		]
 	},
 	// experimental: {
 	// 	serverActions: true,

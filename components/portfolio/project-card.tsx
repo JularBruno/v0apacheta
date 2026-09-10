@@ -6,7 +6,7 @@ import type { Project } from "@/lib/portfolio/projects"
 export default function ProjectCard({ project }: { project: Project }) {
 	return (
 		<Link
-			href={`/portfolio/${project.slug}`}
+			href={`/brunojular/${project.slug}`}
 			className="group flex flex-col overflow-hidden rounded-lg border border-gray-300 bg-card shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 		>
 			<div
