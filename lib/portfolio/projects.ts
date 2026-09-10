@@ -89,6 +89,7 @@ export const projects: Project[] = [
 		category: "Admin Panel",
 		technologies: ["Next.js", "PostgreSQL", "Node.js", "TypeScript"],
 		appScreenColor: "from-sky-500 to-blue-600",
+		cover: "/portfolio/azulrefrigeracion/03-products.png",
 
 		problema:
 			"El negocio utilizaba procesos manuales y sistemas desconectados, sin control de permisos ni trazabilidad sobre las ventas realizadas.",
@@ -104,20 +105,39 @@ export const projects: Project[] = [
 
 		screenshots: [
 			{
-				title: "Dashboard Principal",
-				description: "Resumen de actividad y métricas del negocio",
+				title: "Acceso",
+				description: "Login del panel administrativo",
+				image: "/portfolio/azulrefrigeracion/01-login.png",
 			},
 			{
-				title: "Gestión de Empleados",
-				description: "Administración de usuarios y permisos",
-			},
-			{
-				title: "Ventas",
-				description: "Registro y control de ventas realizadas",
+				title: "Categorías",
+				description: "Organización de productos por categoría",
+				image: "/portfolio/azulrefrigeracion/02-categories.png",
 			},
 			{
 				title: "Productos",
-				description: "Gestión de catálogo y actualización de precios",
+				description: "Catálogo de productos con stock y actualización porcentual de precios",
+				image: "/portfolio/azulrefrigeracion/03-products.png",
+			},
+			{
+				title: "Nuevo Producto",
+				description: "Alta de producto con fotos y descripción",
+				image: "/portfolio/azulrefrigeracion/03b-product-new.png",
+			},
+			{
+				title: "Clientes",
+				description: "Gestión de clientes con condición fiscal",
+				image: "/portfolio/azulrefrigeracion/04-clients.png",
+			},
+			{
+				title: "Ventas",
+				description: "Registro y filtrado de ventas por cliente",
+				image: "/portfolio/azulrefrigeracion/05-sales.png",
+			},
+			{
+				title: "Detalle de Venta",
+				description: "Resumen de venta con deuda, lista de compra y generación de PDF",
+				image: "/portfolio/azulrefrigeracion/05b-sale-detail.png",
 			},
 		],
 	},
@@ -129,6 +149,7 @@ export const projects: Project[] = [
 		category: "Ecommerce",
 		technologies: ["Next.js", "Node.js", "PostgreSQL", "TypeScript"],
 		appScreenColor: "from-orange-500 to-red-600",
+		cover: "/portfolio/disfren/web-01-home.png",
 
 		problema:
 			"El negocio necesitaba centralizar la gestión de productos, stock y compras, además de mejorar la experiencia de compra online.",
@@ -144,20 +165,59 @@ export const projects: Project[] = [
 
 		screenshots: [
 			{
-				title: "Catálogo de Productos",
-				description: "Visualización y búsqueda de productos",
+				title: "Inicio",
+				description: "Home de la tienda con catálogo destacado",
+				image: "/portfolio/disfren/web-01-home.png",
+			},
+			{
+				title: "Detalle de Producto",
+				description: "Vista de producto con información y compra",
+				image: "/portfolio/disfren/web-02-product-detail.png",
 			},
 			{
 				title: "Carrito de Compras",
 				description: "Proceso de compra y gestión de pedidos",
+				image: "/portfolio/disfren/web-03-carrito.png",
 			},
 			{
-				title: "Panel Administrativo",
-				description: "Gestión de stock, productos y proveedores",
+				title: "Nosotros",
+				description: "Información institucional de la marca",
+				image: "/portfolio/disfren/web-04-about.png",
 			},
 			{
-				title: "Actualización de Precios",
-				description: "Herramienta para aumentos porcentuales por proveedor",
+				title: "Acceso de Usuario",
+				description: "Inicio de sesión y registro de clientes",
+				image: "/portfolio/disfren/web-05-login.png",
+			},
+			{
+				title: "Acceso Administrativo",
+				description: "Login del panel administrativo",
+				image: "/portfolio/disfren/adm-01-login.png",
+			},
+			{
+				title: "Gestión de Usuarios",
+				description: "Administración de cuentas y permisos",
+				image: "/portfolio/disfren/adm-02-users.png",
+			},
+			{
+				title: "Gestión de Productos",
+				description: "Catálogo, stock y precios",
+				image: "/portfolio/disfren/adm-03-products.png",
+			},
+			{
+				title: "Edición de Producto",
+				description: "Alta y edición de productos del catálogo",
+				image: "/portfolio/disfren/adm-04-product-detail.png",
+			},
+			{
+				title: "Proveedores",
+				description: "Gestión de proveedores y actualización porcentual de precios",
+				image: "/portfolio/disfren/adm-05-providers.png",
+			},
+			{
+				title: "Compras",
+				description: "Registro y control de compras a proveedores",
+				image: "/portfolio/disfren/adm-06-buys.png",
 			},
 		],
 	},
@@ -169,35 +229,45 @@ export const projects: Project[] = [
 		category: "Geospatial",
 		technologies: ["Next.js", "Leaflet", "Node.js", "PostgreSQL"],
 		appScreenColor: "from-green-600 to-emerald-700",
+		cover: "/portfolio/latlong/mobile-01-home-map.png",
 
 		problema:
-			"La información sobre ubicaciones de especies y zonas de conservación se encontraba dispersa y sin herramientas visuales de seguimiento geográfico.",
+			"La información sobre ubicaciones de interés personal se encontraba dispersa y sin una herramienta visual simple para guardarla y consultarla en el mapa.",
 
 		objetivo:
-			"Crear una plataforma de mapas interactivos para registrar, organizar y visualizar ubicaciones específicas relacionadas con conservación y aprovechamiento de plantas.",
+			"Crear una app de mapas para registrar, organizar por categorías y visualizar ubicaciones de interés desde el celular.",
 
 		solucion:
-			"Desarrollamos un sistema basado en mapas con cuadrículas y puntos georreferenciados para registrar especies, observaciones y zonas de interés, permitiendo una visualización clara y organizada del territorio.",
+			"Desarrollamos una app mobile con un mapa interactivo, categorías personalizables con colores propios y un flujo simple para agregar una ubicación asociándola a una categoría.",
 
 		resultado:
-			"La plataforma facilitó el relevamiento y seguimiento de ubicaciones estratégicas para conservación, reproducción y aprovechamiento de especies vegetales.",
+			"La app permitió centralizar y organizar por categorías las ubicaciones guardadas, con acceso rápido desde el mapa.",
 
 		screenshots: [
 			{
 				title: "Mapa Principal",
-				description: "Visualización geográfica de ubicaciones registradas",
+				description: "Mapa con las ubicaciones guardadas",
+				image: "/portfolio/latlong/mobile-01-home-map.png",
 			},
 			{
-				title: "Registro de Puntos",
-				description: "Carga de coordenadas e información asociada",
+				title: "Acciones Rápidas",
+				description: "Menú flotante para agregar o listar ubicaciones",
+				image: "/portfolio/latlong/mobile-02-home-fab-expanded.png",
 			},
 			{
-				title: "Cuadrículas",
-				description: "Organización territorial para relevamientos",
+				title: "Categorías",
+				description: "Categorías personalizadas con color propio para clasificar ubicaciones",
+				image: "/portfolio/latlong/mobile-03-categories.png",
 			},
 			{
-				title: "Detalle de Ubicación",
-				description: "Información específica de cada punto registrado",
+				title: "Nueva Ubicación",
+				description: "Alta de una ubicación con nombre y categoría",
+				image: "/portfolio/latlong/mobile-04-add-location.png",
+			},
+			{
+				title: "Selección de Categoría",
+				description: "Selector de categoría al registrar una ubicación",
+				image: "/portfolio/latlong/mobile-05-add-location-category-select.png",
 			},
 		],
 	},
@@ -359,6 +429,7 @@ export const projects: Project[] = [
 		category: "Business Management",
 		technologies: ["Angular", "Node.js", "PostgreSQL", "TypeScript"],
 		appScreenColor: "from-indigo-500 to-violet-700",
+		cover: "/portfolio/iTR/02-products.png",
 
 		problema:
 			"El negocio necesitaba controlar stock, ventas y proveedores desde un sistema centralizado y adaptable al trabajo diario.",
@@ -374,20 +445,39 @@ export const projects: Project[] = [
 
 		screenshots: [
 			{
-				title: "Panel de Ventas",
-				description: "Registro y administración de ventas",
+				title: "Acceso",
+				description: "Login del panel administrativo",
+				image: "/portfolio/iTR/01-login.png",
 			},
 			{
-				title: "Gestión de Productos",
-				description: "Control de stock y precios",
+				title: "Productos",
+				description: "Catálogo de productos con stock",
+				image: "/portfolio/iTR/02-products.png",
 			},
 			{
-				title: "Clientes y Proveedores",
-				description: "Administración de contactos y deuda",
+				title: "Subproductos",
+				description: "Variantes por color y capacidad, con precio, costo y stock",
+				image: "/portfolio/iTR/03-subproducts.png",
 			},
 			{
-				title: "Reportes",
-				description: "Filtrado de ventas e ingresos",
+				title: "Proveedores",
+				description: "Proveedores con historial de gasto y deuda",
+				image: "/portfolio/iTR/04-suppliers.png",
+			},
+			{
+				title: "Clientes",
+				description: "Clientes con historial de compras",
+				image: "/portfolio/iTR/05-customers.png",
+			},
+			{
+				title: "Ventas",
+				description: "Historial de ventas con totales en pesos y dólares",
+				image: "/portfolio/iTR/06-sales.png",
+			},
+			{
+				title: "Precio del Dólar",
+				description: "Actualización manual del dólar para recalcular precios",
+				image: "/portfolio/iTR/07-dolars.png",
 			},
 		],
 	},
@@ -398,6 +488,7 @@ export const projects: Project[] = [
 		category: "Landing Page",
 		technologies: ["HTML", "CSS", "JavaScript", "Firebase Hosting"],
 		appScreenColor: "from-pink-500 to-rose-600",
+		cover: "/portfolio/amoresvida/01-hero.png",
 
 		problema:
 			"La marca necesitaba una presencia digital moderna y optimizada para campañas de marketing y posicionamiento online.",
@@ -413,20 +504,103 @@ export const projects: Project[] = [
 
 		screenshots: [
 			{
-				title: "Landing Principal",
+				title: "Hero",
 				description: "Presentación visual de la marca",
+				image: "/portfolio/amoresvida/01-hero.png",
 			},
 			{
-				title: "Secciones Informativas",
-				description: "Contenido institucional y comercial",
+				title: "Qué Hacemos",
+				description: "Sección de servicios y propuesta de valor",
+				image: "/portfolio/amoresvida/02-que-hacemos.png",
 			},
 			{
-				title: "Versión Mobile",
-				description: "Diseño responsive para dispositivos móviles",
+				title: "Quiénes Somos",
+				description: "Información institucional de la marca",
+				image: "/portfolio/amoresvida/03-quienes-somos.png",
 			},
 			{
-				title: "SEO y Performance",
-				description: "Optimización para buscadores y velocidad",
+				title: "Resultados",
+				description: "Casos de éxito y métricas destacadas",
+				image: "/portfolio/amoresvida/04-resultados.png",
+			},
+			{
+				title: "Contacto",
+				description: "Formulario de contacto y captación de clientes",
+				image: "/portfolio/amoresvida/05-contacto.png",
+			},
+		],
+	},
+	{
+		slug: "jungla",
+		title: "Jungla",
+		description:
+			"App para un evento musical con line-up de bandas, información del lugar y entradas gratuitas.",
+		category: "Events",
+		technologies: ["HTML", "CSS", "JavaScript"],
+		appScreenColor: "from-amber-500 to-teal-600",
+		cover: "/portfolio/jungla/01-home.png",
+
+		problema:
+			"El evento necesitaba una forma simple de comunicar el line-up, el lugar y las entradas sin depender solo de redes sociales.",
+
+		objetivo:
+			"Crear una app liviana que centralice la información del evento y permita reservar la entrada gratuita desde el celular.",
+
+		solucion:
+			"Desarrollamos una app con secciones para bandas, lugar (con acceso al mapa) y entradas, con un registro para reservar la entrada gratuita y retirarla en la boletería del evento.",
+
+		resultado:
+			"Los asistentes pudieron informarse del evento y reservar su entrada desde la app, simplificando el acceso.",
+
+		screenshots: [
+			{
+				title: "Inicio",
+				description: "Menú principal con acceso a bandas, lugar, entradas y ayuda",
+				image: "/portfolio/jungla/01-home.png",
+			},
+			{
+				title: "Line-up de Bandas",
+				description: "Bandas confirmadas para el evento",
+				image: "/portfolio/jungla/02-bandas-lineup.png",
+			},
+			{
+				title: "Lugar y Fecha",
+				description: "Información del lugar del evento con acceso al mapa",
+				image: "/portfolio/jungla/03-lugar-venue.png",
+			},
+			{
+				title: "Entradas",
+				description: "Registro para reservar la entrada gratuita y retirarla en boletería",
+				image: "/portfolio/jungla/04-entradas-tickets-info.png",
+			},
+		],
+	},
+	{
+		slug: "srbuho",
+		title: "Sr. Búho",
+		description: "Landing de lanzamiento musical con enlaces a plataformas de streaming.",
+		category: "Music",
+		technologies: ["HTML", "CSS", "JavaScript"],
+		appScreenColor: "from-violet-600 to-blue-700",
+		cover: "/portfolio/srbuho/02-home-hover-link.png",
+
+		problema:
+			"El lanzamiento del sencillo \"Eclipse\" necesitaba un punto de entrada único que lleve a la audiencia a las plataformas de streaming.",
+
+		objetivo:
+			"Crear una landing simple y visual centrada en la portada del disco con accesos directos a streaming.",
+
+		solucion:
+			"Desarrollamos una página de lanzamiento con la portada del disco como protagonista y enlaces directos a Spotify, YouTube y Deezer.",
+
+		resultado:
+			"La página funcionó como punto de referencia único para el lanzamiento, simplificando el acceso a la música en distintas plataformas.",
+
+		screenshots: [
+			{
+				title: "Portada",
+				description: "Portada del sencillo con accesos directos a Spotify, YouTube y Deezer",
+				image: "/portfolio/srbuho/02-home-hover-link.png",
 			},
 		],
 	},
