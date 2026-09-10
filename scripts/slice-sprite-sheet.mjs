@@ -3,8 +3,14 @@
  * Slice a grid sprite sheet (trees, rocks, ...) into individual transparent
  * WebP sprites.
  *
- *  1. keys out the near-uniform background color (soft alpha ramp)
- *  2. decontaminates fringe pixels (un-mixes background bleed)
+ *  1. keys out the near-uniform background color (soft alpha ramp) — unless
+ *     the source already carries real transparency (a varying alpha
+ *     channel), in which case that alpha is used as-is. Some generated
+ *     sheets keep RGB color data (a stray vignette, say) under fully
+ *     transparent pixels; re-deriving alpha from color distance would key
+ *     that bleed back in, so trust the source alpha when it's there.
+ *  2. decontaminates fringe pixels (un-mixes background bleed) — only when
+ *     alpha was re-derived from color in step 1
  *  3. per grid cell: keeps only the largest connected blob (drops stray
  *     leaf/rock fragments that bled in from neighbouring cells)
  *  4. tight-crops to that blob + padding, downscales for crisp small display
@@ -36,33 +42,51 @@ const { data, info } = await sharp(input).raw().toBuffer({ resolveWithObject: tr
 const { width, height, channels } = info
 if (channels !== 3 && channels !== 4) throw new Error(`unexpected channel count ${channels}`)
 
-const at = (x, y) => {
-	const i = (y * width + x) * channels
-	return [data[i], data[i + 1], data[i + 2]]
-}
-const corners = [at(2, 2), at(width - 3, 2), at(2, height - 3), at(width - 3, height - 3)]
-const bg = corners[0].map((_, c) => Math.round(corners.reduce((s, p) => s + p[c], 0) / corners.length))
-console.log("background ~", bg)
+const hasSourceAlpha =
+	channels === 4 &&
+	(() => {
+		let min = 255, max = 0
+		for (let p = 0; p < width * height; p++) {
+			const a = data[p * 4 + 3]
+			if (a < min) min = a
+			if (a > max) max = a
+			if (min === 0 && max > 40) return true
+		}
+		return false
+	})()
 
-// full keyed RGBA
+// full RGBA — either trusted from the source, or keyed from background colour
 const rgba = Buffer.alloc(width * height * 4)
-for (let p = 0; p < width * height; p++) {
-	const s = p * channels
-	const o = p * 4
-	const r = data[s], g = data[s + 1], b = data[s + 2]
-	const dist = Math.sqrt((r - bg[0]) ** 2 + (g - bg[1]) ** 2 + (b - bg[2]) ** 2)
-	let a = dist >= HIGH ? 255 : dist <= LOW ? 0 : Math.round(((dist - LOW) / (HIGH - LOW)) * 255)
-	let rr = r, gg = g, bb = b
-	if (a > 0 && a < 255) {
-		const f = 255 / a
-		rr = Math.max(0, Math.min(255, Math.round(bg[0] + (r - bg[0]) * f)))
-		gg = Math.max(0, Math.min(255, Math.round(bg[1] + (g - bg[1]) * f)))
-		bb = Math.max(0, Math.min(255, Math.round(bg[2] + (b - bg[2]) * f)))
+if (hasSourceAlpha) {
+	console.log("using the source's own alpha channel (already keyed)")
+	data.copy(rgba)
+} else {
+	const at = (x, y) => {
+		const i = (y * width + x) * channels
+		return [data[i], data[i + 1], data[i + 2]]
 	}
-	rgba[o] = rr
-	rgba[o + 1] = gg
-	rgba[o + 2] = bb
-	rgba[o + 3] = a
+	const corners = [at(2, 2), at(width - 3, 2), at(2, height - 3), at(width - 3, height - 3)]
+	const bg = corners[0].map((_, c) => Math.round(corners.reduce((s, p) => s + p[c], 0) / corners.length))
+	console.log("background ~", bg)
+
+	for (let p = 0; p < width * height; p++) {
+		const s = p * channels
+		const o = p * 4
+		const r = data[s], g = data[s + 1], b = data[s + 2]
+		const dist = Math.sqrt((r - bg[0]) ** 2 + (g - bg[1]) ** 2 + (b - bg[2]) ** 2)
+		let a = dist >= HIGH ? 255 : dist <= LOW ? 0 : Math.round(((dist - LOW) / (HIGH - LOW)) * 255)
+		let rr = r, gg = g, bb = b
+		if (a > 0 && a < 255) {
+			const f = 255 / a
+			rr = Math.max(0, Math.min(255, Math.round(bg[0] + (r - bg[0]) * f)))
+			gg = Math.max(0, Math.min(255, Math.round(bg[1] + (g - bg[1]) * f)))
+			bb = Math.max(0, Math.min(255, Math.round(bg[2] + (b - bg[2]) * f)))
+		}
+		rgba[o] = rr
+		rgba[o + 1] = gg
+		rgba[o + 2] = bb
+		rgba[o + 3] = a
+	}
 }
 
 const cellW = Math.floor(width / cols)
