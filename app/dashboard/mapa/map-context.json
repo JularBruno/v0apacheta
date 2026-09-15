@@ -86,7 +86,7 @@
 					"title": "Anotá tu balance",
 					"description": "¿Cuánto entra este mes? Ese es el techo de todo lo demás.",
 					"longDescription": "Lo ideal es arrancar con todos tus movimientos del mes: revisá el historial de tu banco y sumá lo que recordés en efectivo. Si ya tenías algo anotado en un Excel, podés importarlo directo. Y si eso se siente como demasiado por ahora, anotá solo tu saldo actual — después te recordamos seguir registrando.",
-					"appInstruction": "Importar desde Excel: usá el botón de importar para subir tus movimientos ya anotados.\n\nCargar manualmente: Inicio → Anotá tu movimiento → tipo Ingreso o Gasto → elegí o creá una categoría → ingresá el monto con la fecha correcta.\n\nSolo el saldo: poné tu balance actual en el banco y empezá desde hoy.",
+					"appInstruction": "Importar desde Excel: usá el botón de importar para subir tus movimientos ya anotados.\n\nMigrar con IA: muchos bancos y billeteras ya tienen su propio asistente de IA (por ejemplo, en Mercado Pago hay una estrella brillante en el centro-izquierda de la pantalla que abre el chat de Mercado Pago IA) — copiá el prompt que te damos, pegalo ahí, y cargá los movimientos que te devuelva uno por uno.\n\nCargar manualmente: Inicio → Anotá tu movimiento → tipo Ingreso o Gasto → elegí o creá una categoría → ingresá el monto con la fecha correcta.\n\nSolo el saldo: poné tu balance actual en el banco y empezá desde hoy.",
 					"validation": {
 						"type": "api",
 						"apiCheck": "Al menos 1 movimiento de tipo 'income' este mes",

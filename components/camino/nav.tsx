@@ -47,12 +47,21 @@ export default function CaminoNav() {
 						</Link>
 					</div>
 
-					<Link
-						href="/onboarding"
-						className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary-500"
-					>
-						{CTA}
-					</Link>
+					<div className="flex items-center gap-2 sm:gap-3">
+						{/* on phones this lives in the drawer instead — the header row is too tight */}
+						<Link
+							href="/login"
+							className="hidden rounded-lg px-3 py-2 text-sm font-semibold text-foreground/75 transition-colors hover:bg-black/5 hover:text-foreground sm:inline-flex"
+						>
+							Ingresar
+						</Link>
+						<Link
+							href="/onboarding"
+							className="inline-flex items-center whitespace-nowrap rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary-500"
+						>
+							{CTA}
+						</Link>
+					</div>
 				</div>
 			</header>
 

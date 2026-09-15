@@ -306,8 +306,11 @@ export default function CargaMasivaPage() {
 						1. Elegí el período y copiá el prompt
 					</CardTitle>
 					<CardDescription>
-						Pegá este texto en el chat de IA de tu banco (o el que uses) para que te devuelva tus movimientos en
-						JSON. Por defecto traemos desde tu último movimiento cargado, para no repetir viejos.
+						La mayoría de los bancos y billeteras ya tienen su propio asistente de IA integrado en la app, al
+						que le podés hacer preguntas como en un chat — no hace falta instalar nada nuevo. Por ejemplo, en
+						Mercado Pago hay una estrella brillante en el centro-izquierda de la pantalla: tocala para abrir el
+						chat de Mercado Pago IA. Pegale el siguiente prompt para que te devuelva tus movimientos en JSON.
+						Por defecto traemos desde tu último movimiento cargado, para no repetir viejos.
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-3">

@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Terminal, Bell } from "lucide-react"
 import { getProfile } from "@/lib/actions/user"
@@ -17,6 +16,7 @@ import { useDashboard } from '@/app/dashboard/dashboardContext';
 import { toast } from "@/hooks/use-toast"
 import { getSubscriptionNotifications, postSubscriptionNotifications } from '@/lib/actions/notifications'
 import SubscriptionButtonNotification from '@/components/notifications/subscription-notification-button'
+import DeleteAccountDialog from '@/components/settings/delete-account-dialog'
 
 export default function SettingsPage() {
 	// const [userName, setUserName] = useState("Usuario Apacheta")
@@ -30,6 +30,8 @@ export default function SettingsPage() {
 
 	const { user, userBalance, loadingUser } = useDashboard();
 
+	const [deleteAccountOpen, setDeleteAccountOpen] = useState(false)
+
 	const [notifications, setNotifications] = useState({
 		budgetAlerts: true,
 		paymentReminders: true,
@@ -40,18 +42,6 @@ export default function SettingsPage() {
 	const handleSaveProfile = () => {
 		alert("Profile saved!")
 		// In a real app, you'd send this to a server action
-	}
-
-	const handleChangePassword = () => {
-		alert("Redirecting to password change flow (not implemented yet).")
-		// In a real app, you'd redirect to a dedicated password change page/modal
-	}
-
-	const handleDeleteAccount = () => {
-		if (confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
-			alert("Account deleted (simulated).")
-			// In a real app, this would trigger a server action to delete the account
-		}
 	}
 
 	return (
@@ -74,13 +64,6 @@ export default function SettingsPage() {
 						<p className="text-sm text-gray-500 mt-1">El email no puede ser cambiado aquí.</p>
 					</div>
 					{/* <Button onClick={handleSaveProfile}>Guardar Cambios</Button> */}
-					<Separator className="my-4" />
-					<h3 className="text-md font-semibold">Contraseña</h3>
-					<p className="text-sm text-gray-600">Cambia tu contraseña en desarrollo.</p>
-					{/* <p className="text-sm text-gray-600">Cambia tu contraseña para mantener tu cuenta segura.</p> */}
-					{/* <Button variant="outline" onClick={handleChangePassword}>
-						Cambiar Contraseña
-					</Button> */}
 				</CardContent>
 			</Card>
 
@@ -167,15 +150,17 @@ export default function SettingsPage() {
 				<CardHeader>
 					<CardTitle>Acciones de la Cuenta</CardTitle>
 				</CardHeader>
-				{/* <CardContent className="space-y-4">
+				<CardContent className="space-y-4">
 					<p className="text-sm text-gray-600">
-						Si deseas eliminar tu cuenta y todos tus datos, puedes hacerlo aquí. Esta acción es irreversible.
+						Si querés eliminar tu cuenta y todos tus datos, podés hacerlo acá. Esta acción es irreversible.
 					</p>
-					<Button variant="destructive" onClick={handleDeleteAccount}>
+					<Button variant="destructive" onClick={() => setDeleteAccountOpen(true)}>
 						Eliminar Cuenta
 					</Button>
-				</CardContent> */}
+				</CardContent>
 			</Card>
+
+			<DeleteAccountDialog open={deleteAccountOpen} onOpenChange={setDeleteAccountOpen} />
 		</div>
 	)
 }

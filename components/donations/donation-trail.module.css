@@ -1,0 +1,126 @@
+/* Compact, two-stop version of the camino trail (see components/camino/) for the
+   donaciones page. Deliberately NOT the scroll-geometry system those use — this
+   page scrolls inside the dashboard's own container, not the window, and two fixed
+   stations don't need Catmull-Rom smoothing through measured DOM points. The path
+   below is a hand-authored bezier between two fixed, percentage-based anchors. */
+
+.panel {
+	position: relative;
+	overflow: hidden;
+	border-radius: 24px;
+	border: 1px solid var(--map-parchment-edge);
+	padding: 8px clamp(20px, 5vw, 48px) 4px;
+	background:
+		linear-gradient(180deg,
+			color-mix(in srgb, var(--map-parchment-light) 60%, transparent) 0%,
+			color-mix(in srgb, var(--map-parchment-mid) 32%, transparent) 100%);
+}
+
+.path {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 0;
+	pointer-events: none;
+}
+
+/* the full trail, always faintly visible — "the path ahead" */
+.trailFull {
+	fill: none;
+	stroke: var(--map-trail-locked);
+	stroke-width: 3;
+	stroke-linecap: round;
+	stroke-dasharray: 2 11;
+	opacity: 0.55;
+	vector-effect: non-scaling-stroke;
+}
+
+/* the walked portion — hidden until the destination station is reached, then
+   "drawn in" by animating stroke-dashoffset (classic SVG line-draw technique;
+   the exact dasharray value just needs to exceed the path's real length). */
+.trailWalked {
+	fill: none;
+	stroke: hsl(var(--primary));
+	stroke-width: 3;
+	stroke-linecap: round;
+	vector-effect: non-scaling-stroke;
+	stroke-dasharray: 2000;
+	stroke-dashoffset: 2000;
+	transition: stroke-dashoffset 900ms ease;
+}
+.trailWalked.walked {
+	stroke-dashoffset: 0;
+}
+
+.station {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 14px;
+	padding: 28px 0;
+	text-align: center;
+}
+
+.cairn {
+	display: grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	color: var(--map-node-locked);
+	transition: color 400ms ease;
+}
+.cairn svg {
+	width: 100%;
+	height: 100%;
+}
+.station.revealed .cairn {
+	color: hsl(var(--primary));
+}
+
+.card {
+	width: 100%;
+	max-width: 34rem;
+	border-radius: 16px;
+	border: 1px solid hsl(var(--border));
+	background: hsl(var(--card) / 0.92);
+	backdrop-filter: blur(4px);
+	box-shadow: 0 1px 0 var(--map-parchment-edge), 0 16px 32px -20px rgba(27, 14, 19, 0.25);
+	padding: 22px clamp(18px, 4vw, 30px);
+	opacity: 0;
+	transform: translateY(8px);
+	transition: opacity 300ms ease-out, transform 300ms ease-out;
+}
+.station.revealed .card {
+	opacity: 1;
+	transform: translateY(0);
+}
+
+.cardTitle {
+	font-weight: 700;
+	font-size: 1.05rem;
+	color: hsl(var(--foreground));
+	margin-bottom: 8px;
+}
+
+.footnote {
+	margin-top: 14px;
+	padding-top: 14px;
+	border-top: 1px solid hsl(var(--border));
+	font-size: 0.8rem;
+	color: hsl(var(--muted-foreground));
+}
+
+@media (max-width: 640px) {
+	.panel { padding: 4px 16px 2px; }
+	.station { padding: 20px 0; gap: 10px; }
+	.cairn { width: 36px; height: 36px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.card, .trailWalked {
+		transition: none;
+	}
+}

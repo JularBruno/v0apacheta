@@ -2,7 +2,7 @@
 
 import type { ComponentType } from "react"
 import Link from "next/link"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export interface StepContentProps {
@@ -51,6 +51,13 @@ function IncomeWithImportContent({ description, longDescription, appInstruction 
 			<Button asChild variant="outline" size="sm" className="w-full gap-2">
 				<Link href="/dashboard/importar">
 					Importar desde Excel
+					<ArrowRight className="h-3.5 w-3.5" />
+				</Link>
+			</Button>
+			<Button asChild variant="outline" size="sm" className="w-full gap-2">
+				<Link href="/dashboard/carga-masiva">
+					<Sparkles className="h-3.5 w-3.5" />
+					Migrar con IA
 					<ArrowRight className="h-3.5 w-3.5" />
 				</Link>
 			</Button>

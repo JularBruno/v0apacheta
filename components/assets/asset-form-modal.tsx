@@ -181,7 +181,7 @@ export default function AssetFormModal({ isOpen, onClose, onSave, initialData }:
 						</div> */}
 					</div>
 					<DialogFooter>
-						<Button variant="outline" onClick={onClose}>
+						<Button type="button" variant="outline" onClick={onClose}>
 							Cancelar
 						</Button>
 						{/* <Button onClick={handleSubmit}>Guardar</Button> */}
