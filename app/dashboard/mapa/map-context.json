@@ -48,7 +48,7 @@
 					"title": "Primera Apacheta",
 					"description": "**Bienvenido al camino. Acá empieza todo.**",
 					"longDescription": "**El mapa** te va a guiar en tu camino financiero. Con el tiempo vas a tener una imagen más clara de cómo manejás tu dinero — frustraciones incluidas. **El siguiente paso**: instalá la app y activá las notificaciones para que el camino te acompañe.",
-					"appInstruction": "Cómo instalar Apacheta en tu celular:\n\n**Android (Chrome)**: tocá el menú ⋮ → \"Instalar app\" o \"Agregar a pantalla de inicio\".\n\n**iOS (Safari)**: tocá el botón de compartir ↑ → \"Agregar a inicio\".\n\nUna vez instalada, activá las notificaciones con el botón de abajo.",
+					"appInstruction": "Cómo instalar Apacheta en tu celular:\n\n**Android (Chrome)**: tocá el menú ⋮ → \"Instalar app\" o \"Agregar a pantalla de inicio\".\n\n**iOS (Safari)**: tocá el botón de compartir ↑ → \"Agregar a inicio\". No hace falta estar logueado para instalarla — podés hacerlo antes de crear tu cuenta.\n\n**iOS con otros navegadores** (Brave, Chrome, etc.): algunos no dejan agregar apps a la pantalla de inicio. Si no ves esa opción, abrí la página en Safari e instalala desde ahí.\n\nUna vez instalada, activá las notificaciones con el botón de abajo.",
 					"validation": {
 						"type": "pwa_or_acknowledged",
 						"apiCheck": "getSubscriptionNotifications() retorna 1 o más resultados (suscripción push existe)",
@@ -86,7 +86,7 @@
 					"title": "Anotá tu balance",
 					"description": "¿Cuánto entra este mes? Ese es el techo de todo lo demás.",
 					"longDescription": "Lo ideal es arrancar con todos tus movimientos del mes: revisá el historial de tu banco y sumá lo que recordés en efectivo. Si ya tenías algo anotado en un Excel, podés importarlo directo. Y si eso se siente como demasiado por ahora, anotá solo tu saldo actual — después te recordamos seguir registrando.",
-					"appInstruction": "Importar desde Excel: usá el botón de importar para subir tus movimientos ya anotados.\n\nCargar manualmente: Inicio → Anotá tu movimiento → tipo Ingreso o Gasto → elegí o creá una categoría → ingresá el monto con la fecha correcta.\n\nSolo el saldo: poné tu balance actual en el banco y empezá desde hoy.",
+					"appInstruction": "Importar desde Excel: usá el botón de importar para subir tus movimientos ya anotados.\n\nMigrar con IA: muchos bancos y billeteras ya tienen su propio asistente de IA (por ejemplo, en Mercado Pago hay una estrella brillante en el centro-izquierda de la pantalla que abre el chat de Mercado Pago IA) — copiá el prompt que te damos, pegalo ahí, y cargá los movimientos que te devuelva uno por uno.\n\nCargar manualmente: Inicio → Anotá tu movimiento → tipo Ingreso o Gasto → elegí o creá una categoría → ingresá el monto con la fecha correcta.\n\nSolo el saldo: poné tu balance actual en el banco y empezá desde hoy.",
 					"validation": {
 						"type": "api",
 						"apiCheck": "Al menos 1 movimiento de tipo 'income' este mes",

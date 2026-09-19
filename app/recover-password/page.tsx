@@ -1,65 +1,60 @@
 "use client"
 
 import { useActionState } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import Link from "next/link"
+import AuthShell from "@/components/auth/auth-shell"
+import { forgotPassword, type ForgotPasswordState } from "@/lib/actions/user"
+
+const initialState: ForgotPasswordState = { message: null }
 
 export default function RecoverPasswordPage() {
-  const recoverPassword = () => { // formData: FormData
-    console.log('recoverPassword called');
-    return;
-  }
-    
-  const [state, formAction, isPending] = useActionState(recoverPassword, null)
+	const [state, formAction, isPending] = useActionState(forgotPassword, initialState)
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-white py-12 px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8 bg-white p-8 md:p-10 rounded-xl shadow-lg">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">Recover Your Password</h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your email address below and we'll send you a link to reset your password.
-          </p>
-        </div>
+	return (
+		<AuthShell
+			title="Recuperá tu contraseña"
+			subtitle="Ingresá tu email y te mandamos un link para restablecerla."
+		>
+			{state.success ? (
+				<div className="space-y-6 text-center">
+					<p className="text-sm text-muted-foreground">{state.message}</p>
+					<Link href="/login" className="font-medium text-primary hover:text-primary-600">
+						Volver a ingresar
+					</Link>
+				</div>
+			) : (
+				<form action={formAction} className="space-y-6">
+					<div>
+						<Label htmlFor="email">Email</Label>
+						<Input
+							id="email"
+							name="email"
+							type="email"
+							autoComplete="email"
+							required
+							placeholder="tu@email.com"
+							className="mt-1"
+							disabled={isPending}
+						/>
+					</div>
 
-        <form action={formAction} className="mt-8 space-y-6">
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              placeholder="your@email.com"
-              className="mt-1"
-              disabled={isPending}
-            />
-          </div>
+					{state.message && <p className="text-sm text-red-600">{state.message}</p>}
 
-          <Button
-            type="submit"
-            className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
-            disabled={isPending}
-          >
-            {isPending ? "Sending..." : "Send Reset Link"}
-          </Button>
+					<Button type="submit" className="w-full" disabled={isPending}>
+						{isPending ? "Enviando..." : "Enviar link"}
+					</Button>
+				</form>
+			)}
 
-          {/* {state?.message && (
-            <p className={`mt-4 text-center text-sm ${state.success ? "text-green-600" : "text-red-600"}`}>
-              {state.message}
-            </p>
-          )} */}
-        </form>
-        <div className="text-center text-sm text-gray-600">
-          Remember your password?{" "}
-          <Link href="/login" className="font-medium text-green-600 hover:text-green-500">
-            Log In
-          </Link>
-        </div>
-      </div>
-    </div>
-  )
+			<div className="mt-6 text-center text-sm text-muted-foreground">
+				¿Te acordaste?{" "}
+				<Link href="/login" className="font-medium text-primary hover:text-primary-600">
+					Ingresá
+				</Link>
+			</div>
+		</AuthShell>
+	)
 }

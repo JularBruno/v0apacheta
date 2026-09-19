@@ -137,8 +137,13 @@ const config: Config = {
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)',
 			},
+			fontFamily: {
+				sans: ['var(--font-sans)', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+				mono: ['var(--font-mono)', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+			},
 		},
-		safelist: [
+	},
+	safelist: [
 			"bg-primary-400",
 			"bg-primary-500",
 			"bg-coffee-bean-800",
@@ -168,8 +173,15 @@ const config: Config = {
 			"bg-fuchsia-500",
 			"bg-slate-500",
 			"bg-stone-500",
-		]
-	},
+			// portfolio project gradients (lib/portfolio/projects.ts → appScreenColor)
+			{
+				pattern:
+					/^(from|to)-(teal|cyan|sky|blue|orange|red|green|emerald|amber|fuchsia|purple|indigo|violet|pink|rose|zinc)-(500|600|700)$/,
+			},
+			"to-black",
+			"from-primary",
+			"to-primary",
+	],
 	plugins: [require('tailwindcss-animate')],
 };
 

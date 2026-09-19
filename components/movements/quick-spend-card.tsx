@@ -514,6 +514,13 @@ export default function QuickSpendCard({
 	const transferDest = transferDestinations.find((d) => d.id === transferDestId);
 	const isCrossCurrency = !!transferDest && transferDest.currency !== transferOrigin.currency;
 
+	// transferAmount/transferAmountTo are strings — "0" is truthy, so a plain `!transferAmount`
+	// check (used below for the submit button and summary line) doesn't catch a zeroed-out
+	// amount and left the button enabled / the summary showing "Transferís $0" ­— check the
+	// parsed number instead.
+	const hasPositiveTransferAmount = Number.parseFloat(transferAmount) > 0;
+	const hasPositiveTransferAmountTo = Number.parseFloat(transferAmountTo) > 0;
+
 	// Derives "to" from "from" using each side's conversionRate (both rates convert to
 	// the user's preferredCurrency, so bridging through it gives the destination-currency
 	// amount). Recomputes live on every relevant change, but only while untouched — once
@@ -819,7 +826,7 @@ export default function QuickSpendCard({
 
 							{/* Summary line */}
 							<div className="rounded-lg bg-gray-50 p-3 text-center text-sm text-gray-600">
-								{transferAmount && transferDest ? (
+								{hasPositiveTransferAmount && transferDest ? (
 									<>
 										Transferís{" "}
 										<span className="font-semibold text-gray-900">
@@ -837,9 +844,9 @@ export default function QuickSpendCard({
 								type="button"
 								onClick={handleTransferSubmit}
 								disabled={
-									!transferAmount
+									!hasPositiveTransferAmount
 									|| !transferDest
-									|| (isCrossCurrency && !transferAmountTo)
+									|| (isCrossCurrency && !hasPositiveTransferAmountTo)
 									|| createTransfer.isPending
 								}
 								className="w-full h-12 text-base font-semibold gap-1.5"
@@ -942,7 +949,7 @@ export default function QuickSpendCard({
 								data-testid="submit-button"
 								type="submit"
 								className="w-full h-12 text-base font-semibold transition-opacity"
-								disabled={isSubmitting || !categoryId}
+								disabled={isSubmitting || !categoryId || !watchedAmount}
 							>
 								{isSubmitting
 									? <Loading />

@@ -62,11 +62,11 @@ const toolsMenuItems = [
 		url: "/dashboard/carga-masiva",
 		icon: Bot,
 	},
-	// {
-	// 	title: "Acomodar Balance",
-	// 	url: "/dashboard/balance",
-	// 	icon: DollarSign,
-	// },
+	{
+		title: "Acomodar Balance",
+		url: "/dashboard/balance",
+		icon: DollarSign,
+	},
 	{
 		title: "Dividir Cuenta",
 		url: "/dashboard/dividir-cuenta",
@@ -85,11 +85,11 @@ const secondaryMenuItems = [
 		url: "/dashboard/config",
 		icon: Settings,
 	},
-	// {
-	// 	title: "Donaciones",
-	// 	url: "/dashboard/donaciones",
-	// 	icon: Heart,
-	// },
+	{
+		title: "Donaciones",
+		url: "/dashboard/donaciones",
+		icon: Heart,
+	},
 ]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
