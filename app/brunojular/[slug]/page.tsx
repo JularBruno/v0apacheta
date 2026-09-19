@@ -95,12 +95,12 @@ export default async function ProjectPage({
 					controls
 					preload="none"
 					poster={project.cover}
-					className="mt-8 aspect-[16/8] w-full rounded-lg border border-gray-300 bg-black object-contain"
+					className="mt-8 aspect-[16/8] w-full rounded-lg border border-border bg-black object-contain"
 				>
 					<source src={project.video} />
 				</video>
 			) : project.cover ? (
-				<div className="relative mt-8 aspect-[16/8] w-full overflow-hidden rounded-lg border border-gray-300">
+				<div className="relative mt-8 aspect-[16/8] w-full overflow-hidden rounded-lg border border-border">
 					<Image
 						src={project.cover}
 						alt={project.title}
@@ -111,7 +111,7 @@ export default async function ProjectPage({
 				</div>
 			) : (
 				<div
-					className={`mt-8 aspect-[16/8] w-full rounded-lg border border-gray-300 bg-gradient-to-br ${project.appScreenColor}`}
+					className={`mt-8 aspect-[16/8] w-full rounded-lg border border-border bg-gradient-to-br ${project.appScreenColor}`}
 				/>
 			)}
 

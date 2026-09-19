@@ -7,7 +7,7 @@ export default function ProjectScreens({ project }: { project: Project }) {
 			{project.screenshots.map((shot) => (
 				<figure key={shot.title} className="flex flex-col">
 					<div
-						className={`relative aspect-[16/10] overflow-hidden rounded-lg border border-gray-300 bg-gradient-to-br ${project.appScreenColor}`}
+						className={`relative aspect-[16/10] overflow-hidden rounded-lg border border-border bg-gradient-to-br ${project.appScreenColor}`}
 					>
 						{shot.video ? (
 							<video

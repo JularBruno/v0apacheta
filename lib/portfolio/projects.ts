@@ -17,14 +17,16 @@ export interface Project {
 	description: string
 	category: string
 	technologies: string[]
-	/** Tailwind gradient stops, e.g. "from-teal-500 to-cyan-600" — see tailwind.config safelist. */
+	/** Tailwind gradient stops, e.g. "from-teal-500 to-cyan-600", see tailwind.config safelist. */
 	appScreenColor: string
 	/** Optional cover image for the grid card and case-study banner, relative to /public. */
 	cover?: string
-	/** Optional project logo, relative to /public — shown next to the title on the case study. */
+	/** Optional project logo, relative to /public, shown next to the title on the case study. */
 	logo?: string
 	/** Optional walkthrough/demo video for the case-study banner, relative to /public. Uses `cover` as its poster frame. */
 	video?: string
+	/** Optional link override, when set, the grid card links here instead of `/brunojular/<slug>` (e.g. for a project that has its own live site). */
+	href?: string
 	problema: string
 	objetivo: string
 	solucion: string
@@ -33,6 +35,26 @@ export interface Project {
 }
 
 export const projects: Project[] = [
+	{
+		slug: "apacheta",
+		href: "/",
+		title: "Apacheta",
+		description:
+			"Seguí el camino para salir de deudas, ahorrar más y construir patrimonio.",
+		category: "Fintech",
+		technologies: ["Next.js", "NestJS", "PostgreSQL"],
+		appScreenColor: "from-amber-600 to-orange-700",
+		logo: "/icon-192x192.png",
+		problema:
+			"Ordenar las finanzas personales en Argentina es difícil: inflación, múltiples cuentas y billeteras, y ninguna herramienta pensada para el contexto local.",
+		objetivo:
+			"Construir una app que guíe paso a paso, desde entender ingresos y gastos hasta salir de deudas y empezar a construir patrimonio.",
+		solucion:
+			"Una plataforma web progresiva (PWA) con seguimiento de balance, presupuesto, importación de movimientos desde Excel y un mapa de progreso gamificado.",
+		resultado:
+			"En producción y en uso activo: hoy somos 5 usuarios activos diarios que la usamos de verdad para manejar nuestras finanzas, y estamos probando el modelo de monetización para el próximo paso.",
+		screenshots: [],
+	},
 	{
 		slug: "cyberpsi",
 		title: "CyberPsi",

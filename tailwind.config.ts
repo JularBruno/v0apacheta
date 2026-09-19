@@ -179,6 +179,8 @@ const config: Config = {
 					/^(from|to)-(teal|cyan|sky|blue|orange|red|green|emerald|amber|fuchsia|purple|indigo|violet|pink|rose|zinc)-(500|600|700)$/,
 			},
 			"to-black",
+			"from-primary",
+			"to-primary",
 	],
 	plugins: [require('tailwindcss-animate')],
 };

@@ -1,15 +1,23 @@
 "use client"
 
-import { useMemo, useRef, useState } from "react"
+import { Fragment, useMemo, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import ApachetaCairn from "@/components/apacheta-cairn"
 import Scenery from "@/components/camino/scenery"
+import { MAP_MILESTONES } from "@/lib/trail/chapters"
 import { useUpdateMapLevel } from "@/lib/hooks/use-update-map-level"
 import StepSheet, { type SheetState, type SheetStep } from "./step-sheet"
 import { useMapTrail } from "./use-map-trail"
 import styles from "./trail-map.module.css"
 
 export type TrailMapStep = SheetStep
+
+/** Which chapter (1-5) a step or stage-header id belongs to — "2.1" and
+ * "stage-2" both read as 2 — so milestones can drop in at chapter boundaries. */
+function chapterOf(id: string): number {
+	const m = id.match(/^stage-(\d+)$/) ?? id.match(/^(\d+)\./)
+	return m ? Number(m[1]) : NaN
+}
 
 const SIZE: Record<TrailMapStep["type"], string> = {
 	minor: styles.minor,
@@ -129,35 +137,62 @@ export default function TrailMap({ steps: initialSteps }: Props) {
 							<path ref={walkedRef} className={styles.walked} />
 						</svg>
 
+						{MAP_MILESTONES.filter((m) => m.after === 0).map((m) => (
+							<figure
+								key={m.src}
+								data-clear
+								className={cn(styles.milestone, styles[`shift_${m.shift}` as const])}
+								style={{ ["--mw" as string]: `${m.width}px` }}
+							>
+								<img src={m.src} alt="" />
+							</figure>
+						))}
+
 						{steps.map((step, i) => {
 							const side = i % 2 === 0 ? styles.left : styles.right
 							const showLabel =
 								step.status !== "locked" && (step.status === "unlocked" || selectedId === step.id)
-							return (
-								<section
-									key={step.id}
-									className={cn(
-										styles.station,
-										SIZE[step.type],
-										STATE[step.status],
-										side,
-										selectedId === step.id && styles.isSelected,
-									)}
-								>
-									<button
-										data-cairn
-										type="button"
-										className={styles.cairn}
-										disabled={step.status === "locked"}
-										aria-label={step.status === "locked" ? "Paso bloqueado" : step.title}
-										onClick={() => handleCairn(step)}
-									>
-										<span className={styles.halo} aria-hidden="true" />
-										<ApachetaCairn />
-									</button>
+							const chapter = chapterOf(step.id)
+							const isChapterEnd = chapter !== chapterOf(steps[i + 1]?.id ?? "")
 
-									{showLabel && <span className={styles.label}>{step.title}</span>}
-								</section>
+							return (
+								<Fragment key={step.id}>
+									<section
+										className={cn(
+											styles.station,
+											SIZE[step.type],
+											STATE[step.status],
+											side,
+											selectedId === step.id && styles.isSelected,
+										)}
+									>
+										<button
+											data-cairn
+											type="button"
+											className={styles.cairn}
+											disabled={step.status === "locked"}
+											aria-label={step.status === "locked" ? "Paso bloqueado" : step.title}
+											onClick={() => handleCairn(step)}
+										>
+											<span className={styles.halo} aria-hidden="true" />
+											<ApachetaCairn />
+										</button>
+
+										{showLabel && <span className={styles.label}>{step.title}</span>}
+									</section>
+
+									{isChapterEnd &&
+										MAP_MILESTONES.filter((m) => m.after === chapter).map((m) => (
+											<figure
+												key={m.src}
+												data-clear
+												className={cn(styles.milestone, styles[`shift_${m.shift}` as const])}
+												style={{ ["--mw" as string]: `${m.width}px` }}
+											>
+												<img src={m.src} alt="" />
+											</figure>
+										))}
+								</Fragment>
 							)
 						})}
 					</div>

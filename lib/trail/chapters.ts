@@ -80,6 +80,14 @@ export const MILESTONES: Milestone[] = [
 	{ src: "/scenery/milestones/summit.webp", after: 5, width: 460, shift: "center" },
 ]
 
+/** Same landmarks as the landing, plus one only shown on the dashboard map:
+ * the river sits right at the top of the trail (`after: 0` — rendered before
+ * the first chapter, not after it). */
+export const MAP_MILESTONES: Milestone[] = [
+	{ src: "/scenery/milestones/river.webp", after: 0, width: 340, shift: "right" },
+	...MILESTONES,
+]
+
 export const HERO = {
 	title: "Las apachetas",
 	titleAccent: "guiarán tu camino.",

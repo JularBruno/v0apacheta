@@ -1,11 +1,12 @@
 import Link from "next/link"
 import type { Metadata } from "next"
 import { profile } from "@/lib/portfolio/profile"
+import CopyEmailButton from "@/components/portfolio/copy-email-button"
 
 export const metadata: Metadata = {
 	title: {
-		default: `${profile.name} — Portfolio`,
-		template: `%s — ${profile.name}`,
+		default: `${profile.name} Portfolio`,
+		template: `%s ${profile.name}`,
 	},
 	description: profile.tagline,
 }
@@ -25,15 +26,14 @@ export default function PortfolioLayout({
 					>
 						{profile.name}
 					</Link>
-					<a
-						href={
-							profile.links.find((l) => l.href.startsWith("mailto:"))?.href ??
-							"/brunojular"
-						}
+					{/* Jumps to the hero's link row (LinkedIn/GitHub/Email/WhatsApp) instead of
+					    forcing straight into a mailto, let the visitor pick the channel. */}
+					<Link
+						href="/brunojular#contacto"
 						className="font-mono text-xs tracking-wide text-muted-foreground transition-colors hover:text-foreground"
 					>
-						Contacto
-					</a>
+						Contact
+					</Link>
 				</div>
 			</header>
 			{children}
@@ -42,17 +42,21 @@ export default function PortfolioLayout({
 					{profile.name} · {profile.location}
 				</span>
 				<span className="flex gap-4">
-					{profile.links.map((link) => (
-						<a
-							key={link.label}
-							href={link.href}
-							target={link.href.startsWith("http") ? "_blank" : undefined}
-							rel={link.href.startsWith("http") ? "noreferrer" : undefined}
-							className="transition-colors hover:text-foreground"
-						>
-							{link.label}
-						</a>
-					))}
+					{profile.links.map((link) =>
+						link.label === "Email" ? (
+							<CopyEmailButton key={link.label} email={link.href.replace(/^mailto:/, "")} variant="text" />
+						) : (
+							<a
+								key={link.label}
+								href={link.href}
+								target={link.href.startsWith("http") ? "_blank" : undefined}
+								rel={link.href.startsWith("http") ? "noreferrer" : undefined}
+								className="transition-colors hover:text-foreground"
+							>
+								{link.label}
+							</a>
+						),
+					)}
 				</span>
 			</footer>
 		</div>

@@ -6,10 +6,12 @@ import styles from "./camino.module.css"
 
 /**
  * Procedural scenery layered over the ground texture — hand-drawn espinillo
- * tree and granite-boulder sprites, scattered along the trail and through every
- * empty margin (behind the hero and the summit too). Seeded so it stays put;
- * two parallax layers behind all content. Placement clears the hero, the
- * summit, every cairn and every card.
+ * tree, granite-boulder and molle-scrub sprites, scattered along the trail and
+ * through every empty margin (behind the hero and the summit too). Seeded so
+ * it stays put. Rocks and bushes are ground features that share a back layer
+ * with a light parallax drift; trees render static in front of them (no
+ * parallax). Placement clears the hero, the summit, every cairn and every
+ * card.
  *
  * Small ground detail (pebbles, grass, contour lines) lives in the tiling
  * ground texture, not here.
@@ -42,6 +44,7 @@ function mulberry32(seed: number) {
 interface Scene {
 	trees: Sprite[]
 	rocks: Sprite[]
+	bushes: Sprite[]
 }
 
 function generate({ width: W, height: H, trail: TP, cairns, clears }: Layout): Scene {
@@ -93,6 +96,7 @@ function generate({ width: W, height: H, trail: TP, cairns, clears }: Layout): S
 	return {
 		trees: [...alongTrail(Math.round(7 * d), 58, 158, 46), ...fill(Math.round(6 * d), 42)],
 		rocks: [...alongTrail(Math.round(5 * d), 40, 140, 34), ...fill(Math.round(5 * d), 32)],
+		bushes: [...alongTrail(Math.round(6 * d), 36, 126, 28), ...fill(Math.round(6 * d), 24)],
 	}
 }
 
@@ -121,6 +125,19 @@ const ROCK_SPRITES = [
 	{ src: "/scenery/rocks/rock-8.webp", w: 240, h: 156 },
 ]
 
+// Hand-drawn molle/espinillo scrub sprites — low ground bushes, sliced the
+// same way as the trees and rocks above.
+const BUSH_SPRITES = [
+	{ src: "/scenery/bushes/bush-1.webp", w: 234, h: 240 },
+	{ src: "/scenery/bushes/bush-2.webp", w: 216, h: 240 },
+	{ src: "/scenery/bushes/bush-3.webp", w: 216, h: 240 },
+	{ src: "/scenery/bushes/bush-4.webp", w: 240, h: 138 },
+	{ src: "/scenery/bushes/bush-5.webp", w: 230, h: 240 },
+	{ src: "/scenery/bushes/bush-6.webp", w: 240, h: 202 },
+	{ src: "/scenery/bushes/bush-7.webp", w: 240, h: 179 },
+	{ src: "/scenery/bushes/bush-8.webp", w: 240, h: 228 },
+]
+
 /** A hand-drawn sprite, bottom-centre anchored on its placement point. */
 function Sprite2D({ set, base, x, y, s, r }: { set: typeof TREE_SPRITES; base: number } & Sprite) {
 	const sprite = set[Math.min(set.length - 1, Math.floor(r * set.length))]
@@ -138,9 +155,11 @@ function Sprite2D({ set, base, x, y, s, r }: { set: typeof TREE_SPRITES; base: n
 	)
 }
 
-// trees read a step bigger than the ~62px cairns; rock clusters sit low and wide
+// trees read a step bigger than the ~62px cairns; rock clusters sit low and wide;
+// bushes are the smallest ground feature
 const Tree = (p: Sprite) => <Sprite2D set={TREE_SPRITES} base={92} {...p} />
 const Rock = (p: Sprite) => <Sprite2D set={ROCK_SPRITES} base={58} {...p} />
+const Bush = (p: Sprite) => <Sprite2D set={BUSH_SPRITES} base={44} {...p} />
 
 export default function Scenery({
 	pageRef,
@@ -203,7 +222,6 @@ export default function Scenery({
 			raf = 0
 			const p = container ? container.scrollTop : -host.getBoundingClientRect().top
 			back.style.transform = `translate3d(0, ${(p * 0.05).toFixed(1)}px, 0)`
-			front.style.transform = `translate3d(0, ${(p * 0.12).toFixed(1)}px, 0)`
 		}
 		const onScroll = () => {
 			if (!raf) raf = requestAnimationFrame(apply)
@@ -219,25 +237,20 @@ export default function Scenery({
 	if (!layout || !scene) return null
 	const vb = `0 0 ${layout.width} ${layout.height}`
 
-	// smaller trees sit further back (less parallax); bigger ones nearer (more).
-	// rock clusters are ground features — all in the back layer.
-	const sorted = [...scene.trees].sort((a, b) => a.s - b.s)
-	const mid = Math.ceil(sorted.length / 2)
-
 	return (
 		<>
 			<svg ref={backRef} className={styles.sceneryBack} viewBox={vb} aria-hidden="true">
+				{scene.bushes.map((b, i) => (
+					<Bush key={`bu${i}`} {...b} />
+				))}
 				{scene.rocks.map((rk, i) => (
 					<Rock key={`rk${i}`} {...rk} />
-				))}
-				{sorted.slice(0, mid).map((t, i) => (
-					<Tree key={`tb${i}`} {...t} />
 				))}
 			</svg>
 
 			<svg ref={frontRef} className={styles.sceneryFront} viewBox={vb} aria-hidden="true">
-				{sorted.slice(mid).map((t, i) => (
-					<Tree key={`tf${i}`} {...t} />
+				{scene.trees.map((t, i) => (
+					<Tree key={`t${i}`} {...t} />
 				))}
 			</svg>
 		</>

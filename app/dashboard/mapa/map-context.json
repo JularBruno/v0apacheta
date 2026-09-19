@@ -48,7 +48,7 @@
 					"title": "Primera Apacheta",
 					"description": "**Bienvenido al camino. Acá empieza todo.**",
 					"longDescription": "**El mapa** te va a guiar en tu camino financiero. Con el tiempo vas a tener una imagen más clara de cómo manejás tu dinero — frustraciones incluidas. **El siguiente paso**: instalá la app y activá las notificaciones para que el camino te acompañe.",
-					"appInstruction": "Cómo instalar Apacheta en tu celular:\n\n**Android (Chrome)**: tocá el menú ⋮ → \"Instalar app\" o \"Agregar a pantalla de inicio\".\n\n**iOS (Safari)**: tocá el botón de compartir ↑ → \"Agregar a inicio\".\n\nUna vez instalada, activá las notificaciones con el botón de abajo.",
+					"appInstruction": "Cómo instalar Apacheta en tu celular:\n\n**Android (Chrome)**: tocá el menú ⋮ → \"Instalar app\" o \"Agregar a pantalla de inicio\".\n\n**iOS (Safari)**: tocá el botón de compartir ↑ → \"Agregar a inicio\". No hace falta estar logueado para instalarla — podés hacerlo antes de crear tu cuenta.\n\n**iOS con otros navegadores** (Brave, Chrome, etc.): algunos no dejan agregar apps a la pantalla de inicio. Si no ves esa opción, abrí la página en Safari e instalala desde ahí.\n\nUna vez instalada, activá las notificaciones con el botón de abajo.",
 					"validation": {
 						"type": "pwa_or_acknowledged",
 						"apiCheck": "getSubscriptionNotifications() retorna 1 o más resultados (suscripción push existe)",

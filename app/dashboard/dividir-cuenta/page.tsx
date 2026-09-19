@@ -1,138 +1,62 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Users, Plus, Trash2, Calculator, ArrowRight, DollarSign, Copy, Check } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { Card, CardContent } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Calculator, Receipt } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-
-interface Person {
-	id: string
-	name: string
-	amount: number
-}
-
-interface Settlement {
-	from: string
-	to: string
-	amount: number
-}
+import MemberManager from "@/components/dividir-cuenta/member-manager"
+import ExpenseForm, { type ExpenseDraft } from "@/components/dividir-cuenta/expense-form"
+import ExpenseList from "@/components/dividir-cuenta/expense-list"
+import SettlementsPanel from "@/components/dividir-cuenta/settlements-panel"
+import { calculateBalances, calculateSettlements, type Expense, type Member } from "@/components/dividir-cuenta/types"
 
 export default function DividirCuentaPage() {
-	const [people, setPeople] = useState<Person[]>([])
-	const [newPersonName, setNewPersonName] = useState("")
-	const [newPersonAmount, setNewPersonAmount] = useState("")
-	const [showAddForm, setShowAddForm] = useState(false)
-	const [copied, setCopied] = useState(false)
 	const { toast } = useToast()
 
-	// Calculate settlements (who owes whom)
-	const calculateSettlements = (): Settlement[] => {
-		if (people.length === 0) return []
+	const [members, setMembers] = useState<Member[]>([])
+	const [expenses, setExpenses] = useState<Expense[]>([])
+	const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null)
 
-		const totalAmount = people.reduce((sum, person) => sum + person.amount, 0)
-		const averageAmount = totalAmount / people.length
-
-		// Calculate balances (positive = owed, negative = owes)
-		const balances = people.map((person) => ({
-			name: person.name,
-			balance: person.amount - averageAmount,
-		}))
-
-		// Separate debtors and creditors
-		const debtors = balances.filter((b) => b.balance < 0).map((b) => ({ ...b, balance: Math.abs(b.balance) }))
-		const creditors = balances.filter((b) => b.balance > 0)
-
-		const settlements: Settlement[] = []
-
-		// Match debtors with creditors
-		let i = 0
-		let j = 0
-		while (i < debtors.length && j < creditors.length) {
-			const debtAmount = debtors[i].balance
-			const creditAmount = creditors[j].balance
-
-			const settleAmount = Math.min(debtAmount, creditAmount)
-
-			settlements.push({
-				from: debtors[i].name,
-				to: creditors[j].name,
-				amount: settleAmount,
-			})
-
-			debtors[i].balance -= settleAmount
-			creditors[j].balance -= settleAmount
-
-			if (debtors[i].balance === 0) i++
-			if (creditors[j].balance === 0) j++
-		}
-
-		return settlements
+	const handleAddMember = (name: string) => {
+		setMembers((prev) => [...prev, { id: `member-${Date.now()}`, name }])
 	}
 
-	const handleAddPerson = () => {
-		if (!newPersonName.trim() || newPersonAmount === "") {
+	const handleRemoveMember = (id: string) => {
+		const paidSomething = expenses.some((e) => e.paidBy === id)
+		if (paidSomething) {
 			toast({
-				title: "Error",
-				description: "Por favor, ingresa un nombre y un monto válido.",
+				title: "No se puede quitar",
+				description: "Esta persona pagó al menos un gasto — eliminá o reasigná esos gastos primero.",
 				variant: "destructive",
 			})
 			return
 		}
 
-		const newPerson: Person = {
-			id: `person-${Date.now()}`,
-			name: newPersonName.trim(),
-			amount: Number.parseFloat(newPersonAmount),
+		setMembers((prev) => prev.filter((m) => m.id !== id))
+		// Drop them from any expense they were splitting, so totals stay correct.
+		setExpenses((prev) => prev.map((e) => ({ ...e, participants: e.participants.filter((p) => p !== id) })))
+	}
+
+	const editingExpense = expenses.find((e) => e.id === editingExpenseId) ?? null
+
+	const handleSubmitExpense = (draft: ExpenseDraft) => {
+		if (editingExpense) {
+			setExpenses((prev) => prev.map((e) => (e.id === editingExpense.id ? { ...e, ...draft } : e)))
+			setEditingExpenseId(null)
+		} else {
+			setExpenses((prev) => [...prev, { id: `expense-${Date.now()}`, createdAt: Date.now(), ...draft }])
 		}
-
-		setPeople([...people, newPerson])
-		setNewPersonName("")
-		setNewPersonAmount("")
-		setShowAddForm(false)
 	}
 
-	const handleRemovePerson = (id: string) => {
-		setPeople(people.filter((p) => p.id !== id))
+	const handleDeleteExpense = (id: string) => {
+		setExpenses((prev) => prev.filter((e) => e.id !== id))
+		if (editingExpenseId === id) setEditingExpenseId(null)
 	}
 
-	const handleCopyToClipboard = () => {
-		const message = generateSettlementMessage()
-		navigator.clipboard.writeText(message).then(() => {
-			setCopied(true)
-			toast({
-				title: "Copiado",
-				description: "Resumen de liquidación copiado al portapapeles",
-			})
-			setTimeout(() => setCopied(false), 2000)
-		})
-	}
-
-	const generateSettlementMessage = (): string => {
-		let message = "💰 DIVISIÓN DE CUENTA\n\n"
-		message += `📊 Total gastado: $${totalBill.toFixed(2)}\n`
-		message += `👥 ${people.length} personas\n`
-		message += `💵 Promedio: $${averagePerPerson.toFixed(2)} por persona\n\n`
-
-		if (settlements.length > 0) {
-			message += "💸 QUIÉN LE DEBE A QUIÉN:\n\n"
-			settlements.forEach((settlement, index) => {
-				message += `${index + 1}. ${settlement.from} → ${settlement.to}: $${settlement.amount.toFixed(2)}\n`
-			})
-		}
-
-		message += "\n✨ Hecho con Apacheta"
-
-		return message
-	}
-
-	const totalBill = people.reduce((sum, person) => sum + person.amount, 0)
-	const averagePerPerson = people.length > 0 ? totalBill / people.length : 0
-	const settlements = calculateSettlements()
+	const totalSpent = expenses.reduce((sum, e) => sum + e.amount, 0)
+	const balances = calculateBalances(members, expenses)
+	const settlements = calculateSettlements(balances)
 
 	return (
 		<div className="container mx-auto p-4 md:p-6 space-y-6">
@@ -143,236 +67,56 @@ export default function DividirCuentaPage() {
 				</div>
 				<div>
 					<h1 className="text-2xl font-bold">Dividir Cuenta</h1>
-					<p className="text-sm text-gray-500">Divide gastos entre amigos fácilmente</p>
+					<p className="text-sm text-muted-foreground">Cargá gastos y mirá quién le debe a quién</p>
 				</div>
 			</div>
 
-			{/* Summary Cards */}
-			<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-				<Card>
-					<CardHeader className="pb-2">
-						<CardTitle className="text-sm font-medium text-gray-600">Total de la Cuenta</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<div className="text-2xl font-bold">${totalBill.toFixed(2)}</div>
-						<p className="text-sm text-gray-500">{people.length} personas</p>
-					</CardContent>
-				</Card>
-
-				<Card>
-					<CardHeader className="pb-2">
-						<CardTitle className="text-sm font-medium text-gray-600">Promedio por Persona</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<div className="text-2xl font-bold text-blue-600">${averagePerPerson.toFixed(2)}</div>
-						<p className="text-sm text-gray-500">Debe pagar cada uno</p>
-					</CardContent>
-				</Card>
-
-				<Card>
-					<CardHeader className="pb-2">
-						<CardTitle className="text-sm font-medium text-gray-600">Liquidaciones</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<div className="text-2xl font-bold text-green-600">{settlements.length}</div>
-						<p className="text-sm text-gray-500">Transferencias necesarias</p>
-					</CardContent>
-				</Card>
-			</div>
-
-			{/* Main Content Grid */}
-			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-				{/* Left Column: Add People */}
-				<Card>
-					<CardHeader>
-						<div className="flex items-center justify-between">
-							<CardTitle className="flex items-center gap-2">
-								<Users className="w-5 h-5" />
-								Personas ({people.length})
-							</CardTitle>
-							{!showAddForm && (
-								<Button onClick={() => setShowAddForm(true)} size="sm" className="gap-1">
-									<Plus className="w-4 h-4" />
-									Agregar
-								</Button>
-							)}
-						</div>
-					</CardHeader>
-					<CardContent className="space-y-4">
-						{/* Add Person Form */}
-						{showAddForm && (
-							<div className="p-4 border border-dashed border-gray-300 rounded-lg space-y-4 bg-gray-50">
-								<div>
-									<Label htmlFor="personName">Nombre</Label>
-									<Input
-										id="personName"
-										placeholder="Ej: Juan"
-										value={newPersonName}
-										onChange={(e) => setNewPersonName(e.target.value)}
-									/>
-								</div>
-								<div>
-									<Label htmlFor="personAmount">Monto Gastado</Label>
-									<p className="text-xs text-gray-500 mb-2">Usa números negativos para quien debe desde el inicio</p>
-									<div className="relative">
-										<span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-										<Input
-											id="personAmount"
-											type="number"
-											step="0.01"
-											placeholder="0.00"
-											value={newPersonAmount}
-											onChange={(e) => setNewPersonAmount(e.target.value)}
-											className="pl-8"
-										/>
-									</div>
-								</div>
-								<div className="flex gap-2">
-									<Button onClick={handleAddPerson} className="flex-1">
-										Agregar Persona
-									</Button>
-									<Button
-										variant="outline"
-										onClick={() => {
-											setShowAddForm(false)
-											setNewPersonName("")
-											setNewPersonAmount("")
-										}}
-										className="flex-1 bg-transparent"
-									>
-										Cancelar
-									</Button>
-								</div>
-							</div>
+			<Tabs defaultValue="gastos" className="space-y-4">
+				<TabsList className="w-full h-auto grid grid-cols-2 p-1.5">
+					<TabsTrigger value="gastos" className="gap-2 py-3 text-base md:text-lg font-semibold">
+						<Receipt className="w-5 h-5" />
+						Gastos
+					</TabsTrigger>
+					<TabsTrigger value="liquidacion" className="gap-2 py-3 text-base md:text-lg font-semibold">
+						<Calculator className="w-5 h-5" />
+						Liquidación
+						{settlements.length > 0 && (
+							<span className="ml-1 rounded-full bg-primary/20 text-primary text-xs font-semibold px-1.5 py-0.5">
+								{settlements.length}
+							</span>
 						)}
+					</TabsTrigger>
+				</TabsList>
 
-						{/* People List */}
-						{people.length > 0 ? (
-							<div className="space-y-3">
-								{people.map((person) => (
-									<div
-										key={person.id}
-										className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-lg bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors"
-									>
-										<div className="flex items-center gap-3 flex-1 min-w-0 w-full sm:w-auto">
-											<div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-												<span className="text-primary font-semibold text-sm">
-													{person.name.charAt(0).toUpperCase()}
-												</span>
-											</div>
-											<div className="flex-1 min-w-0">
-												<p className="font-medium text-gray-900 truncate">{person.name}</p>
-												<p className="text-sm text-gray-500">Gastó: ${person.amount.toFixed(2)}</p>
-											</div>
-										</div>
-										<div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-											<Badge
-												variant="outline"
-												className={cn(
-													"whitespace-nowrap",
-													person.amount > averagePerPerson
-														? "bg-green-50 text-green-700 border-green-200"
-														: person.amount < averagePerPerson
-															? "bg-red-50 text-red-700 border-red-200"
-															: "bg-gray-50 text-gray-700 border-gray-200",
-												)}
-											>
-												{person.amount > averagePerPerson
-													? `+$${(person.amount - averagePerPerson).toFixed(2)}`
-													: person.amount < averagePerPerson
-														? `-$${(averagePerPerson - person.amount).toFixed(2)}`
-														: "Equilibrado"}
-											</Badge>
-											<Button
-												variant="ghost"
-												size="icon"
-												onClick={() => handleRemovePerson(person.id)}
-												className="text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
-											>
-												<Trash2 className="w-4 h-4" />
-											</Button>
-										</div>
-									</div>
-								))}
-							</div>
-						) : (
-							<div className="text-center py-8 text-gray-500">
-								<Users className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-								<p className="font-medium">No hay personas agregadas</p>
-								<p className="text-sm mt-1">Agrega personas para empezar a dividir la cuenta</p>
-							</div>
-						)}
-					</CardContent>
-				</Card>
+				<TabsContent value="gastos" className="space-y-4">
+					<Card>
+						<CardContent className="pt-6">
+							<MemberManager members={members} onAdd={handleAddMember} onRemove={handleRemoveMember} />
+						</CardContent>
+					</Card>
 
-				{/* Right Column: Settlement Calculations */}
-				<Card>
-					<CardHeader>
-						<div className="flex items-center justify-between gap-2">
-							<CardTitle className="flex items-center gap-2">
-								<DollarSign className="w-5 h-5" />
-								Liquidación de Pagos
-							</CardTitle>
-							{settlements.length > 0 && (
-								<Button variant="outline" size="sm" onClick={handleCopyToClipboard} className="gap-2 bg-transparent">
-									{copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
-									<span className="hidden sm:inline">{copied ? "Copiado" : "Copiar"}</span>
-								</Button>
-							)}
-						</div>
-					</CardHeader>
-					<CardContent className="space-y-4">
-						{settlements.length > 0 ? (
-							<>
-								<div className="space-y-3">
-									{settlements.map((settlement, index) => (
-										<div
-											key={index}
-											className="flex items-center gap-3 p-4 rounded-lg bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200"
-										>
-											<div className="flex-1">
-												<div className="flex items-center gap-2">
-													<span className="font-semibold text-gray-900">{settlement.from}</span>
-													<ArrowRight className="w-4 h-4 text-gray-400" />
-													<span className="font-semibold text-gray-900">{settlement.to}</span>
-												</div>
-												<p className="text-sm text-gray-600 mt-1">
-													{settlement.from} debe pagar a {settlement.to}
-												</p>
-												<p className="text-2xl font-bold text-green-600">${settlement.amount.toFixed(2)}</p>
-											</div>
-										</div>
-									))}
-								</div>
+					<Card>
+						<CardContent className="pt-6 space-y-4">
+							<ExpenseForm
+								members={members}
+								editingExpense={editingExpense}
+								onSubmit={handleSubmitExpense}
+								onCancelEdit={() => setEditingExpenseId(null)}
+							/>
+							<ExpenseList
+								expenses={expenses}
+								members={members}
+								onEdit={(e) => setEditingExpenseId(e.id)}
+								onDelete={handleDeleteExpense}
+							/>
+						</CardContent>
+					</Card>
+				</TabsContent>
 
-								{/* Summary Footer */}
-								<div className="border-t pt-4 space-y-2">
-									<div className="flex justify-between text-sm">
-										<span className="text-gray-600">Total a transferir:</span>
-										<span className="font-semibold">
-											${settlements.reduce((sum, s) => sum + s.amount, 0).toFixed(2)}
-										</span>
-									</div>
-									<div className="flex justify-between text-sm">
-										<span className="text-gray-600">Número de transferencias:</span>
-										<span className="font-semibold">{settlements.length}</span>
-									</div>
-								</div>
-							</>
-						) : (
-							<div className="text-center py-8 text-gray-500">
-								<Calculator className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-								<p className="font-medium">No hay liquidaciones pendientes</p>
-								<p className="text-sm mt-1">
-									{people.length === 0
-										? "Agrega personas para calcular"
-										: "Todos están equilibrados o no hay suficientes datos"}
-								</p>
-							</div>
-						)}
-					</CardContent>
-				</Card>
-			</div>
+				<TabsContent value="liquidacion">
+					<SettlementsPanel members={members} expenses={expenses} settlements={settlements} totalSpent={totalSpent} />
+				</TabsContent>
+			</Tabs>
 		</div>
 	)
 }
