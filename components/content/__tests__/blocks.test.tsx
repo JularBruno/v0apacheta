@@ -1,6 +1,7 @@
 import { render, screen, within } from "@testing-library/react"
 import {
 	Callout,
+	CodeBlock,
 	DataTable,
 	Faq,
 	Glossary,
@@ -69,6 +70,30 @@ describe("Callout", () => {
 		const note = screen.getByRole("note")
 		expect(within(note).getByText("Ojo")).toBeInTheDocument()
 		expect(within(note).getByText("Detalle")).toBeInTheDocument()
+	})
+})
+
+describe("CodeBlock", () => {
+	const code = `export default function Page() {\n\treturn <div className="a">hola</div>\n}`
+
+	test("renders the code verbatim inside pre > code, with language and filename", () => {
+		const { container } = render(<CodeBlock code={code} language="tsx" filename="app/page.tsx" />)
+		const codeEl = container.querySelector("pre > code") as HTMLElement
+		expect(codeEl.textContent).toBe(code)
+		expect(codeEl).toHaveClass("language-tsx")
+		expect(screen.getByText("app/page.tsx").tagName).toBe("FIGCAPTION")
+	})
+
+	test("treats markup in the code as text, never as elements", () => {
+		const { container } = render(<CodeBlock code={`<img src=x onerror="alert(1)" />`} />)
+		expect(container.querySelector("img")).toBeNull()
+		expect(container.querySelector("code")?.textContent).toBe(`<img src=x onerror="alert(1)" />`)
+	})
+
+	test("scrolls horizontally instead of overflowing the page, and has no caption without a filename", () => {
+		const { container } = render(<CodeBlock code="x" />)
+		expect(container.querySelector("pre")).toHaveClass("overflow-x-auto")
+		expect(container.querySelector("figcaption")).toBeNull()
 	})
 })
 

@@ -28,6 +28,7 @@ Enforced by `__tests__/content-security-guardrail.test.ts` (rules live in `lib/c
 - **https only:** no `http://` URLs (localhost excepted), and `seo.sources` URLs must be `https://` (enforced by the schema). No `javascript:`, `vbscript:` or `data:text/html` URLs.
 - **Public means public:** content pages never import auth, server actions (`@/lib/actions`), HTTP clients (`@/lib/http`) or dashboard code, and never declare `"use server"`.
 - **No secrets:** no `process.env` in the public surface.
+- **Code samples live in `*.snippets.ts`:** a post that teaches code (service workers, fetch, env vars...) keeps each sample in `<slug>/<name>.snippets.ts`, only as `export const NAME = \`...\`` plain strings (no imports, calls or `${}`), and shows it with the `CodeBlock` block. Snippets files are exempt from the prose-style rules above but are still checked for `http://` and `javascript:` URLs, and a non-inert snippets file fails the build.
 - **Static pages:** posts and shared components fetch nothing at runtime (`fetch`, `axios`, `useSWR`, `useQuery` are flagged). Tool widgets under `app/herramientas` may fetch, for example live exchange rates; validate and never trust the response.
 
 Not covered by tests (do these by hand when relevant): response headers and CSP, rate limiting for any future API route, and moderation if a community feature ever accepts user input.

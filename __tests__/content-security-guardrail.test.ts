@@ -30,6 +30,7 @@ const ids = (violations: Violation[]) => violations.map((v) => v.rule)
 describe("security rules flag what they should (each rule has teeth)", () => {
 	const JSON_LD = "components/content/json-ld.tsx"
 	const PAGE = "app/blog/un-post/page.tsx"
+	const SNIPPETS = "app/blog/un-post/un-post.snippets.ts"
 	const cases: { rule: string; bad: [string, string]; good?: [string, string] }[] = [
 		{
 			rule: "no-raw-html",
@@ -62,6 +63,13 @@ describe("security rules flag what they should (each rule has teeth)", () => {
 			good: ["app/herramientas/dolar/widget.tsx", `const r = await fetch("https://api.example.com/rate")`],
 		},
 		{ rule: "json-ld-is-escaped", bad: [JSON_LD, `<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(d) }} />`] },
+		{
+			rule: "snippets-are-inert",
+			bad: [SNIPPETS, "export const A = `ok`\nfetch('https://x.com')"],
+			good: [SNIPPETS, "// doc\nexport const A = `self.addEventListener('fetch', (e) => fetch(e.request))`\nexport const B = `a\\nb`"],
+		},
+		{ rule: "snippets-are-inert", bad: [SNIPPETS, "export const A = `hola ${process.env.SECRET}`"] },
+		{ rule: "snippets-are-inert", bad: [SNIPPETS, "import x from 'y'\nexport const A = `ok`"] },
 	]
 
 	for (const { rule, bad, good } of cases) {
@@ -74,6 +82,16 @@ describe("security rules flag what they should (each rule has teeth)", () => {
 			})
 		}
 	}
+
+	test("a valid snippets file may teach about fetch, eval, process.env... without tripping the prose rules", () => {
+		const teaching = "export const SW = `self.addEventListener('fetch', (e) => e.respondWith(fetch(e.request)))\\nprocess.env.X eval(1) <iframe>`"
+		expect(scanSource(SNIPPETS, teaching)).toEqual([])
+	})
+
+	test("snippets still cannot hide insecure or dangerous urls", () => {
+		expect(ids(scanSource(SNIPPETS, "export const A = `<a href=\"http://example.com\">x</a>`"))).toContain("no-insecure-urls")
+		expect(ids(scanSource(SNIPPETS, "export const A = `javascript:alert(1)`"))).toContain("no-dangerous-schemes")
+	})
 
 	test("ignores mentions inside comments but still sees https:// urls as code", () => {
 		const commented = `/** renders <script> and calls eval( and fetch( */\n// process.env and <iframe>\n{/* <script> */}\nconst a = 1`

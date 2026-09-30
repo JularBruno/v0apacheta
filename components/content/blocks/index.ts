@@ -1,4 +1,5 @@
 export { default as Callout } from "./callout"
+export { default as CodeBlock } from "./code-block"
 export { default as DataTable } from "./data-table"
 export { default as Faq } from "./faq"
 export { default as Glossary } from "./glossary"

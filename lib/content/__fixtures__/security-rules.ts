@@ -21,6 +21,17 @@ export interface SecurityRule {
 const JSON_LD_FILE = "components/content/json-ld.tsx"
 const isJsonLd = (file: string) => file.endsWith(JSON_LD_FILE)
 
+/** `*.snippets.ts` holds code samples a post displays as text (via CodeBlock), never executes. */
+const isSnippets = (file: string) => /\.snippets\.ts$/.test(file)
+
+// A snippets file is only `export const NAME = \`...\`` declarations (plus comments). No imports, no calls,
+// no `${}` interpolation: the strings are inert, so they may teach about fetch/eval/process.env safely.
+const COMMENT = "(?:\\/\\/[^\\n]*|\\/\\*[\\s\\S]*?\\*\\/)"
+const INERT_TEMPLATE = "`(?:[^`\\\\$]|\\\\[\\s\\S]|\\$(?!\\{))*`"
+const SNIPPETS_FILE = new RegExp(
+	`^(?:\\s*${COMMENT})*(?:\\s*export const [A-Za-z_][A-Za-z0-9_]* = ${INERT_TEMPLATE}(?:\\s*${COMMENT})*)*\\s*$`,
+)
+
 /** Every match of `pattern`, as a short excerpt. */
 function matches(source: string, pattern: RegExp): string[] {
 	const flags = pattern.flags.includes("g") ? pattern.flags : `${pattern.flags}g`
@@ -99,6 +110,15 @@ export const SECURITY_RULES: SecurityRule[] = [
 		check: (source) => matches(source, /<iframe\b/i),
 	},
 	{
+		id: "snippets-are-inert",
+		description:
+			"*.snippets.ts files contain only `export const NAME = \\`...\\`` strings (no imports, calls or ${} interpolation). They are exempt from the prose-style rules above, but still checked for insecure and dangerous URLs.",
+		check: (source, file) =>
+			isSnippets(file) && !SNIPPETS_FILE.test(source)
+				? ["snippets file has something other than plain `export const NAME = \\`...\\`` strings"]
+				: [],
+	},
+	{
 		id: "no-runtime-fetch",
 		description: "Posts and shared components fetch nothing at runtime (static pages). Tool widgets under app/herramientas may.",
 		check: (source, file) =>
@@ -113,9 +133,14 @@ function stripComments(source: string): string {
 	return source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|\s)\/\/.*$/gm, "$1")
 }
 
+// Rules that still apply to a snippets file. The rest describe code, and a snippets file holds only text.
+const SNIPPET_RULES = new Set(["snippets-are-inert", "no-insecure-urls", "no-dangerous-schemes"])
+
 export function scanSource(file: string, source: string): Violation[] {
-	const code = stripComments(source)
-	return SECURITY_RULES.flatMap((rule) =>
+	const snippets = isSnippets(file)
+	// `//` and `/* */` are ordinary text inside a snippet string, so never strip them there.
+	const code = snippets ? source : stripComments(source)
+	return SECURITY_RULES.filter((rule) => !snippets || SNIPPET_RULES.has(rule.id)).flatMap((rule) =>
 		rule.check(code, file).map((detail) => ({ rule: rule.id, file, detail })),
 	)
 }

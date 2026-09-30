@@ -109,7 +109,7 @@ seo: {
 
 ## Economics block kit
 
-Optional components in `components/content/blocks/`, used in any order alongside hand-written JSX: `Section` (an `<h2>` with an anchor id, pairs with `Toc`), `Summary`, `KeyFigures` (up to 4 tiles, each with label, value, as-of date and optional source), `Callout`, `DataTable`, `Faq` (an accordion, server-rendered so the answers are in the HTML), `Glossary`, `Toc` (takes section ids), and `InlineToolCallout` (takes a tool slug, resolved from the registry).
+Optional components in `components/content/blocks/`, used in any order alongside hand-written JSX: `Section` (an `<h2>` with an anchor id, pairs with `Toc`), `Summary`, `KeyFigures` (up to 4 tiles, each with label, value, as-of date and optional source), `Callout`, `CodeBlock` (code shown as text; samples live in inert `*.snippets.ts` files), `DataTable`, `Faq` (an accordion, server-rendered so the answers are in the HTML), `Glossary`, `Toc` (takes section ids), and `InlineToolCallout` (takes a tool slug, resolved from the registry).
 
 ## Economics-topic starter
 
