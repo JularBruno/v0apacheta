@@ -1,6 +1,6 @@
 
 import type * as React from "react"
-import { Home, Settings, HelpCircle, PiggyBank, Heart, Split, FileSpreadsheet, DollarSign, Map, History, Package, Wallet, LogOut, Bot } from "lucide-react" // Added Map, History, Package
+import { Home, Settings, HelpCircle, PiggyBank, Heart, Split, FileSpreadsheet, DollarSign, Map, History, Package, Wallet, LogOut, Bot, BookOpen } from "lucide-react" // Added Map, History, Package
 import { usePathname } from "next/navigation"
 import { useTransition } from 'react';
 
@@ -71,6 +71,12 @@ const toolsMenuItems = [
 		title: "Dividir Cuenta",
 		url: "/dashboard/dividir-cuenta",
 		icon: Split,
+	},
+	{
+		// public blog, outside the dashboard (full navigation, like every item here)
+		title: "Cuadernito",
+		url: "/blog",
+		icon: BookOpen,
 	},
 	// {
 	// 	title: "Seguidor de ahorro",
