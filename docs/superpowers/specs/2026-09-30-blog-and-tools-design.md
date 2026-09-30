@@ -18,6 +18,10 @@ Success criteria:
 - A page's body layout is unconstrained.
 - Pages are fully static and indexable, following the SEO rules in `CLAUDE.md`.
 
+## Naming
+
+The blog's public name is **Cuadernito** (breadcrumbs, index title, nav links). Its URL space, folders and registry `kind: "post"` keep the `/blog` and "post" naming. The landing drawer and the dashboard sidebar ("Herramientas" group) link to it.
+
 ## Non-goals
 
 - A `tool` page template (the shell supports `kind: "tool"`, but the tool template is a later spec).
@@ -30,7 +34,7 @@ Success criteria:
 
 | Route | Purpose |
 |---|---|
-| `/blog` | Index of posts, with a category filter (economía, apacheta, random) |
+| `/blog` | "Cuadernito" index of posts, grouped by category (economía, apacheta, random) |
 | `/blog/<slug>` | One folder per post: `app/blog/<slug>/page.tsx` |
 | `/herramientas` | Index of tools |
 | `/herramientas/<slug>` | One folder per tool: `app/herramientas/<slug>/page.tsx` |
@@ -82,7 +86,7 @@ interface ContentMeta {
 
 The shell renders:
 - **Header blurb:** a short fixed line ("Este artículo está publicado en Apacheta, la app de finanzas personales para Argentina", linking to `/`), plus a slim "Apoyá Apacheta" link to `/donaciones`. It sits outside the `<h1>` and `<article>`.
-- **Breadcrumbs:** visible, `Inicio > Blog|Herramientas > Título`, with `BreadcrumbList` JSON-LD.
+- **Breadcrumbs:** visible, `Inicio > Cuadernito|Herramientas > Título`, with `BreadcrumbList` JSON-LD.
 - **`<h1>`** from `meta.title`, with "Publicado" and "Actualizado el …" dates. Page bodies use `<h2>` and below.
 - **`<article>`** wrapping `children`.
 - **`<aside>`** with the related-content sidebar and a donation card (`/donaciones`). On mobile the sidebar collapses below the article, and the donation card is repeated at the end of the article.
@@ -105,7 +109,7 @@ seo: {
 
 ## Economics block kit
 
-Optional components in `components/content/blocks/`, used in any order alongside hand-written JSX: `Summary`, `KeyFigures` (up to 4 tiles, each with label, value, as-of date and optional source), `Callout`, `DataTable`, `Faq` (an accordion, server-rendered so the answers are in the HTML), `Glossary`, `Toc` (takes section ids), and `InlineToolCallout` (takes a tool slug, resolved from the registry).
+Optional components in `components/content/blocks/`, used in any order alongside hand-written JSX: `Section` (an `<h2>` with an anchor id, pairs with `Toc`), `Summary`, `KeyFigures` (up to 4 tiles, each with label, value, as-of date and optional source), `Callout`, `DataTable`, `Faq` (an accordion, server-rendered so the answers are in the HTML), `Glossary`, `Toc` (takes section ids), and `InlineToolCallout` (takes a tool slug, resolved from the registry).
 
 ## Economics-topic starter
 
@@ -117,7 +121,8 @@ A new public page with its own standalone component, built for this route. `/das
 
 ## Index pages and sitemap
 
-- `/blog` and `/herramientas` list registry entries, newest first. `/blog` has a category filter that works without JS, using query links.
+- `/blog` and `/herramientas` list registry entries, newest first. `/blog` groups posts under one `<h2>` per category (anchors `#economia`, `#apacheta`, `#random`) with a chip row linking to them. There's no query-param filter: that would force dynamic rendering, and this way every post is in the static HTML.
+- Both indexes carry the blurb, breadcrumbs (with `BreadcrumbList` JSON-LD) and a donation card, but no sidebar.
 - `sitemap.ts` is rewritten to derive from the registry (`lastModified` is `updatedAt ?? publishedAt`) and to include both indexes and `/donaciones`, alongside the existing entries.
 
 ## Guardrails
