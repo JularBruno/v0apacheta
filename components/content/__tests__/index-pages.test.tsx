@@ -61,14 +61,17 @@ describe("Cuadernito index (/blog)", () => {
 		expect(screen.queryByRole("navigation", { name: "Categorías" })).not.toBeInTheDocument()
 	})
 
-	test("has the Apacheta blurb, breadcrumbs, a donation card and BreadcrumbList JSON-LD", () => {
+	test("has the Apacheta trail header, breadcrumbs and BreadcrumbList JSON-LD, with one donation button and no bottom card", () => {
 		const { container } = render(<BlogIndexPage />)
-		expect(screen.getByText(/Este sitio es parte de/)).toBeInTheDocument()
+		const header = container.querySelector('[data-variant="header"]') as HTMLElement
+		expect(within(header).getByText(/Este sitio es parte de/)).toBeInTheDocument()
+		expect(within(header).getByRole("link", { name: "Comenzá tu camino" })).toHaveAttribute("href", "/onboarding")
+		expect(within(header).getByRole("link", { name: "Doná a Apacheta" })).toHaveAttribute("href", "/donaciones")
+		expect(screen.getAllByRole("link", { name: /Doná/ })).toHaveLength(1)
 		expect(within(screen.getByRole("navigation", { name: "Breadcrumb" })).getByText("Cuadernito")).toHaveAttribute(
 			"aria-current",
 			"page",
 		)
-		expect(screen.getAllByRole("link", { name: /Doná/ })[0]).toHaveAttribute("href", "/donaciones")
 		const types = Array.from(container.querySelectorAll('script[type="application/ld+json"]')).map(
 			(script) => JSON.parse(script.textContent ?? "{}")["@type"],
 		)

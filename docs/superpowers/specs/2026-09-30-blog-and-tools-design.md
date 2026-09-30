@@ -85,11 +85,11 @@ interface ContentMeta {
 ```
 
 The shell renders:
-- **Header blurb:** a short fixed line ("Este artículo está publicado en Apacheta, la app de finanzas personales para Argentina", linking to `/`), plus a slim "Apoyá Apacheta" link to `/donaciones`. It sits outside the `<h1>` and `<article>`.
+- **Trail header:** `ApachetaHeader`, the compact `header` variant of the donations-page cairn trail (same parchment map style, dashed trail, two cairns; side by side from 768px, stacked below). Station one: "Apacheta", the hosting line ("Este artículo/herramienta está publicado/a en Apacheta, la app de finanzas personales para Argentina") and a **Comenzá tu camino** button to `/onboarding`. Station two: a **Doná a Apacheta** button to `/donaciones`. Already revealed, no headings, no `<article>`; it sits before the breadcrumbs and `<h1>`. The page content follows.
 - **Breadcrumbs:** visible, `Inicio > Cuadernito|Herramientas > Título`, with `BreadcrumbList` JSON-LD.
 - **`<h1>`** from `meta.title`, with "Publicado" and "Actualizado el …" dates. Page bodies use `<h2>` and below.
 - **`<article>`** wrapping `children`.
-- **`<aside>`** with the related-content sidebar and a donation card (`/donaciones`). On mobile the sidebar collapses below the article, and the donation card is repeated at the end of the article.
+- **`<aside>`** with the related-content sidebar and, on desktop only, a donation card (`/donaciones`). On mobile the sidebar collapses below the article and there is no donation card at the bottom: the header already carries the donation button.
 - **Footer of the article:** `sources` (required) and a fixed "no es asesoramiento financiero" disclaimer. The body can't remove these.
 - **JSON-LD:** `Article` for posts, `WebApplication` for tools, `FAQPage` when `seo.faq` is present, and `BreadcrumbList`.
 
@@ -122,7 +122,7 @@ A new public page with its own standalone component, built for this route. `/das
 ## Index pages and sitemap
 
 - `/blog` and `/herramientas` list registry entries, newest first. `/blog` groups posts under one `<h2>` per category (anchors `#economia`, `#apacheta`, `#random`) with a chip row linking to them. There's no query-param filter: that would force dynamic rendering, and this way every post is in the static HTML.
-- Both indexes carry the blurb, breadcrumbs (with `BreadcrumbList` JSON-LD) and a donation card, but no sidebar.
+- Both indexes carry the trail header, breadcrumbs (with `BreadcrumbList` JSON-LD) and the Comunidad section (Cuadernito only), but no sidebar and no bottom donation card.
 - `sitemap.ts` is rewritten to derive from the registry (`lastModified` is `updatedAt ?? publishedAt`) and to include both indexes and `/donaciones`, alongside the existing entries.
 
 ## Guardrails

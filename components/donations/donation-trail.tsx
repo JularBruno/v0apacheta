@@ -36,6 +36,8 @@ export default function DonationTrail({
 }) {
 	const isHeader = variant === "header"
 	const Title = isHeader ? "p" : "h2"
+	// the page's own <article> must be the only one on a Cuadernito page, so header cards are plain divs
+	const Card = isHeader ? "div" : "article"
 	const stationRefs = useRef<(HTMLDivElement | null)[]>([])
 	const [revealed, setRevealed] = useState<boolean[]>(() => stations.map(() => isHeader))
 
@@ -83,12 +85,12 @@ export default function DonationTrail({
 				<ApachetaCairn />
 			</div>
 
-			<article className={styles.card}>
+			<Card className={styles.card}>
 				<Title className={styles.cardTitle}>{station.title}</Title>
 				{station.body}
 				{station.content}
 				{station.footnote && <div className={styles.footnote}>{station.footnote}</div>}
-			</article>
+			</Card>
 		</div>
 	))
 

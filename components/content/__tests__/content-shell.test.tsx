@@ -21,23 +21,37 @@ function jsonLdTypes(container: HTMLElement) {
 }
 
 describe("ContentShell", () => {
-	test("renders the Apacheta blurb and the header donation link outside the article", () => {
+	test("opens with the Apacheta trail header (name, hosting line, Comenzá tu camino, donation button) outside the article", () => {
 		const { container } = render(
 			<ContentShell meta={makeMeta()} seo={seo}>
 				<p>Cuerpo</p>
 			</ContentShell>,
 		)
-		const article = container.querySelector("article") as HTMLElement
-		const blurbLink = screen.getByRole("link", { name: "Apacheta" })
-		expect(blurbLink).toHaveAttribute("href", "/")
-		expect(article).not.toContainElement(blurbLink)
-		const headerLink = screen.getByRole("link", { name: "Apoyá Apacheta" })
-		expect(headerLink).toHaveAttribute("href", "/donaciones")
-		expect(article).not.toContainElement(headerLink)
-		expect(screen.getByText(/Este artículo está publicado en/)).toBeInTheDocument()
+		const header = container.querySelector('[data-variant="header"]') as HTMLElement
+		expect(header).not.toBeNull()
+		expect(container.querySelector("article")).not.toContainElement(header)
+		expect(container.querySelector("aside")).not.toContainElement(header)
+		expect(within(header).getByText("Apacheta", { selector: "p" })).toBeInTheDocument()
+		expect(within(header).getByText(/Este artículo está publicado en/)).toBeInTheDocument()
+		expect(within(header).getByRole("link", { name: "Apacheta" })).toHaveAttribute("href", "/")
+		expect(within(header).getByRole("link", { name: "Comenzá tu camino" })).toHaveAttribute("href", "/onboarding")
+		expect(within(header).getByRole("link", { name: "Doná a Apacheta" })).toHaveAttribute("href", "/donaciones")
 	})
 
-	test("uses the tool blurb copy for tools", () => {
+	test("the header comes before the page content", () => {
+		const { container } = render(<ContentShell meta={makeMeta()} seo={seo}>x</ContentShell>)
+		const header = container.querySelector('[data-variant="header"]') as HTMLElement
+		const h1 = container.querySelector("h1") as HTMLElement
+		expect(header.compareDocumentPosition(h1) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+	})
+
+	test("the header adds no heading, so the h1 stays the first heading on the page", () => {
+		const { container } = render(<ContentShell meta={makeMeta()} seo={seo}>x</ContentShell>)
+		const first = container.querySelector("h1, h2, h3") as HTMLElement
+		expect(first.tagName).toBe("H1")
+	})
+
+	test("uses the tool hosting line for tools", () => {
 		render(<ContentShell meta={makeMeta({ kind: "tool", category: undefined })} seo={seo}>x</ContentShell>)
 		expect(screen.getByText(/Esta herramienta está publicada en/)).toBeInTheDocument()
 	})
@@ -73,13 +87,16 @@ describe("ContentShell", () => {
 		expect(container.querySelector("article")).not.toContainElement(aside)
 	})
 
-	test("has a sidebar donation card and a mobile donation card after the article, both to /donaciones", () => {
+	test("donation CTAs: one in the header and one in the desktop sidebar, none at the bottom of the article", () => {
 		const { container } = render(<ContentShell meta={makeMeta()} seo={seo}>x</ContentShell>)
-		const cardLinks = screen.getAllByRole("link", { name: /Doná/ })
-		expect(cardLinks).toHaveLength(2)
-		cardLinks.forEach((link) => expect(link).toHaveAttribute("href", "/donaciones"))
+		const donate = screen.getAllByRole("link", { name: /Doná/ })
+		expect(donate).toHaveLength(2)
+		donate.forEach((link) => expect(link).toHaveAttribute("href", "/donaciones"))
+		const header = container.querySelector('[data-variant="header"]') as HTMLElement
 		const aside = container.querySelector("aside") as HTMLElement
-		expect(cardLinks.filter((link) => aside.contains(link))).toHaveLength(1)
+		expect(donate.filter((link) => header.contains(link))).toHaveLength(1)
+		expect(donate.filter((link) => aside.contains(link))).toHaveLength(1)
+		expect(within(container.querySelector("main") as HTMLElement).queryByRole("link", { name: /Doná/ })).toBeNull()
 	})
 
 	test("shows Actualizado with publishedAt when there is no updatedAt, and no Publicado line", () => {

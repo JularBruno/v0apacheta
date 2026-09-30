@@ -39,6 +39,11 @@ describe("DonationTrail, header variant (public Cuadernito/Herramientas pages)",
 		expect(observers()).toHaveLength(0)
 	})
 
+	test("adds no <article> elements, so the page's own article is the only one", () => {
+		const { container } = render(<DonationTrail stations={stations} variant="header" />)
+		expect(container.querySelectorAll("article")).toHaveLength(0)
+	})
+
 	test("renders each station's body and content", () => {
 		render(<DonationTrail stations={stations} variant="header" />)
 		expect(screen.getByText("cuerpo uno")).toBeInTheDocument()

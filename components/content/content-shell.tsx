@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import ApachetaBlurb from "@/components/content/apacheta-blurb"
+import ApachetaHeader from "@/components/content/apacheta-header"
 import Breadcrumbs from "@/components/content/breadcrumbs"
 import DonationCard from "@/components/content/donation-card"
 import JsonLd from "@/components/content/json-ld"
@@ -22,8 +22,8 @@ interface ContentShellProps {
 }
 
 /**
- * Mandatory wrapper for every blog/tool page. Owns the blurb, the only <h1>, the sidebar,
- * the donation CTAs, sources, disclaimer and JSON-LD. The page body (children) is free-form.
+ * Mandatory wrapper for every blog/tool page. Owns the trail header, the only <h1>, the sidebar,
+ * the donation CTAs (header + desktop sidebar), sources, disclaimer and JSON-LD. The page body (children) is free-form.
  * Invalid meta/seo throws, which fails the static build.
  */
 export default function ContentShell({ meta, seo, children }: ContentShellProps) {
@@ -34,7 +34,7 @@ export default function ContentShell({ meta, seo, children }: ContentShellProps)
 
 	return (
 		<div className="min-h-screen bg-background">
-			<ApachetaBlurb variant={meta.kind} />
+			<ApachetaHeader variant={meta.kind} />
 			<div className="mx-auto max-w-5xl gap-10 px-5 py-8 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_18rem]">
 				<main>
 					<Breadcrumbs crumbs={breadcrumbsFor(meta)} />
@@ -68,7 +68,6 @@ export default function ContentShell({ meta, seo, children }: ContentShellProps)
 							<p className="mt-6 text-xs text-muted-foreground">{DISCLAIMER}</p>
 						</footer>
 					</article>
-					<DonationCard className="mt-10 lg:hidden" />
 				</main>
 				<aside aria-label="Recomendaciones" className="mt-10 space-y-8 lg:sticky lg:top-6 lg:mt-0 lg:self-start">
 					<RelatedSidebar related={related} />
