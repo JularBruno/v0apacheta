@@ -15,8 +15,6 @@ beforeEach(() => {
 	]
 })
 
-const after = (a: Element, b: Element) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
-
 describe("ApachetaHeader (compact landing-style trail header)", () => {
 	test("names Apacheta first, in big type but not as a heading (the page's h1 comes later)", () => {
 		const { container } = render(<ApachetaHeader variant="post" />)
@@ -45,17 +43,22 @@ describe("ApachetaHeader (compact landing-style trail header)", () => {
 		expect(container.querySelectorAll("[data-trail] > svg > path")).toHaveLength(2)
 	})
 
-	test("the three stops come in order: Comenzá tu camino, then social links, then the donation", () => {
+	test("the three stops come in order: Comenzá tu camino, Ver redes, then the donation", () => {
 		const { container } = render(<ApachetaHeader variant="post" />)
 		const [first, second, third] = Array.from(container.querySelectorAll("[data-station]")) as HTMLElement[]
 		expect(within(first).getByRole("link", { name: "Comenzá tu camino" })).toHaveAttribute("href", "/onboarding")
-		expect(within(second).getByText("Discord", { exact: false })).toBeInTheDocument()
-		expect(within(second).getByText("Instagram", { exact: false })).toBeInTheDocument()
-		expect(within(second).getByText("YouTube", { exact: false })).toBeInTheDocument()
+		expect(within(second).getByRole("link", { name: /Ver redes/ })).toHaveAttribute("href", "#comunidad")
 		expect(within(third).getByRole("link", { name: "Doná a Apacheta" })).toHaveAttribute("href", "/donaciones")
-		expect(within(first).queryByRole("link", { name: /Doná/ })).toBeNull()
+		expect(within(first).queryByRole("link", { name: /Doná|Ver redes/ })).toBeNull()
 		expect(within(second).queryByRole("link", { name: /Doná|Comenzá/ })).toBeNull()
-		expect(within(third).queryByRole("link", { name: /Comenzá/ })).toBeNull()
+		expect(within(third).queryByRole("link", { name: /Comenzá|Ver redes/ })).toBeNull()
+	})
+
+	test("the social stop only redirects to the links at the bottom: no social pills or external links in the header", () => {
+		const { container } = render(<ApachetaHeader variant="post" />)
+		const header = container.querySelector('[data-variant="header"]') as HTMLElement
+		for (const name of ["Discord", "Instagram", "YouTube"]) expect(within(header).queryByText(name)).toBeNull()
+		expect(header.querySelectorAll('a[target="_blank"]')).toHaveLength(0)
 	})
 
 	test("the cairns sit left, right, left, like the landing trail", () => {
@@ -73,17 +76,18 @@ describe("ApachetaHeader (compact landing-style trail header)", () => {
 		for (const card of cards) expect(card.className).toMatch(/\bin\b/)
 	})
 
-	test("is compact: stations have a bounded height, small cairns and small cards, so title + trail fit one screen", () => {
+	test("cards are as small as they can be: a short title and one button, no label, tiny cairns", () => {
 		const { container } = render(<ApachetaHeader variant="post" />)
 		const stations = Array.from(container.querySelectorAll<HTMLElement>("[data-station]"))
 		expect(stations).toHaveLength(3)
 		for (const station of stations) expect(station.style.minHeight).toMatch(/^clamp\(/)
 		for (const cairn of Array.from(container.querySelectorAll<HTMLElement>("[data-cairn]"))) {
-			expect(parseInt(cairn.style.width, 10)).toBeLessThanOrEqual(48)
+			expect(parseInt(cairn.style.width, 10)).toBeLessThanOrEqual(40)
 		}
 		for (const card of Array.from(container.querySelectorAll<HTMLElement>("[data-card]"))) {
-			expect(card.style.width).toMatch(/^min\(/)
-			expect(parseInt(card.style.width.match(/min\((\d+)px/)?.[1] ?? "999", 10)).toBeLessThanOrEqual(290)
+			expect(parseInt(card.style.width.match(/min\((\d+)px/)?.[1] ?? "999", 10)).toBeLessThanOrEqual(210)
+			expect(card.querySelectorAll("a")).toHaveLength(1)
+			expect(card.querySelectorAll("p")).toHaveLength(1)
 		}
 	})
 
@@ -98,44 +102,12 @@ describe("ApachetaHeader (compact landing-style trail header)", () => {
 	})
 })
 
-describe("ApachetaHeader social quick links (second stop)", () => {
-	test("a configured channel is an external link that opens safely", () => {
-		mockCommunity = [
-			{ platform: "discord", label: "Discord", description: "x", href: "https://discord.gg/abc" },
-			{ platform: "instagram", label: "Instagram", description: "x", href: "https://instagram.com/apacheta" },
-			{ platform: "youtube", label: "YouTube", description: "x", href: "https://youtube.com/@apacheta" },
-		]
-		const { container } = render(<ApachetaHeader variant="post" />)
-		const second = container.querySelectorAll("[data-station]")[1] as HTMLElement
-		for (const [label, href] of [
-			["Discord", "https://discord.gg/abc"],
-			["Instagram", "https://instagram.com/apacheta"],
-			["YouTube", "https://youtube.com/@apacheta"],
-		]) {
-			const link = within(second).getByRole("link", { name: new RegExp(label) })
-			expect(link).toHaveAttribute("href", href)
-			expect(link).toHaveAttribute("target", "_blank")
-			expect(link.getAttribute("rel")).toContain("noopener")
-			expect(link.getAttribute("rel")).toContain("noreferrer")
-		}
-	})
-
-	test("a channel without a url yet is not a link and says it is coming soon", () => {
+describe("ApachetaHeader when no community channels are configured", () => {
+	test("has no dead #comunidad link: the social stop says Próximamente instead", () => {
+		mockCommunity = []
 		const { container } = render(<ApachetaHeader variant="post" />)
 		const second = container.querySelectorAll("[data-station]")[1] as HTMLElement
 		expect(within(second).queryAllByRole("link")).toHaveLength(0)
-		expect(within(second).getAllByText(/próximamente/i).length).toBeGreaterThanOrEqual(3)
-	})
-
-	test("mixes configured and pending channels", () => {
-		mockCommunity = [
-			{ platform: "discord", label: "Discord", description: "x" },
-			{ platform: "youtube", label: "YouTube", description: "x", href: "https://youtube.com/@apacheta" },
-		]
-		const { container } = render(<ApachetaHeader variant="post" />)
-		const second = container.querySelectorAll("[data-station]")[1] as HTMLElement
-		expect(within(second).getAllByRole("link")).toHaveLength(1)
-		expect(within(second).getByRole("link", { name: /YouTube/ })).toBeInTheDocument()
-		expect(within(second).getByText(/próximamente/i)).toBeInTheDocument()
+		expect(within(second).getByText("Próximamente")).toBeInTheDocument()
 	})
 })

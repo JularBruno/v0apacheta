@@ -99,6 +99,18 @@ describe("ContentShell", () => {
 		expect(within(container.querySelector("main") as HTMLElement).queryByRole("link", { name: /Doná/ })).toBeNull()
 	})
 
+	test("ends with the Comunidad section after the article, and the header's Ver redes link jumps to it", () => {
+		const { container } = render(<ContentShell meta={makeMeta()} seo={seo}>x</ContentShell>)
+		expect(container.querySelectorAll("#comunidad")).toHaveLength(1)
+		const section = container.querySelector("main #comunidad") as HTMLElement
+		expect(section.tagName).toBe("SECTION")
+		const article = container.querySelector("article") as HTMLElement
+		expect(article.compareDocumentPosition(section) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+		expect(article).not.toContainElement(section)
+		const header = container.querySelector('[data-variant="header"]') as HTMLElement
+		expect(within(header).getByRole("link", { name: /Ver redes/ })).toHaveAttribute("href", "#comunidad")
+	})
+
 	test("shows Actualizado with publishedAt when there is no updatedAt, and no Publicado line", () => {
 		const { container } = render(<ContentShell meta={makeMeta({ publishedAt: "2026-09-01" })} seo={seo}>x</ContentShell>)
 		expect(screen.getByText(/Actualizado el 1 de septiembre de 2026/)).toBeInTheDocument()

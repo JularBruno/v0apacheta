@@ -11,7 +11,7 @@ const CARD = "flex h-full flex-col gap-2 rounded-xl border border-border bg-card
 export default function CommunitySection({ links = communityLinks() }: { links?: CommunityLink[] }) {
 	if (links.length === 0) return null
 	return (
-		<section aria-labelledby="comunidad-heading">
+		<section id="comunidad" aria-labelledby="comunidad-heading" className="scroll-mt-6">
 			<h2 id="comunidad-heading" className="text-2xl font-bold tracking-tight text-foreground">
 				Comunidad
 			</h2>

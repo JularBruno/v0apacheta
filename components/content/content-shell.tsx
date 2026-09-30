@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import ApachetaHeader from "@/components/content/apacheta-header"
 import Breadcrumbs from "@/components/content/breadcrumbs"
+import CommunitySection from "@/components/content/community-section"
 import DonationCard from "@/components/content/donation-card"
 import JsonLd from "@/components/content/json-ld"
 import RelatedSidebar from "@/components/content/related-sidebar"
@@ -68,6 +69,9 @@ export default function ContentShell({ meta, seo, children }: ContentShellProps)
 							<p className="mt-6 text-xs text-muted-foreground">{DISCLAIMER}</p>
 						</footer>
 					</article>
+					<div className="mt-12">
+						<CommunitySection />
+					</div>
 				</main>
 				<aside aria-label="Recomendaciones" className="mt-10 space-y-8 lg:sticky lg:top-6 lg:mt-0 lg:self-start">
 					<RelatedSidebar related={related} />

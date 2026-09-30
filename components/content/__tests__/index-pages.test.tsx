@@ -47,6 +47,14 @@ describe("Cuadernito index (/blog)", () => {
 		expect(within(section).getByRole("link", { name: /YouTube/ })).toHaveAttribute("href", "https://youtube.com/@apacheta")
 	})
 
+	test("the Comunidad section is the target of the header's Ver redes link", () => {
+		mockCommunity = [{ platform: "discord", label: "Discord", description: "x", href: "https://discord.gg/abc" }]
+		const { container } = render(<BlogIndexPage />)
+		expect(container.querySelectorAll("section#comunidad")).toHaveLength(1)
+		const header = container.querySelector('[data-variant="header"]') as HTMLElement
+		expect(within(header).getByRole("link", { name: /Ver redes/ })).toHaveAttribute("href", "#comunidad")
+	})
+
 	test("a channel without a url yet shows as Próximamente on the Cuadernito page", () => {
 		mockCommunity = [{ platform: "instagram", label: "Instagram", description: "Seguinos." }]
 		render(<BlogIndexPage />)
