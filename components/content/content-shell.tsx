@@ -35,10 +35,10 @@ export default function ContentShell({ meta, seo, children }: ContentShellProps)
 	return (
 		<div className="min-h-screen bg-background">
 			<ApachetaHeader variant={meta.kind} />
-			<div className="mx-auto max-w-5xl gap-10 px-5 py-8 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_18rem]">
+			<div className="mx-auto max-w-5xl gap-10 px-5 pb-8 pt-4 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_18rem]">
 				<main>
 					<Breadcrumbs crumbs={breadcrumbsFor(meta)} />
-					<article className="mt-6">
+					<article className="mt-4">
 						<header>
 							<h1 className="text-3xl font-extrabold leading-tight tracking-tight text-foreground sm:text-4xl">
 								{meta.title}

@@ -19,9 +19,17 @@ const COPY = {
 export type HeaderVariant = keyof typeof COPY
 
 const PRIMARY_BUTTON =
-	"inline-flex items-center rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-md transition-colors hover:bg-primary-500 hover:shadow-lg"
+	"inline-flex items-center rounded-lg bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-md transition-colors hover:bg-primary-500 hover:shadow-lg"
+const CARD_TITLE = "mb-2 mt-1 text-[1.05rem] font-extrabold leading-tight tracking-tight text-balance"
 const SECONDARY_BUTTON =
-	"inline-flex items-center rounded-xl border border-border bg-background px-5 py-2.5 text-sm font-bold text-foreground shadow-sm transition-colors hover:bg-muted"
+	"inline-flex items-center rounded-lg border border-border bg-background px-4 py-2 text-xs font-bold text-foreground shadow-sm transition-colors hover:bg-muted"
+
+// Compact on purpose: the name, the whole trail, the breadcrumbs and the page title should fit one screen.
+// Station height stays above the tallest card so cards of neighbouring stations never overlap (phones put
+// them on overlapping columns).
+const STATION_STYLE = { minHeight: "clamp(112px, 15vh, 132px)" }
+const CAIRN_STYLE = { width: "44px", height: "44px" }
+const CARD_STYLE = { width: "min(270px, 62vw)", padding: "10px 13px 12px" }
 
 /** One stop on the header trail: a cairn on the path with a floating card beside it (landing markup, no headings). */
 function HeaderStation({
@@ -42,15 +50,16 @@ function HeaderStation({
 	return (
 		<div
 			data-station={index}
+			style={STATION_STYLE}
 			className={cn(styles.station, styles[side], reached && styles.reached, here && styles.here)}
 		>
-			<div data-cairn className={styles.cairn}>
+			<div data-cairn style={CAIRN_STYLE} className={styles.cairn}>
 				<span className={styles.halo} aria-hidden="true" />
 				<ApachetaCairn />
 			</div>
 			{/* visible from the first render (`in`): the links must be in the server HTML and work without JS */}
-			<div data-card className={cn(styles.card, styles.in)}>
-				<p className="font-mono text-[11px] font-medium uppercase tracking-[0.13em] text-primary/90">{label}</p>
+			<div data-card style={CARD_STYLE} className={cn(styles.card, styles.in)}>
+				<p className="font-mono text-[10px] font-medium uppercase tracking-[0.13em] text-primary/90">{label}</p>
 				{children}
 			</div>
 		</div>
@@ -59,8 +68,9 @@ function HeaderStation({
 
 /**
  * Top of every Cuadernito/Herramientas page, built from the landing's own pieces (parchment ground,
- * scenery, the trail through the cairns, the milestones): it names Apacheta, then three stops,
- * "Comenzá tu camino", quick links to the social channels, and the donation, and the page continues below. Tall on purpose. It adds no
+ * scenery, the trail through the cairns): it names Apacheta, then three short stops, "Comenzá tu camino",
+ * quick links to the social channels, and the donation, and the page continues below. Compact, so it fits
+ * one screen together with the page title. It adds no
  * headings and no <article>, so the page's <h1> stays the first heading.
  */
 export default function ApachetaHeader({ variant }: { variant: HeaderVariant }) {
@@ -81,9 +91,12 @@ export default function ApachetaHeader({ variant }: { variant: HeaderVariant }) 
 				<Scenery pageRef={pageRef} geometry={geometry} />
 
 				<div className={styles.content}>
-					<div data-clear className={cn("mx-auto max-w-2xl px-5 pb-8 pt-14 sm:px-6", styles.textZone)}>
-						<p className="mb-3 text-5xl font-extrabold leading-[1.05] tracking-tight text-foreground sm:text-6xl">Apacheta</p>
-						<p className="max-w-[46ch] text-lg leading-relaxed text-muted-foreground">
+					<div
+						data-clear
+						className={cn("mx-auto flex max-w-2xl flex-wrap items-baseline gap-x-4 gap-y-1 px-5 pb-2 pt-6 sm:px-6", styles.textZone)}
+					>
+						<p className="text-4xl font-extrabold leading-none tracking-tight text-foreground sm:text-5xl">Apacheta</p>
+						<p className="text-sm leading-snug text-muted-foreground">
 							{COPY[variant]}{" "}
 							<Link href="/" className="font-semibold text-foreground underline-offset-2 hover:underline">
 								Apacheta
@@ -99,41 +112,19 @@ export default function ApachetaHeader({ variant }: { variant: HeaderVariant }) 
 						</svg>
 
 						<HeaderStation index={0} side="left" reached={reachedCount > 0} here={activeIndex === 0} label="Primer paso">
-							<p className="mb-1.5 mt-1.5 text-[1.3rem] font-extrabold leading-[1.14] tracking-tight text-balance">
-								Seguí el camino
-							</p>
-							<p className="mb-3 text-[0.9rem] text-muted-foreground">{HERO.body}</p>
+							<p className={CARD_TITLE}>Seguí el camino</p>
 							<Link href="/onboarding" className={PRIMARY_BUTTON}>
 								{HERO.cta}
 							</Link>
 						</HeaderStation>
 
-						<figure data-clear className={cn(styles.milestone, styles.shift_right)} style={{ ["--mw" as string]: "380px" }}>
-							{/* eslint-disable-next-line @next/next/no-img-element */}
-							<img src="/scenery/milestones/bridge.webp" alt="" />
-						</figure>
-
 						<HeaderStation index={1} side="right" reached={reachedCount > 1} here={activeIndex === 1} label="Comunidad">
-							<p className="mb-1.5 mt-1.5 text-[1.3rem] font-extrabold leading-[1.14] tracking-tight text-balance">
-								Sumate al camino
-							</p>
-							<p className="mb-3 text-[0.9rem] text-muted-foreground">Seguinos y recorrelo con más gente.</p>
+							<p className={CARD_TITLE}>Sumate al camino</p>
 							<CommunityQuickLinks />
 						</HeaderStation>
 
-						<figure data-clear className={cn(styles.milestone, styles.shift_left)} style={{ ["--mw" as string]: "360px" }}>
-							{/* eslint-disable-next-line @next/next/no-img-element */}
-							<img src="/scenery/milestones/outcrop.webp" alt="" />
-						</figure>
-
 						<HeaderStation index={2} side="left" reached={reachedCount > 2} here={activeIndex === 2} label="Apoyá el proyecto">
-							<p className="mb-1.5 mt-1.5 text-[1.3rem] font-extrabold leading-[1.14] tracking-tight text-balance">
-								¿Te sirve?
-							</p>
-							<p className="mb-3 text-[0.9rem] text-muted-foreground">
-								Apacheta se mantiene con donaciones. Tu aporte cubre el hosting y el tiempo para seguir sumando
-								funciones y contenido.
-							</p>
+							<p className={CARD_TITLE}>¿Te sirve?</p>
 							<Link href="/donaciones" className={SECONDARY_BUTTON}>
 								Doná a Apacheta
 							</Link>

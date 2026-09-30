@@ -22,9 +22,9 @@ export default function ContentIndexLayout({
 	return (
 		<div className="min-h-screen bg-background">
 			<ApachetaHeader variant="index" />
-			<main className="mx-auto max-w-4xl px-5 py-10 sm:px-6">
+			<main className="mx-auto max-w-4xl px-5 pb-10 pt-4 sm:px-6">
 				<Breadcrumbs crumbs={crumbs} />
-				<h1 className="mt-6 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">{title}</h1>
+				<h1 className="mt-4 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">{title}</h1>
 				<p className="mt-3 max-w-2xl text-lg text-foreground/80">{intro}</p>
 				<div className="mt-10 space-y-12">{children}</div>
 			</main>

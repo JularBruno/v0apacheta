@@ -17,7 +17,7 @@ beforeEach(() => {
 
 const after = (a: Element, b: Element) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
 
-describe("ApachetaHeader (tall landing-style trail header)", () => {
+describe("ApachetaHeader (compact landing-style trail header)", () => {
 	test("names Apacheta first, in big type but not as a heading (the page's h1 comes later)", () => {
 		const { container } = render(<ApachetaHeader variant="post" />)
 		const header = container.querySelector('[data-variant="header"]') as HTMLElement
@@ -73,25 +73,24 @@ describe("ApachetaHeader (tall landing-style trail header)", () => {
 		for (const card of cards) expect(card.className).toMatch(/\bin\b/)
 	})
 
-	test("the stations use the landing's own height, so the header is tall (no shrinking override)", () => {
+	test("is compact: stations have a bounded height, small cairns and small cards, so title + trail fit one screen", () => {
 		const { container } = render(<ApachetaHeader variant="post" />)
 		const stations = Array.from(container.querySelectorAll<HTMLElement>("[data-station]"))
 		expect(stations).toHaveLength(3)
-		for (const station of stations) expect(station.style.minHeight).toBe("")
+		for (const station of stations) expect(station.style.minHeight).toMatch(/^clamp\(/)
+		for (const cairn of Array.from(container.querySelectorAll<HTMLElement>("[data-cairn]"))) {
+			expect(parseInt(cairn.style.width, 10)).toBeLessThanOrEqual(48)
+		}
+		for (const card of Array.from(container.querySelectorAll<HTMLElement>("[data-card]"))) {
+			expect(card.style.width).toMatch(/^min\(/)
+			expect(parseInt(card.style.width.match(/min\((\d+)px/)?.[1] ?? "999", 10)).toBeLessThanOrEqual(290)
+		}
 	})
 
-	test("drops two hand-drawn milestones as decorative art: a bridge between stops 1 and 2, an outcrop between 2 and 3", () => {
+	test("has no milestone art (no figures or images): just the trail, the cairns and the cards", () => {
 		const { container } = render(<ApachetaHeader variant="post" />)
-		const [first, second, third] = Array.from(container.querySelectorAll("[data-station]"))
-		const bridge = container.querySelector('img[src="/scenery/milestones/bridge.webp"]') as HTMLImageElement
-		const outcrop = container.querySelector('img[src="/scenery/milestones/outcrop.webp"]') as HTMLImageElement
-		expect(bridge).not.toBeNull()
-		expect(outcrop).not.toBeNull()
-		for (const img of [bridge, outcrop]) expect(img.getAttribute("alt")).toBe("")
-		const bridgeFigure = bridge.closest("figure") as HTMLElement
-		const outcropFigure = outcrop.closest("figure") as HTMLElement
-		expect(after(first, bridgeFigure) && after(bridgeFigure, second)).toBe(true)
-		expect(after(second, outcropFigure) && after(outcropFigure, third)).toBe(true)
+		expect(container.querySelectorAll("figure")).toHaveLength(0)
+		expect(container.querySelectorAll("img")).toHaveLength(0)
 	})
 
 	test("renders without SVG geometry APIs (jsdom), like the landing does", () => {
