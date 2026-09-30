@@ -38,7 +38,12 @@ describe.each(SECTIONS)("content pages in $dir", ({ dir, kind }) => {
 	})
 
 	test("every page folder is registered with the right kind", () => {
-		const missing = slugs.filter((slug) => !entries.some((e) => e.slug === slug && e.kind === kind))
+		const missing = slugs
+			.filter((slug) => !entries.some((e) => e.slug === slug && e.kind === kind))
+			.map(
+				(slug) =>
+					`${dir}/${slug} is not registered: add its meta import at "// [registry:imports]" and the entry at "// [registry:entries]" in lib/content/registry.ts`,
+			)
 		expect(missing).toEqual([])
 	})
 

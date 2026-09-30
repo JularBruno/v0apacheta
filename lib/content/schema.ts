@@ -31,7 +31,17 @@ export const metaSchema = z
 export const seoSchema = z.object({
 	summary: z.string().min(1),
 	faq: z.array(z.object({ question: z.string().min(1), answer: z.string().min(1) })).optional(),
-	sources: z.array(z.object({ name: z.string().min(1), url: z.string().url() })).min(1, "at least one source is required"),
+	sources: z
+		.array(
+			z.object({
+				name: z.string().min(1),
+				url: z
+					.string()
+					.url()
+					.refine((url) => url.startsWith("https://"), "source urls must be https"),
+			}),
+		)
+		.min(1, "at least one source is required"),
 })
 
 function formatIssues(error: z.ZodError): string {

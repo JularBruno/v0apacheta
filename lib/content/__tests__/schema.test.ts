@@ -41,6 +41,13 @@ describe("seoSchema", () => {
 		expect(seoSchema.safeParse({ ...valid, faq: [{ question: "¿Q?", answer: "A." }] }).success).toBe(true)
 	})
 
+	test("only accepts https source urls (no http:, javascript: or data: links in the footer)", () => {
+		for (const url of ["http://example.com/", "javascript:alert(1)", "data:text/html,hola"]) {
+			expect(seoSchema.safeParse({ ...valid, sources: [{ name: "x", url }] }).success).toBe(false)
+		}
+		expect(seoSchema.safeParse({ ...valid, sources: [{ name: "x", url: "https://example.com/a" }] }).success).toBe(true)
+	})
+
 	test("requires at least one source with a valid url", () => {
 		expect(seoSchema.safeParse({ ...valid, sources: [] }).success).toBe(false)
 		expect(seoSchema.safeParse({ ...valid, sources: [{ name: "x", url: "not-a-url" }] }).success).toBe(false)

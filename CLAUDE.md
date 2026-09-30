@@ -16,6 +16,22 @@ Applies to every generated page under `/blog/<slug>` and `/herramientas/<slug>`,
 - **Header blurb:** keep the fixed "published on Apacheta" blurb short, and keep it outside the `<h1>` and `<article>` content.
 - **Language:** write titles, descriptions and body in Argentine Spanish. Keep each `description` at 155 characters or fewer, and each title at 60 characters or fewer.
 
+## Blog and tools pages: security requirements
+
+Enforced by `__tests__/content-security-guardrail.test.ts` (rules live in `lib/content/__fixtures__/security-rules.ts`) over the public surface: `app/blog`, `app/herramientas`, `app/donaciones`, `components/content`, `components/donations/public-donations.tsx`, `lib/content`. Comments are ignored; code is scanned. To add a rule: add it to the rules file, add a bad sample to the test, add a line here.
+
+- **No raw HTML injection:** no `dangerouslySetInnerHTML`, `innerHTML`, `outerHTML`, `insertAdjacentHTML` or `document.write`. The single exception is the JSON-LD `<script>` in `components/content/json-ld.tsx`.
+- **JSON-LD is always escaped:** `json-ld.tsx` must serialize through `serializeJsonLd` (escapes `<`, so content can never close the script tag).
+- **No inline `<script>`** anywhere else, and no `<iframe>` (add a `sandbox` plus an origin allowlist before enabling embeds).
+- **No dynamic code:** no `eval()` or `new Function()`.
+- **External links:** every `target="_blank"` carries `rel="noopener noreferrer"`.
+- **https only:** no `http://` URLs (localhost excepted), and `seo.sources` URLs must be `https://` (enforced by the schema). No `javascript:`, `vbscript:` or `data:text/html` URLs.
+- **Public means public:** content pages never import auth, server actions (`@/lib/actions`), HTTP clients (`@/lib/http`) or dashboard code, and never declare `"use server"`.
+- **No secrets:** no `process.env` in the public surface.
+- **Static pages:** posts and shared components fetch nothing at runtime (`fetch`, `axios`, `useSWR`, `useQuery` are flagged). Tool widgets under `app/herramientas` may fetch, for example live exchange rates; validate and never trust the response.
+
+Not covered by tests (do these by hand when relevant): response headers and CSP, rate limiting for any future API route, and moderation if a community feature ever accepts user input.
+
 ## Adding a blog post or tool
 
 1. Create `app/blog/<slug>/` (or `app/herramientas/<slug>/`) with `meta.ts` exporting `meta: ContentMeta` (see `lib/content/types.ts`).
