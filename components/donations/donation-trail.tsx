@@ -21,12 +21,26 @@ export interface DonationStation {
  * for a short, fixed number of stations inside the dashboard's own scroll container.
  * See components/camino/use-trail.ts for the full scroll-driven system this
  * deliberately does NOT reuse (window-scroll bound, tuned for a tall full page).
+ *
+ * `page` (default) is the dashboard donaciones layout: tall stations that reveal as they scroll into view.
+ * `header` is the compact banner for public Cuadernito/Herramientas pages: already revealed (so the
+ * content is in the server HTML and visible without JS), titles are plain text (the page's <h1> comes
+ * later), and from 768px the two stations sit side by side on a horizontal trail.
  */
-export default function DonationTrail({ stations }: { stations: DonationStation[] }) {
+export default function DonationTrail({
+	stations,
+	variant = "page",
+}: {
+	stations: DonationStation[]
+	variant?: "page" | "header"
+}) {
+	const isHeader = variant === "header"
+	const Title = isHeader ? "p" : "h2"
 	const stationRefs = useRef<(HTMLDivElement | null)[]>([])
-	const [revealed, setRevealed] = useState<boolean[]>(() => stations.map(() => false))
+	const [revealed, setRevealed] = useState<boolean[]>(() => stations.map(() => isHeader))
 
 	useEffect(() => {
+		if (isHeader) return
 		const observer = new IntersectionObserver(
 			(entries) => {
 				setRevealed((prev) => {
@@ -55,8 +69,31 @@ export default function DonationTrail({ stations }: { stations: DonationStation[
 
 	const destinationReached = revealed[revealed.length - 1]
 
+	const stationNodes = stations.map((station, index) => (
+		<div
+			key={station.title}
+			ref={(el) => {
+				stationRefs.current[index] = el
+			}}
+			data-trail-station=""
+			data-revealed={String(!!revealed[index])}
+			className={cn(styles.station, revealed[index] && styles.revealed)}
+		>
+			<div className={styles.cairn}>
+				<ApachetaCairn />
+			</div>
+
+			<article className={styles.card}>
+				<Title className={styles.cardTitle}>{station.title}</Title>
+				{station.body}
+				{station.content}
+				{station.footnote && <div className={styles.footnote}>{station.footnote}</div>}
+			</article>
+		</div>
+	))
+
 	return (
-		<div className={styles.panel}>
+		<div className={cn(styles.panel, isHeader && styles.headerPanel)} data-variant={variant}>
 			<svg className={styles.path} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
 				<path className={styles.trailFull} d="M 50 0 C 20 30, 80 70, 50 100" />
 				<path
@@ -65,26 +102,18 @@ export default function DonationTrail({ stations }: { stations: DonationStation[
 				/>
 			</svg>
 
-			{stations.map((station, index) => (
-				<div
-					key={station.title}
-					ref={(el) => {
-						stationRefs.current[index] = el
-					}}
-					className={cn(styles.station, revealed[index] && styles.revealed)}
-				>
-					<div className={styles.cairn}>
-						<ApachetaCairn />
-					</div>
-
-					<article className={styles.card}>
-						<h2 className={styles.cardTitle}>{station.title}</h2>
-						{station.body}
-						{station.content}
-						{station.footnote && <div className={styles.footnote}>{station.footnote}</div>}
-					</article>
+			{isHeader ? (
+				<div className={styles.headerRow}>
+					{/* horizontal trail between the two cairns, from 768px; the vertical one above is used below that */}
+					<svg className={styles.pathH} viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true">
+						<path className={styles.trailFull} d="M 0 10 C 30 0, 70 20, 100 10" />
+						<path className={cn(styles.trailWalked, styles.walked)} d="M 0 10 C 30 0, 70 20, 100 10" />
+					</svg>
+					{stationNodes}
 				</div>
-			))}
+			) : (
+				stationNodes
+			)}
 		</div>
 	)
 }

@@ -124,3 +124,39 @@
 		transition: none;
 	}
 }
+
+
+/* ---- header variant: compact banner for the public Cuadernito/Herramientas pages ---- */
+.headerPanel {
+	border-radius: 20px;
+	padding: 2px clamp(16px, 4vw, 32px);
+}
+.headerPanel .station { padding: 14px 0; gap: 8px; }
+.headerPanel .cairn { width: 34px; height: 34px; }
+.headerPanel .card { padding: 14px clamp(14px, 3vw, 22px); max-width: 28rem; }
+.headerPanel .cardTitle { margin-bottom: 4px; font-size: 1rem; }
+
+.headerRow { position: relative; }
+.pathH { display: none; }
+
+/* Side by side from 768px. The horizontal trail sits at the cairns' vertical center
+   (station padding-top 14px + half the 34px cairn = 31px) between the two column centers
+   (left/right 25%), so it lines up with the cairns whatever height the cards end up. */
+@media (min-width: 768px) {
+	.headerPanel > .path { display: none; }
+	.headerRow {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		column-gap: 24px;
+	}
+	.pathH {
+		display: block;
+		position: absolute;
+		left: 25%;
+		right: 25%;
+		top: 21px;
+		height: 20px;
+		z-index: 0;
+		pointer-events: none;
+	}
+}
