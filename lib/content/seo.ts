@@ -8,16 +8,23 @@ const CONTEXT = "https://schema.org"
 const LANGUAGE = "es-AR"
 const PUBLISHER = { "@type": "Organization", name: "Apacheta", url: SITE_URL }
 
+/**
+ * The root app/opengraph-image.tsx only reaches pages that don't set their own `openGraph`
+ * (Next replaces that object wholesale), so every page here carries its own image.
+ */
+export const DEFAULT_SHARE_IMAGE = "/opengraph-image"
+
 /** Use as `generateMetadata` output; the `%s | Apacheta` template lives in the blog/herramientas layouts. */
 export function buildMetadata(meta: ContentMeta): Metadata {
 	const url = contentUrl(meta)
+	const images = [meta.cover ?? DEFAULT_SHARE_IMAGE]
 	const common = {
 		url,
 		title: meta.title,
 		description: meta.description,
 		locale: "es_AR",
 		siteName: "Apacheta",
-		...(meta.cover ? { images: [meta.cover] } : {}),
+		images,
 	}
 	return {
 		title: meta.title,
@@ -32,7 +39,41 @@ export function buildMetadata(meta: ContentMeta): Metadata {
 						modifiedTime: meta.updatedAt ?? meta.publishedAt,
 					}
 				: { type: "website", ...common },
-		twitter: { card: "summary_large_image", title: meta.title, description: meta.description },
+		twitter: { card: "summary_large_image", title: meta.title, description: meta.description, images },
+	}
+}
+
+/**
+ * Metadata for index-style pages (/blog, /herramientas, /donaciones). `title` goes through the
+ * segment's title template; `socialTitle` is the already-final title used for og/twitter, which
+ * templates don't apply to.
+ */
+export function buildPageMetadata({
+	title,
+	socialTitle,
+	description,
+	path,
+}: {
+	title: string
+	socialTitle: string
+	description: string
+	path: string
+}): Metadata {
+	const url = `${SITE_URL}${path}`
+	return {
+		title,
+		description,
+		alternates: { canonical: url },
+		openGraph: {
+			type: "website",
+			url,
+			title: socialTitle,
+			description,
+			locale: "es_AR",
+			siteName: "Apacheta",
+			images: [DEFAULT_SHARE_IMAGE],
+		},
+		twitter: { card: "summary_large_image", title: socialTitle, description, images: [DEFAULT_SHARE_IMAGE] },
 	}
 }
 

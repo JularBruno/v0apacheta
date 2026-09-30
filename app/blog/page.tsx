@@ -2,23 +2,17 @@ import type { Metadata } from "next"
 import ContentCard from "@/components/content/content-card"
 import ContentIndexLayout from "@/components/content/index-layout"
 import { listByKind } from "@/lib/content/registry"
+import { buildPageMetadata } from "@/lib/content/seo"
 import { CATEGORY_LABELS, type BlogCategory } from "@/lib/content/types"
-import { SITE_URL } from "@/lib/content/urls"
 
 export const dynamic = "force-static"
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
 	title: "Cuadernito",
+	socialTitle: "Cuadernito | Apacheta",
 	description: "El Cuadernito de Apacheta: economía explicada simple, finanzas personales y novedades de la app, para Argentina.",
-	alternates: { canonical: `${SITE_URL}/blog` },
-	openGraph: {
-		type: "website",
-		url: `${SITE_URL}/blog`,
-		title: "Cuadernito | Apacheta",
-		locale: "es_AR",
-		siteName: "Apacheta",
-	},
-}
+	path: "/blog",
+})
 
 const CATEGORY_ORDER: BlogCategory[] = ["economia", "apacheta", "random"]
 

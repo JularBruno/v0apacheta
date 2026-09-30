@@ -2,22 +2,16 @@ import type { Metadata } from "next"
 import ContentCard from "@/components/content/content-card"
 import ContentIndexLayout from "@/components/content/index-layout"
 import { listByKind } from "@/lib/content/registry"
-import { SITE_URL } from "@/lib/content/urls"
+import { buildPageMetadata } from "@/lib/content/seo"
 
 export const dynamic = "force-static"
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
 	title: "Herramientas",
+	socialTitle: "Herramientas | Apacheta",
 	description: "Calculadoras y herramientas gratuitas de finanzas personales para Argentina: inflación, conversión de dólar y más.",
-	alternates: { canonical: `${SITE_URL}/herramientas` },
-	openGraph: {
-		type: "website",
-		url: `${SITE_URL}/herramientas`,
-		title: "Herramientas | Apacheta",
-		locale: "es_AR",
-		siteName: "Apacheta",
-	},
-}
+	path: "/herramientas",
+})
 
 export default function HerramientasIndexPage() {
 	const tools = listByKind("tool")

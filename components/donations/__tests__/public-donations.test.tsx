@@ -31,4 +31,9 @@ describe("/donaciones route", () => {
 		expect(metadata.alternates?.canonical).toBe("https://apacheta.ar/donaciones")
 		expect(String(metadata.description).length).toBeLessThanOrEqual(155)
 	})
+
+	test("shares with its own twitter text and the site share image, not the homepage's", () => {
+		expect(metadata.twitter).toMatchObject({ title: "Donaciones | Apacheta", images: ["/opengraph-image"] })
+		expect(metadata.openGraph).toMatchObject({ title: "Donaciones | Apacheta", images: ["/opengraph-image"] })
+	})
 })

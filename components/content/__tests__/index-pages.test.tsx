@@ -55,6 +55,11 @@ describe("Cuadernito index (/blog)", () => {
 		expect(blogMetadata.alternates?.canonical).toBe("https://apacheta.ar/blog")
 		expect(String(blogMetadata.description).length).toBeLessThanOrEqual(155)
 	})
+
+	test("shares with its own twitter text and the site share image, not the homepage's", () => {
+		expect(blogMetadata.twitter).toMatchObject({ title: "Cuadernito | Apacheta", images: ["/opengraph-image"] })
+		expect(blogMetadata.openGraph).toMatchObject({ title: "Cuadernito | Apacheta", images: ["/opengraph-image"] })
+	})
 })
 
 describe("/herramientas index", () => {
@@ -74,5 +79,10 @@ describe("/herramientas index", () => {
 		expect(toolsMetadata.title).toBe("Herramientas")
 		expect(toolsMetadata.alternates?.canonical).toBe("https://apacheta.ar/herramientas")
 		expect(String(toolsMetadata.description).length).toBeLessThanOrEqual(155)
+	})
+
+	test("shares with its own twitter text and the site share image, not the homepage's", () => {
+		expect(toolsMetadata.twitter).toMatchObject({ title: "Herramientas | Apacheta", images: ["/opengraph-image"] })
+		expect(toolsMetadata.openGraph).toMatchObject({ title: "Herramientas | Apacheta", images: ["/opengraph-image"] })
 	})
 })

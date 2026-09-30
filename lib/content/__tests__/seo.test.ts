@@ -3,6 +3,7 @@ import {
 	breadcrumbJsonLd,
 	buildJsonLd,
 	buildMetadata,
+	buildPageMetadata,
 	faqJsonLd,
 	serializeJsonLd,
 	webApplicationJsonLd,
@@ -38,6 +39,53 @@ describe("buildMetadata", () => {
 		expect(metadata.alternates?.canonical).toBe("https://apacheta.ar/herramientas/calc")
 		expect(metadata.openGraph).toMatchObject({ type: "website", images: ["/herramientas/calc.webp"] })
 		expect(metadata.openGraph).not.toHaveProperty("publishedTime")
+	})
+})
+
+describe("share image", () => {
+	// A page that sets its own openGraph replaces the root one wholesale, so it must carry its own image.
+	test("buildMetadata defaults og and twitter images to the site share image", () => {
+		const metadata = buildMetadata(makeMeta())
+		expect(metadata.openGraph).toMatchObject({ images: ["/opengraph-image"] })
+		expect(metadata.twitter).toMatchObject({ images: ["/opengraph-image"] })
+	})
+
+	test("buildMetadata prefers the cover over the default image", () => {
+		const metadata = buildMetadata(makeMeta({ cover: "/blog/x.webp" }))
+		expect(metadata.openGraph).toMatchObject({ images: ["/blog/x.webp"] })
+		expect(metadata.twitter).toMatchObject({ images: ["/blog/x.webp"] })
+	})
+})
+
+describe("buildPageMetadata", () => {
+	const metadata = buildPageMetadata({
+		title: "Cuadernito",
+		socialTitle: "Cuadernito | Apacheta",
+		description: "Descripción del índice.",
+		path: "/blog",
+	})
+
+	test("sets canonical, title and description", () => {
+		expect(metadata.title).toBe("Cuadernito")
+		expect(metadata.description).toBe("Descripción del índice.")
+		expect(metadata.alternates?.canonical).toBe("https://apacheta.ar/blog")
+	})
+
+	test("open graph and twitter carry the page's own text and the share image, not the homepage's", () => {
+		expect(metadata.openGraph).toMatchObject({
+			type: "website",
+			url: "https://apacheta.ar/blog",
+			title: "Cuadernito | Apacheta",
+			description: "Descripción del índice.",
+			locale: "es_AR",
+			images: ["/opengraph-image"],
+		})
+		expect(metadata.twitter).toMatchObject({
+			card: "summary_large_image",
+			title: "Cuadernito | Apacheta",
+			description: "Descripción del índice.",
+			images: ["/opengraph-image"],
+		})
 	})
 })
 
