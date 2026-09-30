@@ -4,7 +4,7 @@ export interface CommunityLink {
 	platform: CommunityPlatform
 	label: string
 	description: string
-	/** Public https URL. Leave undefined until the channel exists: entries without one are hidden. */
+	/** Public https URL. Leave undefined until the channel exists: the card shows as "Próximamente". */
 	href?: string
 }
 
@@ -18,15 +18,12 @@ export const COMMUNITY_LINKS: CommunityLink[] = [
 	{ platform: "youtube", label: "YouTube", description: "Mirá los videos en YouTube." },
 ]
 
-export type ActiveCommunityLink = CommunityLink & { href: string }
-
-/** Links that have an href. A non-https href throws, so a typo fails the build instead of shipping. */
-export function activeCommunityLinks(links: CommunityLink[] = COMMUNITY_LINKS): ActiveCommunityLink[] {
-	return links.flatMap((link) => {
-		if (!link.href) return []
-		if (!link.href.startsWith("https://")) {
+/** All channels, validated. A non-https href throws, so a typo fails the build instead of shipping. */
+export function communityLinks(links: CommunityLink[] = COMMUNITY_LINKS): CommunityLink[] {
+	for (const link of links) {
+		if (link.href !== undefined && !link.href.startsWith("https://")) {
 			throw new Error(`Community link for ${link.platform} must be an https URL, got "${link.href}"`)
 		}
-		return [{ ...link, href: link.href }]
-	})
+	}
+	return links
 }

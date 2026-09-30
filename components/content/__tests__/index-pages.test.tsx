@@ -9,9 +9,9 @@ jest.mock("@/lib/content/registry", () => ({
 	listByKind: (kind: string) => mockEntries.filter((entry) => entry.kind === kind),
 }))
 
-let mockCommunity: { platform: string; label: string; description: string; href: string }[] = []
+let mockCommunity: { platform: string; label: string; description: string; href?: string }[] = []
 jest.mock("@/lib/content/community", () => ({
-	activeCommunityLinks: () => mockCommunity,
+	communityLinks: () => mockCommunity,
 }))
 
 beforeEach(() => {
@@ -47,9 +47,12 @@ describe("Cuadernito index (/blog)", () => {
 		expect(within(section).getByRole("link", { name: /YouTube/ })).toHaveAttribute("href", "https://youtube.com/@apacheta")
 	})
 
-	test("hides the community section while no links are configured", () => {
+	test("a channel without a url yet shows as Próximamente on the Cuadernito page", () => {
+		mockCommunity = [{ platform: "instagram", label: "Instagram", description: "Seguinos." }]
 		render(<BlogIndexPage />)
-		expect(screen.queryByRole("region", { name: "Comunidad" })).not.toBeInTheDocument()
+		const section = screen.getByRole("region", { name: "Comunidad" })
+		expect(within(section).getByText("Próximamente")).toBeInTheDocument()
+		expect(within(section).queryByRole("link")).not.toBeInTheDocument()
 	})
 
 	test("shows an empty state when there are no posts", () => {
