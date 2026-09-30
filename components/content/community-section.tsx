@@ -1,12 +1,6 @@
-import { ExternalLink, Instagram, MessageCircle, Youtube, type LucideIcon } from "lucide-react"
-import { communityLinks, type CommunityLink, type CommunityPlatform } from "@/lib/content/community"
-
-// lucide has no Discord glyph, so a chat bubble stands in for it.
-const ICONS: Record<CommunityPlatform, LucideIcon> = {
-	discord: MessageCircle,
-	instagram: Instagram,
-	youtube: Youtube,
-}
+import { ExternalLink } from "lucide-react"
+import { COMMUNITY_ICONS } from "@/components/content/community-icons"
+import { communityLinks, type CommunityLink } from "@/lib/content/community"
 
 const CARD = "flex h-full flex-col gap-2 rounded-xl border border-border bg-card p-5"
 
@@ -24,7 +18,7 @@ export default function CommunitySection({ links = communityLinks() }: { links?:
 			<p className="mt-2 text-muted-foreground">Sumate y seguí el camino con más gente.</p>
 			<ul className="mt-4 grid gap-4 sm:grid-cols-3">
 				{links.map((link) => {
-					const Icon = ICONS[link.platform]
+					const Icon = COMMUNITY_ICONS[link.platform]
 					const heading = (
 						<span className="flex items-center gap-2 font-bold text-foreground">
 							<Icon className="h-5 w-5 text-primary" aria-hidden="true" />
