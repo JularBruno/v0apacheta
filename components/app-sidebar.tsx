@@ -1,6 +1,6 @@
 
 import type * as React from "react"
-import { Home, Settings, HelpCircle, PiggyBank, Heart, Split, FileSpreadsheet, DollarSign, Map, History, Package, Wallet, LogOut, Bot, BookOpen } from "lucide-react" // Added Map, History, Package
+import { Home, Settings, HelpCircle, PiggyBank, Heart, Split, FileSpreadsheet, DollarSign, Map, History, Package, Wallet, LogOut, Bot, BookOpen, ExternalLink } from "lucide-react" // Added Map, History, Package
 import { usePathname } from "next/navigation"
 import { useTransition } from 'react';
 
@@ -77,6 +77,7 @@ const toolsMenuItems = [
 		title: "Cuadernito",
 		url: "/blog",
 		icon: BookOpen,
+		external: true,
 	},
 	// {
 	// 	title: "Seguidor de ahorro",
@@ -153,6 +154,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 										<a href={item.url}>
 											<item.icon />
 											<span>{item.title}</span>
+											{/* leaves the dashboard for a public page */}
+											{"external" in item && item.external && (
+												<>
+													<ExternalLink className="ml-auto" aria-hidden="true" />
+													<span className="sr-only">(sale del panel)</span>
+												</>
+											)}
 										</a>
 									</SidebarMenuButton>
 								</SidebarMenuItem>

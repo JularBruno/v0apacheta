@@ -13,15 +13,32 @@ beforeAll(() => {
 	})
 })
 
-test("the Herramientas group links to the public Cuadernito", () => {
+function renderSidebar() {
 	render(
 		<SidebarProvider>
 			<AppSidebar />
 		</SidebarProvider>,
 	)
-	const link = screen.getByRole("link", { name: "Cuadernito" })
+}
+
+test("the Herramientas group links to the public Cuadernito", () => {
+	renderSidebar()
+	const link = screen.getByRole("link", { name: /^Cuadernito/ })
 	expect(link).toHaveAttribute("href", "/blog")
 	const group = screen.getByText("Herramientas").closest('[data-sidebar="group"]') as HTMLElement
 	expect(group).not.toBeNull()
-	expect(within(group).getByRole("link", { name: "Cuadernito" })).toBe(link)
+	expect(within(group).getByRole("link", { name: /^Cuadernito/ })).toBe(link)
+})
+
+test("the Cuadernito link shows a redirect icon and tells screen readers it leaves the dashboard", () => {
+	renderSidebar()
+	const link = screen.getByRole("link", { name: /^Cuadernito/ })
+	expect(link.querySelector("svg.lucide-external-link")).not.toBeNull()
+	expect(within(link).getByText("(sale del panel)")).toHaveClass("sr-only")
+})
+
+test("regular dashboard items do not get the redirect icon", () => {
+	renderSidebar()
+	const link = screen.getByRole("link", { name: "Dividir Cuenta" })
+	expect(link.querySelector("svg.lucide-external-link")).toBeNull()
 })
