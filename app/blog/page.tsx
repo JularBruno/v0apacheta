@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import CommunitySection from "@/components/content/community-section"
 import ContentCard from "@/components/content/content-card"
 import ContentIndexLayout from "@/components/content/index-layout"
 import { listByKind } from "@/lib/content/registry"
@@ -58,6 +59,7 @@ export default function BlogIndexPage() {
 					))}
 				</>
 			)}
+			<CommunitySection />
 		</ContentIndexLayout>
 	)
 }

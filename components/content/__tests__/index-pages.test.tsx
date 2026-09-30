@@ -9,8 +9,14 @@ jest.mock("@/lib/content/registry", () => ({
 	listByKind: (kind: string) => mockEntries.filter((entry) => entry.kind === kind),
 }))
 
+let mockCommunity: { platform: string; label: string; description: string; href: string }[] = []
+jest.mock("@/lib/content/community", () => ({
+	activeCommunityLinks: () => mockCommunity,
+}))
+
 beforeEach(() => {
 	mockEntries = []
+	mockCommunity = []
 })
 
 describe("Cuadernito index (/blog)", () => {
@@ -28,6 +34,22 @@ describe("Cuadernito index (/blog)", () => {
 		expect(screen.getByRole("heading", { level: 2, name: "Economía" })).toBeInTheDocument()
 		expect(screen.getByRole("link", { name: "Post de economía" })).toHaveAttribute("href", "/blog/eco-uno")
 		expect(screen.getByRole("link", { name: "Post de novedades" })).toHaveAttribute("href", "/blog/novedad")
+	})
+
+	test("shows the community section with social links when they are configured", () => {
+		mockCommunity = [
+			{ platform: "discord", label: "Discord", description: "Sumate al canal.", href: "https://discord.gg/abc" },
+			{ platform: "youtube", label: "YouTube", description: "Mirá los videos.", href: "https://youtube.com/@apacheta" },
+		]
+		render(<BlogIndexPage />)
+		const section = screen.getByRole("region", { name: "Comunidad" })
+		expect(within(section).getByRole("link", { name: /Discord/ })).toHaveAttribute("href", "https://discord.gg/abc")
+		expect(within(section).getByRole("link", { name: /YouTube/ })).toHaveAttribute("href", "https://youtube.com/@apacheta")
+	})
+
+	test("hides the community section while no links are configured", () => {
+		render(<BlogIndexPage />)
+		expect(screen.queryByRole("region", { name: "Comunidad" })).not.toBeInTheDocument()
 	})
 
 	test("shows an empty state when there are no posts", () => {
@@ -68,6 +90,12 @@ describe("/herramientas index", () => {
 		render(<HerramientasIndexPage />)
 		expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument()
 		expect(screen.getByRole("link", { name: "Calculadora de ejemplo" })).toHaveAttribute("href", "/herramientas/calculadora")
+	})
+
+	test("never shows the community section (it lives on the Cuadernito page only)", () => {
+		mockCommunity = [{ platform: "discord", label: "Discord", description: "x", href: "https://discord.gg/abc" }]
+		render(<HerramientasIndexPage />)
+		expect(screen.queryByRole("region", { name: "Comunidad" })).not.toBeInTheDocument()
 	})
 
 	test("shows an empty state when there are no tools yet", () => {
