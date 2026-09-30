@@ -1,6 +1,6 @@
 # Blog and tools: content model, routing, shell, economics-topic template
 
-Status: design approved in conversation, pending written-spec review.
+Status: approved.
 
 ## Intent
 
@@ -127,8 +127,8 @@ A new public page with its own standalone component, built for this route. `/das
 - Unit tests for `getRelated` and for JSON-LD output.
 - SEO rules live in `CLAUDE.md` (written).
 
-## Open items and assumptions
+## Confirmed decisions
 
-- The sidebar donation card is kept in addition to the header link (assumed, not explicitly confirmed).
-- Category display names (Economía, Novedades de Apacheta, Varios) are a placeholder to confirm.
-- The tool template, and where `InlineToolCallout` links until tools exist, come in a later spec. The callout renders nothing if the slug isn't in the registry.
+- The sidebar donation card is kept in addition to the header link.
+- Category display names: Economía, Novedades de Apacheta, Varios.
+- Tools get only the basic shell (`kind: "tool"`) for now. The tool template comes in a later spec. `InlineToolCallout` renders nothing if the slug isn't in the registry.
