@@ -18,7 +18,7 @@ Applies to every generated page under `/blog/<slug>` and `/herramientas/<slug>`,
 
 ## Blog and tools pages: security requirements
 
-Enforced by `__tests__/content-security-guardrail.test.ts` (rules live in `lib/content/__fixtures__/security-rules.ts`) over the public surface: `app/blog`, `app/herramientas`, `app/donaciones`, `components/content`, `components/donations/public-donations.tsx`, `lib/content`. Comments are ignored; code is scanned. To add a rule: add it to the rules file, add a bad sample to the test, add a line here.
+Enforced by `__tests__/content-security-guardrail.test.ts` (rules live in `lib/content/__fixtures__/security-rules.ts`) over the public surface: `app/blog`, `app/herramientas`, `app/donaciones`, `components/content`, `components/donations/public-donations.tsx`, `components/sky`, `lib/astro`, `lib/content`. Comments are ignored; code is scanned. To add a rule: add it to the rules file, add a bad sample to the test, add a line here.
 
 - **No raw HTML injection:** no `dangerouslySetInnerHTML`, `innerHTML`, `outerHTML`, `insertAdjacentHTML` or `document.write`. The single exception is the JSON-LD `<script>` in `components/content/json-ld.tsx`.
 - **JSON-LD is always escaped:** `json-ld.tsx` must serialize through `serializeJsonLd` (escapes `<`, so content can never close the script tag).
