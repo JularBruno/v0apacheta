@@ -17,16 +17,22 @@ import {
 	referenceDeclination,
 	sunAtClock,
 	sunDay,
-	type CurvePoint,
 	type Location,
 } from "@/lib/astro/chart"
+import { moonAltAz, moonElongation, moonIllumination, moonRaDec, nextPhase, phaseName } from "@/lib/astro/moon"
+import { moonCycleReferences, moonPassNear, moonPassOnDay, type MoonPass } from "@/lib/astro/moon-chart"
 import { SUNRISE_ALTITUDE, dayOfYear } from "@/lib/astro/sun"
 
 // ---- formatting --------------------------------------------------------------------------------
 
+const HOUR = 3_600_000
+const MIN = 60_000
+const DAY = 24 * HOUR
+
 const oneDecimal = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 const upToTwoDecimals = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 2 })
-const fmt1 = (n: number) => oneDecimal.format(Math.abs(n) < 0.05 ? 0 : n)
+// ASCII minus sign (some locales use U+2212), and no "-0,0"
+const fmt1 = (n: number) => oneDecimal.format(Math.abs(n) < 0.05 ? 0 : n).replace("−", "-")
 const pad2 = (n: number) => String(n).padStart(2, "0")
 
 function formatLatLon({ lat, lon }: Location): string {
@@ -44,16 +50,19 @@ function parseDate(text: string): { y: number; m: number; d: number } | null {
 const longDate = (y: number, m: number, d: number) =>
 	new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("es-AR", { timeZone: "UTC", day: "numeric", month: "long", year: "numeric" })
 
-/** Today's date and minute of the day on the clock of a UTC offset, whatever the visitor's own timezone. */
-function nowAt(utcOffset: number): { date: string; minutes: number } {
-	const shifted = new Date(Date.now() + utcOffset * 3_600_000)
+/** Date ("YYYY-MM-DD") and minute of the day of an instant, on the clock of a UTC offset. */
+function localParts(ms: number, utcOffset: number): { date: string; minutes: number } {
+	const shifted = new Date(ms + utcOffset * HOUR)
 	return {
 		date: `${shifted.getUTCFullYear()}-${pad2(shifted.getUTCMonth() + 1)}-${pad2(shifted.getUTCDate())}`,
 		minutes: shifted.getUTCHours() * 60 + shifted.getUTCMinutes(),
 	}
 }
 
-const pathOf = (points: CurvePoint[]) =>
+/** Today's date and minute of the day on the clock of a UTC offset, whatever the visitor's own timezone. */
+const nowAt = (utcOffset: number) => localParts(Date.now(), utcOffset)
+
+const pathOf = (points: { alt: number; az: number }[]) =>
 	points
 		.map((p, i) => {
 			const { x, y } = project(p.alt, p.az)
@@ -65,6 +74,8 @@ const FIELD =
 	"rounded-md border border-[#2a3648] bg-[#0d1420] px-2 py-1 font-mono text-xs text-[#e8edf4] aria-[invalid=true]:border-[#e0343c]"
 const BUTTON =
 	"rounded-md border border-[#2a3648] bg-[#0d1420] px-2.5 py-1 font-mono text-[11px] text-[#8b9bb0] transition-colors hover:border-[#3d5170] hover:text-[#e8edf4]"
+
+type Body = "sol" | "luna"
 
 // ---- the chart --------------------------------------------------------------------------------
 
@@ -138,11 +149,25 @@ function HourDots({ points, color, today }: { points: { solarHour: number; alt: 
 	)
 }
 
+/** A body marker (Sun or Moon): a glow, a disc and a faint line from the zenith along its direction. */
+function BodyMarker({ alt, az, color }: { alt: number; az: number; color: string }) {
+	const spot = project(alt, az)
+	const edge = project(0, az)
+	return (
+		<g>
+			<line x1={500} y1={500} x2={edge.x} y2={edge.y} stroke={color} strokeWidth={1.2} strokeDasharray="4,6" opacity={0.5} />
+			<circle cx={spot.x} cy={spot.y} r={26} fill={color} opacity={0.22} />
+			<circle cx={spot.x} cy={spot.y} r={11} fill={color} stroke="#fff" strokeWidth={2} />
+		</g>
+	)
+}
+
 // ---- the component -----------------------------------------------------------------------------
 
 export default function SkyChart({ initialDate, syncToNow = true }: { initialDate: string; syncToNow?: boolean }) {
 	const ids = { date: useId(), lat: useId(), lon: useId(), offset: useId(), time: useId() }
 
+	const [body, setBody] = useState<Body>("sol")
 	const [date, setDate] = useState(parseDate(initialDate) ? initialDate : "2026-12-21")
 	const [minutes, setMinutes] = useState(13 * 60 + 15)
 	const [playing, setPlaying] = useState(false)
@@ -176,7 +201,10 @@ export default function SkyChart({ initialDate, syncToNow = true }: { initialDat
 	const when = parseDate(date) as { y: number; m: number; d: number }
 	const doy = dayOfYear(when.y, when.m, when.d)
 	const loc = useMemo<Location>(() => ({ lat, lon }), [lat, lon])
+	const dayStart = Date.UTC(when.y, when.m - 1, when.d) - offset * HOUR
+	const instant = dayStart + minutes * MIN
 
+	// ---- Sun
 	const today = useMemo(() => sunDay(loc, doy, offset), [loc, doy, offset])
 	const todayPoints = useMemo(() => curvePoints(loc, today.dec), [loc, today.dec])
 	const todayMarkers = useMemo(() => hourMarkers(loc, today.dec), [loc, today.dec])
@@ -196,9 +224,34 @@ export default function SkyChart({ initialDate, syncToNow = true }: { initialDat
 	const sun = sunAtClock(loc, doy, offset, minutes / 60)
 	const sunUp = sun.alt >= SUNRISE_ALTITUDE
 
+	// ---- Moon (only computed in Moon mode)
+	const moon = useMemo(() => {
+		if (body !== "luna") return null
+		const noon = dayStart + 12 * HOUR
+		return {
+			refs: moonCycleReferences(noon).map((ref) => ({ ref, pass: moonPassNear(loc, ref.t) })),
+			day: moonPassOnDay(loc, offset, when.y, when.m, when.d),
+			elongation: moonElongation(noon),
+			illumination: moonIllumination(noon),
+			dec: moonRaDec(noon).dec,
+		}
+	}, [body, loc, offset, dayStart, when.y, when.m, when.d])
+	const moonNow = body === "luna" ? moonAltAz(loc, instant) : null
+	const moonUp = moonNow !== null && moonNow.alt >= SUNRISE_ALTITUDE
+
 	const isCordoba = lat === CORDOBA.lat && lon === CORDOBA.lon
 	const place = isCordoba ? CORDOBA.name : formatLatLon(loc)
 	const zone = `UTC${offset >= 0 ? "+" : ""}${offset}`
+
+	const clockOf = (ms: number) => formatClock((((ms / HOUR + offset) % 24) + 24) % 24)
+	const dayMark = (ms: number) => {
+		const diff = Math.floor((ms + offset * HOUR) / DAY) - Math.floor((dayStart + offset * HOUR) / DAY)
+		return diff < 0 ? " (día anterior)" : diff > 0 ? " (día siguiente)" : ""
+	}
+	const dayMonth = (ms: number) => {
+		const d = new Date(ms + offset * HOUR)
+		return `${pad2(d.getUTCDate())}/${pad2(d.getUTCMonth() + 1)}`
+	}
 
 	const errors = [
 		latInvalid && "Latitud: usá un número entre -90 y 90 (el sur lleva signo menos).",
@@ -207,6 +260,11 @@ export default function SkyChart({ initialDate, syncToNow = true }: { initialDat
 	].filter(Boolean) as string[]
 
 	const pickDate = (month: number, day: number) => setDate(`${when.y}-${pad2(month)}-${pad2(day)}`)
+	const goTo = (ms: number) => {
+		const parts = localParts(ms, offset)
+		setDate(parts.date)
+		setMinutes(parts.minutes)
+	}
 
 	const resetToCordoba = () => {
 		setLatText(String(CORDOBA.lat))
@@ -219,82 +277,146 @@ export default function SkyChart({ initialDate, syncToNow = true }: { initialDat
 
 	const direction = (az: number | null) => (az === null ? "—" : `${Math.round(az)}° ${compass(az)}`)
 
+	// ---- text for the status box
 	let dayText: ReactNode
-	if (today.kind === "polarDay") dayText = "Sol de medianoche: el Sol no se pone en todo el día."
-	else if (today.kind === "polarNight") dayText = "Noche polar: el Sol no sale en todo el día."
-	else
-		dayText = `El Sol sale a las ${formatClock(today.sunrise as number)} hacia el ${compass(today.riseAz as number)} (${Math.round(today.riseAz as number)}°) y se pone a las ${formatClock(today.sunset as number)} hacia el ${compass(today.setAz as number)} (${Math.round(today.setAz as number)}°). El día dura ${formatDuration(today.dayLength)}.`
+	if (body === "sol") {
+		if (today.kind === "polarDay") dayText = "Sol de medianoche: el Sol no se pone en todo el día."
+		else if (today.kind === "polarNight") dayText = "Noche polar: el Sol no sale en todo el día."
+		else
+			dayText = `El Sol sale a las ${formatClock(today.sunrise as number)} hacia el ${compass(today.riseAz as number)} (${Math.round(today.riseAz as number)}°) y se pone a las ${formatClock(today.sunset as number)} hacia el ${compass(today.setAz as number)} (${Math.round(today.setAz as number)}°). El día dura ${formatDuration(today.dayLength)}.`
+	}
+
+	const moonRiseSet = (pass: MoonPass | null, outsideDay: boolean): string => {
+		if (pass === null) return "Hoy la Luna no sale."
+		if (pass.circumpolar) return "La Luna queda sobre el horizonte durante todo este tramo."
+		const text = `La Luna sale a las ${clockOf(pass.rise as number)}${dayMark(pass.rise as number)} hacia el ${compass(pass.riseAz as number)} (${Math.round(pass.riseAz as number)}°), pasa por su punto más alto a las ${clockOf(pass.transit)}${dayMark(pass.transit)} (${fmt1(pass.maxAlt)}° de altura) y se pone a las ${clockOf(pass.set as number)}${dayMark(pass.set as number)} hacia el ${compass(pass.setAz as number)} (${Math.round(pass.setAz as number)}°).`
+		return outsideDay ? `${text} Hoy la Luna no pasa por su punto más alto: este es el arco siguiente, porque su día dura 24 h 50 min.` : text
+	}
+
+	const passCells = (pass: MoonPass | null) => ({
+		rise: pass === null ? "No sale" : pass.circumpolar ? "Todo el día arriba" : `${clockOf(pass.rise as number)} · ${direction(pass.riseAz)}`,
+		set: pass === null ? "—" : pass.circumpolar ? "—" : `${clockOf(pass.set as number)} · ${direction(pass.setAz)}`,
+		alt: pass === null ? "—" : `${fmt1(pass.maxAlt)}°`,
+	})
+
+	const cycleText = moon
+		? [...moon.refs]
+				.filter(({ ref }) => ref.id === "extremo-sur" || ref.id === "nodo" || ref.id === "extremo-norte")
+				.sort((a, b) => a.ref.t - b.ref.t)
+				.map(({ ref }) => `${ref.label.toLowerCase()} el ${dayMonth(ref.t)} (${fmt1(ref.dec)}°)`)
+				.join(" → ")
+		: ""
+
+	const svgLabel =
+		body === "sol"
+			? "Mapa del cielo: recorrido del Sol en 7 fechas de referencia y en la fecha elegida, visto mirando hacia arriba, con el norte arriba y el este a la izquierda"
+			: "Mapa del cielo: recorrido de la Luna en 5 momentos del ciclo de declinación del mes y en la fecha elegida, visto mirando hacia arriba, con el norte arriba y el este a la izquierda"
 
 	return (
 		<section
 			aria-label="Mapa del cielo interactivo"
 			className="not-prose rounded-2xl border border-[#2a3648] bg-gradient-to-b from-[#161f2c] to-[#0f1620] p-4 text-[#e8edf4] sm:p-5"
 		>
+			<div role="radiogroup" aria-label="Astro" className="mb-4 inline-flex gap-1.5">
+				{(["sol", "luna"] as const).map((b) => (
+					<button
+						key={b}
+						type="button"
+						role="radio"
+						aria-checked={body === b}
+						onClick={() => setBody(b)}
+						className={`rounded-md border px-4 py-1.5 font-mono text-xs font-bold transition-colors ${
+							body === b
+								? "border-[#ffd666] bg-[#ffd666]/15 text-[#ffd666]"
+								: "border-[#2a3648] bg-[#0d1420] text-[#8b9bb0] hover:text-[#e8edf4]"
+						}`}
+					>
+						{b === "sol" ? "Sol" : "Luna"}
+					</button>
+				))}
+			</div>
+
 			<div className="grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
 				<div>
-					<svg
-						viewBox="0 0 1000 1000"
-						role="img"
-						aria-label="Mapa del cielo: recorrido del Sol en 7 fechas de referencia y en la fecha elegida, visto mirando hacia arriba, con el norte arriba y el este a la izquierda"
-						className="h-auto w-full"
-					>
+					<svg viewBox="0 0 1000 1000" role="img" aria-label={svgLabel} className="h-auto w-full">
 						<Grid />
-						{rows.map(({ curve, points, markers }) =>
-							points.length === 0 ? null : (
-								<g key={curve.id}>
+						{body === "sol" &&
+							rows.map(({ curve, points, markers }) =>
+								points.length === 0 ? null : (
+									<g key={curve.id}>
+										<path
+											data-curve={curve.id}
+											d={pathOf(points)}
+											fill="none"
+											stroke={curve.color}
+											strokeWidth={curve.emphasize ? 3.2 : 2.2}
+											opacity={0.95}
+										/>
+										{curve.emphasize && <HourDots points={markers} color={curve.color} />}
+									</g>
+								),
+							)}
+						{body === "sol" && todayPoints.length > 0 && (
+							<g>
+								<path data-curve="hoy" d={pathOf(todayPoints)} fill="none" stroke="#f5f5f5" strokeWidth={3.6} strokeDasharray="9,6" />
+								<HourDots points={todayMarkers} color="#f5f5f5" today />
+							</g>
+						)}
+						{body === "sol" && sunUp && <BodyMarker alt={sun.alt} az={sun.az} color="#ffd666" />}
+
+						{moon &&
+							moon.refs.map(({ ref, pass }) =>
+								pass === null ? null : (
 									<path
-										data-curve={curve.id}
-										d={pathOf(points)}
+										key={ref.id}
+										data-curve={ref.id}
+										d={pathOf(pass.points)}
 										fill="none"
-										stroke={curve.color}
-										strokeWidth={curve.emphasize ? 3.2 : 2.2}
+										stroke={ref.color}
+										strokeWidth={ref.id === "nodo" ? 3.2 : 2.2}
 										opacity={0.95}
 									/>
-									{curve.emphasize && <HourDots points={markers} color={curve.color} />}
-								</g>
-							),
-						)}
-						{todayPoints.length > 0 && (
+								),
+							)}
+						{moon && moon.day.pass && (
 							<g>
 								<path
 									data-curve="hoy"
-									d={pathOf(todayPoints)}
+									d={pathOf(moon.day.pass.points)}
 									fill="none"
 									stroke="#f5f5f5"
 									strokeWidth={3.6}
 									strokeDasharray="9,6"
 								/>
-								<HourDots points={todayMarkers} color="#f5f5f5" today />
-							</g>
-						)}
-						{sunUp && (
-							<g>
-								<line
-									x1={500}
-									y1={500}
-									x2={project(0, sun.az).x}
-									y2={project(0, sun.az).y}
-									stroke="#ffd666"
-									strokeWidth={1.2}
-									strokeDasharray="4,6"
-									opacity={0.5}
-								/>
-								<circle cx={project(sun.alt, sun.az).x} cy={project(sun.alt, sun.az).y} r={26} fill="#ffd666" opacity={0.22} />
 								<circle
-									cx={project(sun.alt, sun.az).x}
-									cy={project(sun.alt, sun.az).y}
-									r={11}
-									fill="#ffd666"
-									stroke="#fff"
+									cx={project(moon.day.pass.maxAlt, moon.day.pass.maxAz).x}
+									cy={project(moon.day.pass.maxAlt, moon.day.pass.maxAz).y}
+									r={4.2}
+									fill="#0f1620"
+									stroke="#f5f5f5"
 									strokeWidth={2}
 								/>
+								<text
+									x={project(moon.day.pass.maxAlt, moon.day.pass.maxAz).x}
+									y={project(moon.day.pass.maxAlt, moon.day.pass.maxAz).y - 10}
+									fill="#f5f5f5"
+									fontSize={11}
+									fontFamily="monospace"
+									textAnchor="middle"
+									fontWeight={700}
+								>
+									{clockOf(moon.day.pass.transit)}
+								</text>
 							</g>
 						)}
+						{moonUp && moonNow && <BodyMarker alt={moonNow.alt} az={moonNow.az} color="#e8edf4" />}
 					</svg>
 					<p className="mt-2 font-mono text-[11px] leading-relaxed text-[#8b9bb0]">
 						Centro = justo arriba tuyo (cénit), borde = horizonte. Norte arriba, este a la izquierda, sur abajo, oeste a la
-						derecha: así se ve el cielo cuando mirás hacia arriba. Los números sobre las curvas son horas solares (12 =
-						mediodía solar).
+						derecha: así se ve el cielo cuando mirás hacia arriba.{" "}
+						{body === "sol"
+							? "Los números sobre las curvas son horas solares (12 = mediodía solar)."
+							: "Cada curva es un arco completo de la Luna, de salida a puesta. El número blanco es la hora a la que pasa por su punto más alto."}
 					</p>
 				</div>
 
@@ -312,25 +434,42 @@ export default function SkyChart({ initialDate, syncToNow = true }: { initialDat
 								className={FIELD}
 							/>
 							<div className="flex flex-wrap gap-1.5">
-								<button type="button" className={BUTTON} onClick={() => {
-									const now = nowAt(offset)
-									setDate(now.date)
-									setMinutes(now.minutes)
-								}}>
+								<button
+									type="button"
+									className={BUTTON}
+									onClick={() => {
+										const now = nowAt(offset)
+										setDate(now.date)
+										setMinutes(now.minutes)
+									}}
+								>
 									Hoy
 								</button>
-								<button type="button" className={BUTTON} onClick={() => pickDate(12, 21)}>
-									Solsticio de diciembre
-								</button>
-								<button type="button" className={BUTTON} onClick={() => pickDate(3, 20)}>
-									Equinoccio de marzo
-								</button>
-								<button type="button" className={BUTTON} onClick={() => pickDate(6, 21)}>
-									Solsticio de junio
-								</button>
-								<button type="button" className={BUTTON} onClick={() => pickDate(9, 23)}>
-									Equinoccio de septiembre
-								</button>
+								{body === "sol" ? (
+									<>
+										<button type="button" className={BUTTON} onClick={() => pickDate(12, 21)}>
+											Solsticio de diciembre
+										</button>
+										<button type="button" className={BUTTON} onClick={() => pickDate(3, 20)}>
+											Equinoccio de marzo
+										</button>
+										<button type="button" className={BUTTON} onClick={() => pickDate(6, 21)}>
+											Solsticio de junio
+										</button>
+										<button type="button" className={BUTTON} onClick={() => pickDate(9, 23)}>
+											Equinoccio de septiembre
+										</button>
+									</>
+								) : (
+									<>
+										<button type="button" className={BUTTON} onClick={() => goTo(nextPhase(instant, 0))}>
+											Próxima luna nueva
+										</button>
+										<button type="button" className={BUTTON} onClick={() => goTo(nextPhase(instant, 180))}>
+											Próxima luna llena
+										</button>
+									</>
+								)}
 							</div>
 						</div>
 
@@ -397,7 +536,10 @@ export default function SkyChart({ initialDate, syncToNow = true }: { initialDat
 								Volver a Córdoba
 							</button>
 							{errors.length > 0 && (
-								<div role="alert" className="space-y-1 rounded-md border border-[#e0343c]/60 bg-[#e0343c]/10 p-2 font-mono text-[11px] text-[#ffb4b8]">
+								<div
+									role="alert"
+									className="space-y-1 rounded-md border border-[#e0343c]/60 bg-[#e0343c]/10 p-2 font-mono text-[11px] text-[#ffb4b8]"
+								>
 									{errors.map((message) => (
 										<p key={message}>{message}</p>
 									))}
@@ -426,9 +568,13 @@ export default function SkyChart({ initialDate, syncToNow = true }: { initialDat
 							</button>
 						</div>
 						<p data-testid="sun-readout" className="font-mono text-xs leading-relaxed">
-							{sunUp
-								? `A las ${formatClock(minutes / 60)} el Sol está a ${fmt1(sun.alt)}° de altura, hacia el ${compass(sun.az)} (${Math.round(sun.az)}°).`
-								: `A las ${formatClock(minutes / 60)} el Sol está debajo del horizonte (${fmt1(sun.alt)}° de altura).`}
+							{body === "sol"
+								? sunUp
+									? `A las ${formatClock(minutes / 60)} el Sol está a ${fmt1(sun.alt)}° de altura, hacia el ${compass(sun.az)} (${Math.round(sun.az)}°).`
+									: `A las ${formatClock(minutes / 60)} el Sol está debajo del horizonte (${fmt1(sun.alt)}° de altura).`
+								: moonUp && moonNow
+									? `A las ${formatClock(minutes / 60)} la Luna está a ${fmt1(moonNow.alt)}° de altura, hacia el ${compass(moonNow.az)} (${Math.round(moonNow.az)}°).`
+									: `A las ${formatClock(minutes / 60)} La Luna está debajo del horizonte (${fmt1(moonNow ? moonNow.alt : 0)}° de altura).`}
 						</p>
 					</div>
 
@@ -436,12 +582,28 @@ export default function SkyChart({ initialDate, syncToNow = true }: { initialDat
 						<p className="font-sans text-sm font-bold">
 							{place} · {longDate(when.y, when.m, when.d)}
 						</p>
-						<p>
-							Declinación solar <span className="font-bold text-[#f0b429]">{fmt1(today.dec)}°</span> · altura máxima{" "}
-							<span className="font-bold text-[#f0b429]">{fmt1(today.maxAlt)}°</span> al mediodía solar, que cae a las{" "}
-							<span className="font-bold text-[#f0b429]">{formatClock(today.noon)}</span> de la hora de reloj ({zone}).
-						</p>
-						<p>{dayText}</p>
+						{body === "sol" ? (
+							<>
+								<p>
+									Declinación solar <span className="font-bold text-[#f0b429]">{fmt1(today.dec)}°</span> · altura máxima{" "}
+									<span className="font-bold text-[#f0b429]">{fmt1(today.maxAlt)}°</span> al mediodía solar, que cae a las{" "}
+									<span className="font-bold text-[#f0b429]">{formatClock(today.noon)}</span> de la hora de reloj ({zone}).
+								</p>
+								<p>{dayText}</p>
+							</>
+						) : (
+							moon && (
+								<>
+									<p>
+										Fase: <span className="font-bold text-[#f0b429]">{phaseName(moon.elongation)}</span> (
+										{Math.round(moon.illumination * 100)}% iluminada) · declinación{" "}
+										<span className="font-bold text-[#f0b429]">{fmt1(moon.dec)}°</span>.
+									</p>
+									<p>{moonRiseSet(moon.day.pass, moon.day.outsideDay)}</p>
+									<p>Ciclo del mes: {cycleText}.</p>
+								</>
+							)
+						)}
 					</div>
 				</div>
 			</div>
@@ -449,46 +611,85 @@ export default function SkyChart({ initialDate, syncToNow = true }: { initialDat
 			<div className="mt-5 overflow-x-auto">
 				<table className="w-full border-collapse font-mono text-[11.5px]">
 					<caption className="pb-2 text-left text-[11px] text-[#8b9bb0]">
-						Recorrido del Sol en 7 fechas de referencia y en la fecha elegida
+						{body === "sol"
+							? "Recorrido del Sol en 7 fechas de referencia y en la fecha elegida"
+							: "Recorrido de la Luna en 5 momentos del ciclo de declinación del mes y en la fecha elegida"}
 					</caption>
 					<thead>
 						<tr className="text-left text-[10.5px] uppercase tracking-wider text-[#8b9bb0]">
-							<th scope="col" className="border-b border-[#2a3648] p-1.5 font-semibold">Fecha(s)</th>
-							<th scope="col" className="border-b border-[#2a3648] p-1.5 font-semibold">Orto</th>
-							<th scope="col" className="border-b border-[#2a3648] p-1.5 font-semibold">Ocaso</th>
+							<th scope="col" className="border-b border-[#2a3648] p-1.5 font-semibold">
+								{body === "sol" ? "Fecha(s)" : "Momento"}
+							</th>
+							<th scope="col" className="border-b border-[#2a3648] p-1.5 font-semibold">{body === "sol" ? "Orto" : "Sale"}</th>
+							<th scope="col" className="border-b border-[#2a3648] p-1.5 font-semibold">{body === "sol" ? "Ocaso" : "Se pone"}</th>
 							<th scope="col" className="border-b border-[#2a3648] p-1.5 font-semibold">Alt. máx</th>
-							<th scope="col" className="border-b border-[#2a3648] p-1.5 font-semibold">Día</th>
+							<th scope="col" className="border-b border-[#2a3648] p-1.5 font-semibold">{body === "sol" ? "Día" : "Declin."}</th>
 						</tr>
 					</thead>
 					<tbody>
-						{rows.map(({ curve, day }) => (
-							<tr key={curve.id} className={curve.emphasize ? "bg-[#2ea043]/10" : undefined}>
-								<td className="border-b border-[#202b3c] p-1.5">
-									<span className="mr-2 inline-block h-2.5 w-2.5 rounded-sm" style={{ background: curve.color }} aria-hidden="true" />
-									{curve.label}
-									{curveSubtitle(curve, lat) && <span className="block pl-[18px] text-[10.5px] text-[#8b9bb0]">{curveSubtitle(curve, lat)}</span>}
+						{body === "sol" &&
+							rows.map(({ curve, day }) => (
+								<tr key={curve.id} className={curve.emphasize ? "bg-[#2ea043]/10" : undefined}>
+									<td className="border-b border-[#202b3c] p-1.5">
+										<span className="mr-2 inline-block h-2.5 w-2.5 rounded-sm" style={{ background: curve.color }} aria-hidden="true" />
+										{curve.label}
+										{curveSubtitle(curve, lat) && (
+											<span className="block pl-[18px] text-[10.5px] text-[#8b9bb0]">{curveSubtitle(curve, lat)}</span>
+										)}
+									</td>
+									<td className="border-b border-[#202b3c] p-1.5">{direction(day.riseAz)}</td>
+									<td className="border-b border-[#202b3c] p-1.5">{direction(day.setAz)}</td>
+									<td className="border-b border-[#202b3c] p-1.5">{fmt1(day.maxAlt)}°</td>
+									<td className="border-b border-[#202b3c] p-1.5">{formatDuration(day.dayLength)}</td>
+								</tr>
+							))}
+						{body === "sol" && (
+							<tr className="bg-[#f0b429]/10 font-bold">
+								<td className="p-1.5">
+									<span className="mr-2 inline-block h-2.5 w-2.5 rounded-sm bg-[#f5f5f5]" aria-hidden="true" />
+									HOY — {longDate(when.y, when.m, when.d)}
 								</td>
-								<td className="border-b border-[#202b3c] p-1.5">{direction(day.riseAz)}</td>
-								<td className="border-b border-[#202b3c] p-1.5">{direction(day.setAz)}</td>
-								<td className="border-b border-[#202b3c] p-1.5">{fmt1(day.maxAlt)}°</td>
-								<td className="border-b border-[#202b3c] p-1.5">{formatDuration(day.dayLength)}</td>
+								<td className="p-1.5">{direction(today.riseAz)}</td>
+								<td className="p-1.5">{direction(today.setAz)}</td>
+								<td className="p-1.5">{fmt1(today.maxAlt)}°</td>
+								<td className="p-1.5">{formatDuration(today.dayLength)}</td>
 							</tr>
-						))}
-						<tr className="bg-[#f0b429]/10 font-bold">
-							<td className="p-1.5">
-								<span className="mr-2 inline-block h-2.5 w-2.5 rounded-sm bg-[#f5f5f5]" aria-hidden="true" />
-								HOY — {longDate(when.y, when.m, when.d)}
-							</td>
-							<td className="p-1.5">{direction(today.riseAz)}</td>
-							<td className="p-1.5">{direction(today.setAz)}</td>
-							<td className="p-1.5">{fmt1(today.maxAlt)}°</td>
-							<td className="p-1.5">{formatDuration(today.dayLength)}</td>
-						</tr>
+						)}
+						{moon &&
+							moon.refs.map(({ ref, pass }) => {
+								const cells = passCells(pass)
+								return (
+									<tr key={ref.id} className={ref.id === "nodo" ? "bg-[#2ea043]/10" : undefined}>
+										<td className="border-b border-[#202b3c] p-1.5">
+											<span className="mr-2 inline-block h-2.5 w-2.5 rounded-sm" style={{ background: ref.color }} aria-hidden="true" />
+											{ref.label}
+											<span className="block pl-[18px] text-[10.5px] text-[#8b9bb0]">{dayMonth(ref.t)}</span>
+										</td>
+										<td className="border-b border-[#202b3c] p-1.5">{cells.rise}</td>
+										<td className="border-b border-[#202b3c] p-1.5">{cells.set}</td>
+										<td className="border-b border-[#202b3c] p-1.5">{cells.alt}</td>
+										<td className="border-b border-[#202b3c] p-1.5">{fmt1(ref.dec)}°</td>
+									</tr>
+								)
+							})}
+						{moon && (
+							<tr className="bg-[#f0b429]/10 font-bold">
+								<td className="p-1.5">
+									<span className="mr-2 inline-block h-2.5 w-2.5 rounded-sm bg-[#f5f5f5]" aria-hidden="true" />
+									HOY — {longDate(when.y, when.m, when.d)}
+								</td>
+								<td className="p-1.5">{passCells(moon.day.pass).rise}</td>
+								<td className="p-1.5">{passCells(moon.day.pass).set}</td>
+								<td className="p-1.5">{passCells(moon.day.pass).alt}</td>
+								<td className="p-1.5">{fmt1(moon.dec)}°</td>
+							</tr>
+						)}
 					</tbody>
 				</table>
 				<p className="mt-2 font-mono text-[11px] leading-relaxed text-[#8b9bb0]">
-					Orto y ocaso oficiales (el centro del Sol a 0,83° bajo el horizonte, por la refracción). Declinación y ecuación del
-					tiempo: serie de NOAA, con un error de unos 0,05°.
+					{body === "sol"
+						? "Orto y ocaso oficiales (el centro del Sol a 0,83° bajo el horizonte, por la refracción). Declinación y ecuación del tiempo: serie de NOAA, con un error de unos 0,05°."
+						: "Posición de la Luna: serie de Meeus, con un error de pocas centésimas de grado, y paralaje incluido. Salida y puesta con el centro de la Luna a 0,83° bajo el horizonte."}
 				</p>
 			</div>
 		</section>

@@ -211,3 +211,163 @@ describe("SkyChart syncToNow", () => {
 		expect(input("Hora del día").value).toBe(String(22 * 60 + 30))
 	})
 })
+
+// ---------------------------------------------------------------------------------------------
+// Moon mode
+// ---------------------------------------------------------------------------------------------
+
+import { moonAltAz } from "@/lib/astro/moon"
+import { moonPassOnDay } from "@/lib/astro/moon-chart"
+
+const CORDOBA_LOC = { lat: -31.42, lon: -64.18 }
+
+function toMoon(date = "2026-10-02") {
+	const view = setup(date)
+	fireEvent.click(screen.getByRole("radio", { name: "Luna" }))
+	return view
+}
+
+describe("SkyChart Sol / Luna switch", () => {
+	test("starts on the Sun and switches with a radio group", () => {
+		setup()
+		const group = screen.getByRole("radiogroup", { name: "Astro" })
+		expect(within(group).getByRole("radio", { name: "Sol" })).toHaveAttribute("aria-checked", "true")
+		expect(within(group).getByRole("radio", { name: "Luna" })).toHaveAttribute("aria-checked", "false")
+		fireEvent.click(within(group).getByRole("radio", { name: "Luna" }))
+		expect(within(group).getByRole("radio", { name: "Luna" })).toHaveAttribute("aria-checked", "true")
+		expect(within(group).getByRole("radio", { name: "Sol" })).toHaveAttribute("aria-checked", "false")
+	})
+
+	test("switching back restores the Sun chart", () => {
+		toMoon()
+		fireEvent.click(screen.getByRole("radio", { name: "Sol" }))
+		expect(legendRow("21 de diciembre")).toBeInTheDocument()
+		expect(screen.getByRole("button", { name: "Solsticio de junio" })).toBeInTheDocument()
+	})
+
+	test("the Sun-only date buttons go away in Moon mode, and the Moon-only ones appear there only", () => {
+		setup()
+		expect(screen.queryByRole("button", { name: "Próxima luna llena" })).not.toBeInTheDocument()
+		fireEvent.click(screen.getByRole("radio", { name: "Luna" }))
+		expect(screen.queryByRole("button", { name: "Solsticio de junio" })).not.toBeInTheDocument()
+		expect(screen.getByRole("button", { name: "Próxima luna llena" })).toBeInTheDocument()
+		expect(screen.getByRole("button", { name: "Próxima luna nueva" })).toBeInTheDocument()
+	})
+})
+
+describe("SkyChart Moon mode: the chart", () => {
+	test("draws the five cycle curves in order, plus the chosen day's", () => {
+		const { container } = toMoon()
+		const ids = Array.from(container.querySelectorAll("path[data-curve]")).map((p) => p.getAttribute("data-curve"))
+		expect(ids).toEqual(["extremo-sur", "cuarto-sur", "nodo", "cuarto-norte", "extremo-norte", "hoy"])
+	})
+
+	test("the legend lists the five moments and today, and no Sun rows", () => {
+		toMoon()
+		const table = screen.getByRole("table")
+		expect(within(table).getAllByRole("row")).toHaveLength(1 + 5 + 1)
+		expect(legendRow("Extremo sur del mes")).toBeInTheDocument()
+		expect(legendRow("Cruce del ecuador")).toBeInTheDocument()
+		expect(legendRow("Extremo norte del mes")).toBeInTheDocument()
+		expect(within(table).queryByText(/21 de diciembre/)).not.toBeInTheDocument()
+	})
+
+	test("on 2 Oct 2026 (the day the original file collapsed) the five curves are different", () => {
+		toMoon("2026-10-02")
+		const south = legendRow("Extremo sur del mes").textContent as string
+		const north = legendRow("Extremo norte del mes").textContent as string
+		expect(south).not.toEqual(north)
+		expect(south).toMatch(/-2[5-9],\d/)
+		expect(north).toMatch(/2[5-9],\d/)
+	})
+
+	test("the legend's maximum altitudes follow the latitude", () => {
+		toMoon()
+		const altitude = () => {
+			const cells = legendRow("Extremo norte del mes").querySelectorAll("td")
+			return parseFloat((cells[3].textContent as string).replace(",", "."))
+		}
+		const inCordoba = altitude()
+		type("Latitud", "40")
+		expect(altitude()).toBeGreaterThan(inCordoba + 20)
+	})
+})
+
+describe("SkyChart Moon mode: phase and status", () => {
+	test("on the day of the August 2026 new moon it says Luna nueva, ~0% lit", () => {
+		toMoon("2026-08-12")
+		const status = screen.getByRole("status")
+		expect(status).toHaveTextContent("Luna nueva")
+		expect(status).toHaveTextContent("0%")
+	})
+
+	test("on the day of the March 2026 full moon it says Luna llena, ~100% lit", () => {
+		toMoon("2026-03-03")
+		const status = screen.getByRole("status")
+		expect(status).toHaveTextContent("Luna llena")
+		expect(status).toHaveTextContent("100%")
+	})
+
+	test("tells when the Moon rises and sets that day, in the clock of the chosen zone", () => {
+		toMoon("2026-10-02")
+		const { pass } = moonPassOnDay(CORDOBA_LOC, -3, 2026, 10, 2)
+		expect(pass).not.toBeNull()
+		expect(screen.getByRole("status")).toHaveTextContent(/La Luna sale a las \d\d:\d\d/)
+		expect(screen.getByRole("status")).toHaveTextContent(/se pone a las \d\d:\d\d/)
+	})
+
+	test("describes the month's declination cycle with its dates", () => {
+		toMoon("2026-10-02")
+		expect(screen.getByRole("status")).toHaveTextContent(/extremo sur/i)
+		expect(screen.getByRole("status")).toHaveTextContent(/extremo norte/i)
+	})
+})
+
+describe("SkyChart Moon mode: next phase buttons", () => {
+	test("Próxima luna llena jumps to 26 Oct 2026 at ~01:13 Argentina time (04:13 UTC)", () => {
+		toMoon("2026-10-02")
+		fireEvent.click(screen.getByRole("button", { name: "Próxima luna llena" }))
+		expect(input("Fecha").value).toBe("2026-10-26")
+		expect(Math.abs(Number(input("Hora del día").value) - 73)).toBeLessThanOrEqual(2)
+	})
+
+	test("Próxima luna nueva jumps to 10 Oct 2026 at ~12:50 Argentina time (15:50 UTC)", () => {
+		toMoon("2026-10-02")
+		fireEvent.click(screen.getByRole("button", { name: "Próxima luna nueva" }))
+		expect(input("Fecha").value).toBe("2026-10-10")
+		expect(Math.abs(Number(input("Hora del día").value) - 770)).toBeLessThanOrEqual(2)
+	})
+})
+
+describe("SkyChart Moon mode: time of day", () => {
+	test("at the Moon's culmination the readout gives its altitude, and when it is down it says so", () => {
+		toMoon("2026-10-02")
+		const { pass } = moonPassOnDay(CORDOBA_LOC, -3, 2026, 10, 2)
+		const dayStart = Date.UTC(2026, 9, 2) + 3 * 3_600_000
+		const transitMinute = Math.round(((pass as { transit: number }).transit - dayStart) / 60_000)
+		fireEvent.change(input("Hora del día"), { target: { value: String(Math.min(1439, Math.max(0, transitMinute))) } })
+		expect(screen.getByTestId("sun-readout")).toHaveTextContent(/la Luna está a/i)
+
+		// find a minute where the Moon is clearly below the horizon
+		let down = -1
+		for (let m = 0; m < 1440; m += 10) {
+			if (moonAltAz(CORDOBA_LOC, dayStart + m * 60_000).alt < -10) {
+				down = m
+				break
+			}
+		}
+		expect(down).toBeGreaterThanOrEqual(0)
+		fireEvent.change(input("Hora del día"), { target: { value: String(down) } })
+		expect(screen.getByTestId("sun-readout")).toHaveTextContent(/La Luna está debajo del horizonte/i)
+	})
+})
+
+describe("SkyChart Moon mode: extreme places", () => {
+	test("at 80° N some curves have no moonrise or never set, and the legend says so without breaking", () => {
+		toMoon("2026-10-02")
+		type("Latitud", "80")
+		const table = screen.getByRole("table")
+		expect(within(table).getAllByRole("row")).toHaveLength(1 + 5 + 1)
+		expect(table.textContent).toMatch(/No sale|Todo el día arriba/)
+	})
+})
