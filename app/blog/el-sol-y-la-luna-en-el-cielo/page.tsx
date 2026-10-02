@@ -121,7 +121,7 @@ const seo: ContentSeo = {
 		{
 			question: "¿A qué hora sale la Luna?",
 			answer:
-				"Sale unos 50 minutos más tarde cada día, porque su día dura 24 horas y 50 minutos. Con el botón Luna del mapa ves la salida y la puesta de cualquier fecha en tu lugar.",
+				"Sale unos 50 minutos más tarde cada día, porque su día dura 24 horas y 50 minutos. Con el mapa de la Luna ves la salida y la puesta de cualquier fecha en tu lugar.",
 		},
 		{
 			question: "¿Sirve para otras ciudades o países?",
@@ -145,7 +145,7 @@ const seo: ContentSeo = {
 
 const sections = [
 	{ id: "para-que-sirve", label: "Para qué sirve" },
-	{ id: "mapa", label: "Probalo: el mapa del cielo" },
+	{ id: "mapa", label: "Probalo: el mapa del Sol" },
 	{ id: "como-leerlo", label: "Cómo leer el mapa" },
 	{ id: "por-que-cambia", label: "Por qué cambia el camino del Sol" },
 	{ id: "mediodia-solar", label: "El mediodía solar no es a las 12" },
@@ -209,13 +209,12 @@ export default function SolYLunaPage() {
 				</ul>
 			</Section>
 
-			<Section id="mapa" heading="Probalo: el mapa del cielo">
+			<Section id="mapa" heading="Probalo: el mapa del Sol">
 				<p>
-					Elegí <strong>Sol</strong> o <strong>Luna</strong>, una fecha, y mové la hora del día o tocá{" "}
-					<strong>Reproducir</strong> para ver cómo cruza el cielo. Empieza en Córdoba, pero podés escribir las coordenadas de
-					cualquier lugar. Con la Luna también podés saltar a la próxima luna nueva o llena.
+					Elegí una fecha, mové la hora del día o tocá <strong>Reproducir</strong> para ver cómo cruza el Sol. Empieza en Córdoba,
+					pero podés escribir las coordenadas de cualquier lugar. Más abajo está el mismo mapa para la Luna.
 				</p>
-				<SkyChart initialDate={BUILD_DATE} />
+				<SkyChart initialDate={BUILD_DATE} fixedBody="sol" />
 			</Section>
 
 			<Section id="como-leerlo" heading="Cómo leer el mapa">
@@ -332,10 +331,11 @@ export default function SolYLunaPage() {
 			<Section id="luna" heading="Y la Luna">
 				<p>
 					La Luna usa el mismo mapa y el mismo tipo de curvas que el Sol, pero se mueve de otra manera: su declinación recorre todo
-					su rango en unos 27 días, no en un año. Por eso sus curvas no se repiten cada año: cambian noche a noche. Con el botón{" "}
-					<strong>Luna</strong> del mapa ves cinco momentos del mes, del extremo sur al extremo norte, y el arco completo de la
-					fecha que elijas, de salida a puesta, con su fase.
+					su rango en unos 27 días, no en un año. Por eso sus curvas no se repiten cada año: cambian noche a noche. En el mapa de
+					abajo ves cinco momentos del mes, del extremo sur al extremo norte, y el arco completo de la fecha que elijas, de
+					salida a puesta, con su fase. Podés saltar a la próxima luna nueva o llena.
 				</p>
+				<SkyChart initialDate={BUILD_DATE} fixedBody="luna" />
 				<ul className="list-disc space-y-2 pl-5">
 					<li>
 						<strong>Sale unos 50 minutos más tarde cada día</strong>, porque el día lunar dura 24 horas y 50 minutos. Un día al

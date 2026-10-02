@@ -371,3 +371,42 @@ describe("SkyChart Moon mode: extreme places", () => {
 		expect(table.textContent).toMatch(/No sale|Todo el día arriba/)
 	})
 })
+
+describe("SkyChart pinned to one body (the post shows a Sun chart and a Moon chart, each in its own section)", () => {
+	test("fixedBody=luna starts in Moon mode, with no Sol/Luna switch", () => {
+		const { container } = render(<SkyChart initialDate="2026-10-02" syncToNow={false} fixedBody="luna" />)
+		expect(screen.queryByRole("radiogroup", { name: "Astro" })).not.toBeInTheDocument()
+		expect(container.querySelectorAll('path[data-curve="extremo-sur"]')).toHaveLength(1)
+		expect(legendRow("Extremo norte del mes")).toBeInTheDocument()
+		expect(screen.getByRole("button", { name: "Próxima luna llena" })).toBeInTheDocument()
+		expect(screen.getByRole("region", { name: /Mapa de la Luna/ })).toBeInTheDocument()
+	})
+
+	test("fixedBody=sol is the Sun chart, with no switch and no Moon controls", () => {
+		render(<SkyChart initialDate={DEC_21} syncToNow={false} fixedBody="sol" />)
+		expect(screen.queryByRole("radiogroup", { name: "Astro" })).not.toBeInTheDocument()
+		expect(legendRow("21 de diciembre")).toBeInTheDocument()
+		expect(screen.queryByRole("button", { name: "Próxima luna llena" })).not.toBeInTheDocument()
+		expect(screen.getByRole("region", { name: /Mapa del Sol/ })).toBeInTheDocument()
+	})
+
+	test("two charts on one page do not clash: unique field ids and independent state", () => {
+		render(
+			<>
+				<SkyChart initialDate={DEC_21} syncToNow={false} fixedBody="sol" />
+				<SkyChart initialDate="2026-10-02" syncToNow={false} fixedBody="luna" />
+			</>,
+		)
+		const dates = screen.getAllByLabelText("Fecha") as HTMLInputElement[]
+		expect(dates).toHaveLength(2)
+		expect(new Set(dates.map((d) => d.id)).size).toBe(2)
+		fireEvent.change(dates[0], { target: { value: "2026-06-21" } })
+		expect(dates[0].value).toBe("2026-06-21")
+		expect(dates[1].value).toBe("2026-10-02")
+	})
+
+	test("without fixedBody the switch is still there (default behaviour unchanged)", () => {
+		setup()
+		expect(screen.getByRole("radiogroup", { name: "Astro" })).toBeInTheDocument()
+	})
+})

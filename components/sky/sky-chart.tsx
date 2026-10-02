@@ -164,10 +164,22 @@ function BodyMarker({ alt, az, color }: { alt: number; az: number; color: string
 
 // ---- the component -----------------------------------------------------------------------------
 
-export default function SkyChart({ initialDate, syncToNow = true }: { initialDate: string; syncToNow?: boolean }) {
+/**
+ * The interactive sky chart. By default it has a Sol/Luna switch; pass `fixedBody` to pin it to one body
+ * and drop the switch (the post shows one chart in the Sun section and one in the Moon section).
+ */
+export default function SkyChart({
+	initialDate,
+	syncToNow = true,
+	fixedBody,
+}: {
+	initialDate: string
+	syncToNow?: boolean
+	fixedBody?: Body
+}) {
 	const ids = { date: useId(), lat: useId(), lon: useId(), offset: useId(), time: useId() }
 
-	const [body, setBody] = useState<Body>("sol")
+	const [body, setBody] = useState<Body>(fixedBody ?? "sol")
 	const [date, setDate] = useState(parseDate(initialDate) ? initialDate : "2026-12-21")
 	const [minutes, setMinutes] = useState(13 * 60 + 15)
 	const [playing, setPlaying] = useState(false)
@@ -314,9 +326,10 @@ export default function SkyChart({ initialDate, syncToNow = true }: { initialDat
 
 	return (
 		<section
-			aria-label="Mapa del cielo interactivo"
+			aria-label={fixedBody ? (fixedBody === "sol" ? "Mapa del Sol interactivo" : "Mapa de la Luna interactivo") : "Mapa del cielo interactivo"}
 			className="not-prose rounded-2xl border border-[#2a3648] bg-gradient-to-b from-[#161f2c] to-[#0f1620] p-4 text-[#e8edf4] sm:p-5"
 		>
+			{!fixedBody && (
 			<div role="radiogroup" aria-label="Astro" className="mb-4 inline-flex gap-1.5">
 				{(["sol", "luna"] as const).map((b) => (
 					<button
@@ -335,6 +348,7 @@ export default function SkyChart({ initialDate, syncToNow = true }: { initialDat
 					</button>
 				))}
 			</div>
+			)}
 
 			<div className="grid gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
 				<div>
