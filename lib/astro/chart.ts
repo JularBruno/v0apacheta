@@ -215,3 +215,25 @@ export function sunAtClock(
 	const { alt, az } = sunAltAz(loc.lat, decOverride ?? solarDeclination(doy), H)
 	return { alt, az, H }
 }
+
+/**
+ * When the Sun is at least `minAlt` degrees high on a day, as clock hours (0-24), or null if it never gets that high.
+ * Used for UV and shadow advice: UV is strongest when the Sun is high, and above 45° your shadow is shorter than you.
+ */
+export function sunAboveWindow(
+	loc: Location,
+	doy: number,
+	utcOffset: number,
+	minAlt: number,
+	decOverride?: number,
+): { from: number; to: number } | null {
+	let first = -1
+	let last = -1
+	for (let minute = 0; minute < 1440; minute++) {
+		if (sunAtClock(loc, doy, utcOffset, minute / 60, decOverride).alt >= minAlt) {
+			if (first < 0) first = minute
+			last = minute
+		}
+	}
+	return first < 0 ? null : { from: first / 60, to: (last + 1) / 60 }
+}

@@ -4,6 +4,7 @@ import {
 	CodeBlock,
 	DataTable,
 	Faq,
+	Figure,
 	Glossary,
 	InlineToolCallout,
 	KeyFigures,
@@ -94,6 +95,36 @@ describe("CodeBlock", () => {
 		const { container } = render(<CodeBlock code="x" />)
 		expect(container.querySelector("pre")).toHaveClass("overflow-x-auto")
 		expect(container.querySelector("figcaption")).toBeNull()
+	})
+})
+
+describe("Figure", () => {
+	test("renders the image with its alt text, caption and credit inside a figure", () => {
+		const { container } = render(
+			<Figure src="/blog/x.webp" alt="Protector solar y sombrero" width={800} height={450} caption="Cómo cuidarte" credit="Ilustración: Bruno" />,
+		)
+		const img = container.querySelector("figure img") as HTMLImageElement
+		expect(img.getAttribute("alt")).toBe("Protector solar y sombrero")
+		// Jest does not read next.config (unoptimized images), so next/image gives an optimizer url with the path encoded
+		expect(decodeURIComponent(img.getAttribute("src") as string)).toContain("/blog/x.webp")
+		expect(container.querySelector("figcaption")).toHaveTextContent("Cómo cuidarte")
+		expect(container.querySelector("figcaption")).toHaveTextContent("Ilustración: Bruno")
+	})
+
+	test("has no caption element when there is none", () => {
+		const { container } = render(<Figure src="/blog/x.webp" alt="Algo" width={10} height={10} />)
+		expect(container.querySelector("figcaption")).toBeNull()
+	})
+
+	test("requires meaningful alt text (an empty one fails the build)", () => {
+		expect(() => Figure({ src: "/blog/x.webp", alt: "  ", width: 10, height: 10 })).toThrow(/alt/i)
+	})
+
+	test("only accepts local paths or https urls, never javascript: or data: or http:", () => {
+		for (const src of ["javascript:alert(1)", "data:image/png;base64,xx", "http://example.com/a.png", "blog/x.webp"]) {
+			expect(() => Figure({ src, alt: "Algo", width: 10, height: 10 })).toThrow(/src/i)
+		}
+		expect(() => Figure({ src: "https://example.com/a.png", alt: "Algo", width: 10, height: 10 })).not.toThrow()
 	})
 })
 

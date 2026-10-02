@@ -12,6 +12,7 @@ import {
 	parseUtcOffset,
 	project,
 	referenceDeclination,
+	sunAboveWindow,
 	sunAtClock,
 	sunDay,
 } from "../chart"
@@ -232,5 +233,40 @@ describe("sunAtClock", () => {
 		const a = sunAtClock(CORDOBA, day, ARGENTINA_UTC_OFFSET, 0)
 		const b = sunAtClock(CORDOBA, day, ARGENTINA_UTC_OFFSET, 24)
 		expect(a.alt).toBeCloseTo(b.alt, 6)
+	})
+})
+
+describe("sunAboveWindow (when the Sun is higher than a given altitude, for UV and shadows)", () => {
+	const dec21 = doy(12, 21)
+
+	test("Córdoba at the December solstice: above 45° from about 09:55 to 16:35, centred on solar noon", () => {
+		const w = sunAboveWindow(CORDOBA, dec21, ARGENTINA_UTC_OFFSET, 45)!
+		const noon = sunDay(CORDOBA, dec21, ARGENTINA_UTC_OFFSET).noon
+		expect(w.to - w.from).toBeGreaterThan(6.5)
+		expect(w.to - w.from).toBeLessThan(7.0)
+		expect((w.from + w.to) / 2).toBeCloseTo(noon, 1)
+		expect(Math.abs(w.from - clockToHours("09:54"))).toBeLessThan(0.1)
+	})
+
+	test("at the June solstice the Sun never reaches 45° in Córdoba (35° at most), so there is no window", () => {
+		expect(sunAboveWindow(CORDOBA, doy(6, 21), ARGENTINA_UTC_OFFSET, 45)).toBeNull()
+		expect(sunAboveWindow(CORDOBA, doy(6, 21), ARGENTINA_UTC_OFFSET, 30)).not.toBeNull()
+	})
+
+	test("a lower threshold gives a wider window, and the window is always inside the day", () => {
+		const high = sunAboveWindow(CORDOBA, dec21, ARGENTINA_UTC_OFFSET, 60)!
+		const low = sunAboveWindow(CORDOBA, dec21, ARGENTINA_UTC_OFFSET, 30)!
+		expect(low.to - low.from).toBeGreaterThan(high.to - high.from)
+		for (const w of [high, low]) {
+			expect(w.from).toBeGreaterThanOrEqual(0)
+			expect(w.to).toBeLessThanOrEqual(24)
+			expect(w.to).toBeGreaterThan(w.from)
+		}
+	})
+
+	test("a pole in its polar day is above a low altitude all day", () => {
+		const w = sunAboveWindow({ lat: 80, lon: 0 }, doy(6, 21), 0, 10)!
+		expect(w.from).toBe(0)
+		expect(w.to).toBe(24)
 	})
 })
