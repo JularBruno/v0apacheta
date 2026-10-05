@@ -91,8 +91,8 @@ describe("the Sol y Luna post", () => {
 			const article = container.querySelector("article") as HTMLElement
 			const figures = Array.from(article.querySelectorAll("figure"))
 			const last = figures[figures.length - 1]
-			const wow = screen.getByText(/Wow Soka you pick the best mini vacations for sure/)
-			const broke = screen.getByText(/Oh you broke it/)
+			const wow = screen.getByText(/Wow I gotta hand it to you Sokka/)
+			const broke = screen.getByText(/Great you must have broken it/)
 			for (const line of [wow, broke]) expect(line.closest("em, .italic")).not.toBeNull()
 			expect(after(wow, broke)).toBe(true)
 			expect(after(broke, last)).toBe(true)
