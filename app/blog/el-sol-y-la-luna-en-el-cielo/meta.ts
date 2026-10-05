@@ -8,5 +8,5 @@ export const meta: ContentMeta = {
 		"Mapa interactivo del cielo para Córdoba o cualquier lugar: por dónde salen, pasan y se ponen el Sol y la Luna, y para qué sirve saberlo.",
 	publishedAt: "2026-10-02",
 	category: "random",
-	tags: ["sol", "luna", "astronomia", "cielo", "solsticio", "paneles-solares", "rayos-uv", "fases-lunares"],
+	tags: ["sol", "luna", "astronomia", "cielo", "solsticio", "paneles-solares", "eclipses", "fases-lunares"],
 }

@@ -111,6 +111,15 @@ describe("Figure", () => {
 		expect(container.querySelector("figcaption")).toHaveTextContent("Ilustración: Bruno")
 	})
 
+	test("loads lazily by default and with priority when asked (the image at the top of a page)", () => {
+		const lazy = render(<Figure src="/blog/x.webp" alt="Algo" width={10} height={10} />)
+		expect(lazy.container.querySelector("img")?.getAttribute("loading")).toBe("lazy")
+		lazy.unmount()
+		const eager = render(<Figure src="/blog/x.webp" alt="Algo" width={10} height={10} priority />)
+		// next/image marks priority by not setting loading="lazy" (and preloading the image in the head)
+		expect(eager.container.querySelector("img")?.getAttribute("loading")).toBeNull()
+	})
+
 	test("has no caption element when there is none", () => {
 		const { container } = render(<Figure src="/blog/x.webp" alt="Algo" width={10} height={10} />)
 		expect(container.querySelector("figcaption")).toBeNull()

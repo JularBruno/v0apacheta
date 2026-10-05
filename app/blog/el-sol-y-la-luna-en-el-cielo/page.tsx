@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import ContentShell from "@/components/content/content-shell"
-import { Callout, DataTable, Faq, Glossary, Section, Summary, Toc } from "@/components/content/blocks"
+import { Callout, DataTable, Faq, Figure, Glossary, Section, Summary, Toc } from "@/components/content/blocks"
 import SkyChart from "@/components/sky/sky-chart"
 import {
 	ARGENTINA_UTC_OFFSET,
@@ -10,13 +10,14 @@ import {
 	formatClock,
 	formatDuration,
 	referenceDeclination,
-	sunAboveWindow,
 	sunDay,
 } from "@/lib/astro/chart"
 import { STANDSTILL, monthlyDeclinationRange } from "@/lib/astro/moon-chart"
 import { dayOfYear, maxAltitude } from "@/lib/astro/sun"
 import { buildMetadata } from "@/lib/content/seo"
 import type { ContentSeo } from "@/lib/content/types"
+import finalGif from "./final.gif"
+import inicioGif from "./inicio.gif"
 import { meta } from "./meta"
 
 export const dynamic = "force-static"
@@ -25,8 +26,8 @@ export function generateMetadata() {
 	return buildMetadata(meta)
 }
 
-// Pending from the author (see the project memory): the Avatar planetarium image and the skin-protection
-// image. Add them here with the <Figure> block once the files exist under /public/blog.
+// Pending from the author (see the project memory): the Avatar planetarium image. Add it with the <Figure> block
+// once the file exists under /public/blog.
 
 // ---- numbers for the text, computed at build time from the same library the chart uses ----------
 
@@ -65,20 +66,21 @@ const row = (label: string, day: typeof summer, month: number, d: number) => {
 	]
 }
 
-// skin: the Sun above 45° (your shadow is shorter than you) and the noon shadow of a 1.70 m person
-const above45 = (id: string, month: number, day: number) =>
-	sunAboveWindow(CORDOBA, dayOfYear(YEAR, month, day), ARGENTINA_UTC_OFFSET, 45, decOf(id))
-const windowText = (w: { from: number; to: number } | null) => (w ? `${formatClock(w.from)} a ${formatClock(w.to)}` : "Nunca")
-const shadow = (alt: number) => `${comma(1.7 / Math.tan((alt * Math.PI) / 180))} m`
-const skinRow = (label: string, day: typeof summer, w: { from: number; to: number } | null) => [
-	label,
-	windowText(w),
-	`${whole(day.maxAlt)}°`,
-	shadow(day.maxAlt),
+// the eclipses worth going outside for, seen from Córdoba (clock of Argentina, UTC-3). Times from public ephemerides
+const ECLIPSES = [
+	[
+		"6 de febrero de 2027",
+		"Solar anular (acá se ve parcial)",
+		"Cubre el 64 % del Sol. De 10:39 a 14:08, con el máximo a las 12:23 y el Sol a 68° de altura.",
+		"Anteojos ISO 12312-2",
+	],
+	[
+		"26 de junio de 2029 (noche del 26 al 27)",
+		"Lunar total",
+		"Totalidad de 23:30 a 01:13, con el máximo a las 00:22 y la Luna a 75° de altura.",
+		"A ojo desnudo",
+	],
 ]
-const summerWindow = above45("solsticio-diciembre", 12, 21)
-const equinoxWindow = above45("equinoccios", 3, 20)
-const winterWindow = above45("solsticio-junio", 6, 21)
 
 // the Moon: the 18.6-year cycle at Córdoba's latitude, and how far the monthly extremes reach when the post was published
 const moonRow = (label: string, dec: number) => [
@@ -101,8 +103,9 @@ const seo: ContentSeo = {
 			answer: `Solo sale exactamente por el este en los equinoccios (alrededor del 20 de marzo y del 23 de septiembre). En Córdoba, en el solsticio de diciembre sale hacia el sudeste (unos ${whole(summer.riseAz as number)}°) y en el de junio hacia el noreste (unos ${whole(winter.riseAz as number)}°).`,
 		},
 		{
-			question: "¿Cuándo es más fuerte el Sol para la piel?",
-			answer: `Cuando está alto. En Córdoba, en verano el Sol supera los 45° entre las ${windowText(summerWindow).replace(" a ", " y las ")}; en invierno nunca llega a esa altura. Una regla fácil: si tu sombra es más corta que vos, el Sol está alto y la radiación UV es fuerte.`,
+			question: "¿Cuándo es el próximo eclipse que se ve en Córdoba?",
+			answer:
+				"El 6 de febrero de 2027 hay un eclipse solar anular que desde Córdoba se ve parcial (cubre el 64 % del Sol, con el máximo a las 12:23), y para mirarlo necesitás anteojos con norma ISO 12312-2. El 26 de junio de 2029 hay un eclipse lunar total que se ve entero y sin protección, con el máximo a las 00:22.",
 		},
 		{
 			question: "¿Hacia dónde conviene orientar ventanas y paneles solares en Argentina?",
@@ -137,8 +140,7 @@ const seo: ContentSeo = {
 	sources: [
 		{ name: "NOAA: Solar Calculator", url: "https://gml.noaa.gov/grad/solcalc/" },
 		{ name: "NOAA: detalles de los cálculos solares", url: "https://gml.noaa.gov/grad/solcalc/calcdetails.html" },
-		{ name: "OMS: radiación ultravioleta", url: "https://www.who.int/news-room/fact-sheets/detail/ultraviolet-radiation" },
-		{ name: "Servicio Meteorológico Nacional (índice UV)", url: "https://www.smn.gob.ar/" },
+		{ name: "NASA: Eclipse Web Site", url: "https://eclipse.gsfc.nasa.gov/" },
 		{ name: "Wikipedia: Lunar standstill", url: "https://en.wikipedia.org/wiki/Lunar_standstill" },
 	],
 }
@@ -149,8 +151,8 @@ const sections = [
 	{ id: "como-leerlo", label: "Cómo leer el mapa" },
 	{ id: "por-que-cambia", label: "Por qué cambia el camino del Sol" },
 	{ id: "mediodia-solar", label: "El mediodía solar no es a las 12" },
-	{ id: "piel", label: "Cuidá tu piel" },
 	{ id: "luna", label: "Y la Luna" },
+	{ id: "eclipses", label: "Próximos eclipses" },
 	{ id: "como-se-calcula", label: "Cómo se calcula" },
 ]
 
@@ -161,6 +163,13 @@ function C({ children }: { children: ReactNode }) {
 export default function SolYLunaPage() {
 	return (
 		<ContentShell meta={meta} seo={seo}>
+			<Figure
+				src={inicioGif.src}
+				width={inicioGif.width}
+				height={inicioGif.height}
+				alt="Escena animada dentro de un planetario: una sala oscura con cúpula, un gran proyector de estrellas y un animal parecido a un perro al costado."
+				priority
+			/>
 			<p className="text-lg">
 				¿Alguna vez te preguntaste por qué en verano el Sol te pasa casi por arriba de la cabeza y en invierno apenas se
 				levanta, o por qué la Luna sale cada día más tarde? Todo eso entra en un solo dibujo: el mapa del cielo.
@@ -180,13 +189,6 @@ export default function SolYLunaPage() {
 						<strong>Paneles solares y termotanques solares.</strong> Van mirando al norte, y una inclinación parecida a tu
 						latitud (unos 31° en Córdoba) es un buen punto de partida. Un buen ángulo hace que rindan más durante el año, lo
 						que se nota en la factura de luz o de gas.
-					</li>
-					<li>
-						<strong>Cuidar tu piel.</strong> Los rayos UV son más fuertes cuando el Sol está alto. En Córdoba, en verano, supera
-						los 45° entre las {windowText(summerWindow).replace(" a ", " y las ")}: ese es el momento de buscar sombra.{" "}
-						<a href="#piel" className="text-primary hover:underline">
-							Más abajo, cómo protegerte.
-						</a>
 					</li>
 					<li>
 						<strong>Sombras con intención.</strong> Aleros, pérgolas y árboles de hoja caduca dan sombra en verano y dejan
@@ -274,60 +276,6 @@ export default function SolYLunaPage() {
 				</p>
 			</Section>
 
-			<Section id="piel" heading="Cuidá tu piel: el Sol y los rayos UV">
-				<p>
-					Los rayos ultravioleta (UV) que queman y dañan la piel dependen sobre todo de qué tan alto está el Sol: cuanto más alto,
-					menos atmósfera atraviesan y más fuertes llegan. Por eso el mapa también te dice cuándo cuidarte más.
-				</p>
-				<Callout title="La regla de la sombra">
-					<p>
-						Mirá tu sombra: si es <strong>más corta que vos</strong>, el Sol está a más de 45° y la radiación UV es fuerte. Si
-						es más larga, es menor, pero no es cero.
-					</p>
-				</Callout>
-				<DataTable
-					caption={`${CORDOBA.name}: cuándo el Sol supera los 45° y qué sombra da al mediodía solar una persona de 1,70 m`}
-					columns={["Día", "Sol a más de 45°", "Altura máx.", "Sombra al mediodía"]}
-					rows={[
-						skinRow("21 de diciembre (verano)", summer, summerWindow),
-						skinRow("20 de marzo y 23 de septiembre (equinoccios)", equinox, equinoxWindow),
-						skinRow("21 de junio (invierno)", winter, winterWindow),
-					]}
-				/>
-				<p>
-					En invierno el Sol de Córdoba nunca pasa de {whole(winter.maxAlt)}°, así que la radiación UV baja bastante, pero no
-					desaparece. En verano, en cambio, hay unas {formatDuration((summerWindow?.to ?? 0) - (summerWindow?.from ?? 0))} por día
-					con el Sol alto.
-				</p>
-				<h3 className="text-lg font-bold text-foreground">Cómo protegerte mejor</h3>
-				<ul className="list-disc space-y-2 pl-5">
-					<li>
-						<strong>Sombra</strong> en las horas en que el Sol está alto, que en verano en Córdoba van de las{" "}
-						{windowText(summerWindow).replace(" a ", " a las ")}.
-					</li>
-					<li>
-						<strong>Ropa que cubra</strong>, sombrero de ala ancha y anteojos con filtro UV.
-					</li>
-					<li>
-						<strong>Protector solar</strong> de amplio espectro con FPS 30 o más, en cantidad generosa y unos 15 a 30 minutos antes
-						de salir. Renovalo cada 2 horas y después de nadar o transpirar.
-					</li>
-					<li>El protector no es una excusa para quedarte más tiempo al sol.</li>
-					<li>
-						<strong>Las nubes no te protegen del todo</strong>: buena parte de los UV las atraviesa. El agua, la arena y la nieve
-						los reflejan, y en altura hay más radiación.
-					</li>
-					<li>Los bebés menores de 6 meses no deben estar al sol directo.</li>
-					<li>Hacete un control dermatológico una vez al año, y consultá si un lunar cambia de forma, color o tamaño.</li>
-				</ul>
-				<Callout title="Mirá el índice UV del día">
-					<p>
-						El Servicio Meteorológico Nacional publica el índice UV. A partir de 3 ya conviene protegerse, y de 8 en adelante la
-						radiación es muy alta o extrema.
-					</p>
-				</Callout>
-			</Section>
-
 			<Section id="luna" heading="Y la Luna">
 				<p>
 					La Luna usa el mismo mapa y el mismo tipo de curvas que el Sol, pero se mueve de otra manera: su declinación recorre todo
@@ -375,6 +323,28 @@ export default function SolYLunaPage() {
 				</Callout>
 			</Section>
 
+			<Section id="eclipses" heading="Próximos eclipses desde Córdoba">
+				<p>
+					De todos los eclipses de los próximos años, estos son los dos que más valen la pena desde Córdoba. Las horas son de reloj
+					de Argentina.
+				</p>
+				<DataTable
+					caption="Eclipses para salir a mirar desde Córdoba"
+					columns={["Fecha", "Tipo", "Qué se ve", "Cómo mirarlo"]}
+					rows={ECLIPSES}
+				/>
+				<Callout title="Cuidado con los ojos">
+					<p>
+						Un eclipse solar, aunque sea parcial, no se mira a ojo desnudo ni con anteojos de sol comunes: usá anteojos para
+						eclipses con norma ISO 12312-2. El eclipse lunar, en cambio, es seguro de mirar sin ninguna protección.
+					</p>
+				</Callout>
+				<p>
+					Hay otros eclipses menores que también se ven desde acá, como uno lunar casi imperceptible en febrero de 2027 y un solar de
+					apenas el 8 % en enero de 2028. Antes de salir, confirmá los horarios con una fuente oficial como la de la NASA.
+				</p>
+			</Section>
+
 			<Section id="como-se-calcula" heading="Cómo se calcula">
 				<p>No es un dibujo: cada punto sale de ecuaciones de geometría astronómica.</p>
 				<ul className="list-disc space-y-2 pl-5">
@@ -419,10 +389,23 @@ export default function SolYLunaPage() {
 					{ term: "Ecuación del tiempo", definition: "La diferencia, de hasta unos 16 minutos, entre el tiempo solar y el de un reloj que marca siempre la misma duración del día." },
 					{ term: "Fase lunar", definition: "Cuánta parte del disco de la Luna está iluminada vista desde la Tierra; depende del ángulo entre la Luna y el Sol." },
 					{ term: "Standstill lunar", definition: "El momento del ciclo de 18,6 años en que la Luna llega a su declinación máxima (mayor) o a la mínima (menor)." },
-					{ term: "Índice UV", definition: "Una escala que indica la intensidad de la radiación ultravioleta del día: de 1 (baja) a 11 o más (extrema)." },
 				]}
 			/>
 			<Faq items={seo.faq ?? []} />
+			<div className="space-y-3">
+				<p>
+					<em>“Wow I gotta hand it to you Sokka, you picked the best mini vacations for sure”</em>
+				</p>
+				<p>
+					<em>“Great you must have broken it”</em>
+				</p>
+				<Figure
+					src={finalGif.src}
+					width={finalGif.width}
+					height={finalGif.height}
+					alt="Escena animada del techo de una cúpula de planetario: caracteres chinos blancos sobre un cielo gris oscuro, cruzados por barras doradas."
+				/>
+			</div>
 		</ContentShell>
 	)
 }

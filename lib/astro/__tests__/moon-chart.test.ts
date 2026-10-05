@@ -1,3 +1,4 @@
+import { project } from "../chart"
 import { moonAltAz, moonRaDec } from "../moon"
 import {
 	MOON_REFERENCE_IDS,
@@ -7,6 +8,7 @@ import {
 	moonPassNear,
 	moonPassOnDay,
 	monthlyDeclinationRange,
+	nearestMoonMinute,
 } from "../moon-chart"
 
 const CORDOBA = { lat: -31.42, lon: -64.18 }
@@ -168,5 +170,52 @@ describe("the 18.6-year standstill cycle", () => {
 		const range = monthlyDeclinationRange(utc("2026-10-02T12:00:00Z"))
 		expect(range.max).toBeGreaterThan(27)
 		expect(range.min).toBeLessThan(-27)
+	})
+})
+
+describe("nearestMoonMinute (dragging the Moon along its path)", () => {
+	const dayStart = Date.UTC(2026, 9, 2) - ART * HOUR // 00:00 ART of 2 Oct 2026
+	const spotAt = (minute: number) => {
+		const { alt, az } = moonAltAz(CORDOBA, dayStart + minute * 60_000)
+		return project(alt, az)
+	}
+	const upMinutes = () => {
+		const minutes: number[] = []
+		for (let m = 0; m < 1440; m += 5) if (moonAltAz(CORDOBA, dayStart + m * 60_000).alt > 8) minutes.push(m)
+		return minutes
+	}
+
+	test("a point on the Moon's path maps back to the minute it came from, within a few minutes", () => {
+		const up = upMinutes()
+		expect(up.length).toBeGreaterThan(20)
+		for (const minute of [up[0], up[Math.floor(up.length / 2)], up[up.length - 1]]) {
+			const found = nearestMoonMinute(CORDOBA, dayStart, spotAt(minute)) as number
+			expect(Math.abs(found - minute)).toBeLessThanOrEqual(3)
+		}
+	})
+
+	test("a point beside the path snaps to a nearby part of it", () => {
+		const up = upMinutes()
+		const minute = up[Math.floor(up.length / 2)]
+		const on = spotAt(minute)
+		const found = nearestMoonMinute(CORDOBA, dayStart, { x: on.x + 20, y: on.y - 20 }) as number
+		expect(Math.abs(found - minute)).toBeLessThan(45)
+	})
+
+	test("always returns a minute of the day (0-1439) when the Moon is up at some point", () => {
+		for (const point of [{ x: 0, y: 0 }, { x: 500, y: 500 }, { x: 1000, y: 1000 }]) {
+			const minute = nearestMoonMinute(CORDOBA, dayStart, point) as number
+			expect(minute).toBeGreaterThanOrEqual(0)
+			expect(minute).toBeLessThan(1440)
+		}
+	})
+
+	test("is null on a day the Moon never rises (found near the pole)", () => {
+		const pole = { lat: 80, lon: 0 }
+		const results = Array.from({ length: 30 }, (_, day) =>
+			nearestMoonMinute(pole, Date.UTC(2026, 9, 2 + day), { x: 500, y: 500 }),
+		)
+		expect(results.some((r) => r === null)).toBe(true)
+		expect(results.some((r) => r !== null)).toBe(true)
 	})
 })

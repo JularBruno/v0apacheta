@@ -6,15 +6,38 @@ This file **proposes** the canonical names and lists conflicts. Nothing here is 
 
 Legend: ✅ keep · ✏️ rename proposed · ⚠️ conflict/bug · ➕ missing (from [methods/](methods/README.md))
 
-## The five chapters
+## The chapters (agreed 2026-09-30, copy still draft)
 
-| # | Canonical title | Tagline | Landing desc (one line) | Notes |
-|---|---|---|---|---|
-| 1 | **Conocé el camino** | El primer paso es mirar. | Anotás cada peso que entra y sale. En un mes tenés un mapa real de tu plata. | ⚠️ `map-context` has "Conoce" (tú) |
-| 2 | **Presupuesto** | Dale un nombre a cada peso. | Decidís en papel, antes de que empiece el mes, en qué importa gastar. | ✅ |
-| 3 | **Protección** | Construí el escudo. Después escalá. | Fondo de emergencia primero. Salir de deudas después. | ✅ |
-| 4 | **Lo que enseña el camino** | El interés compuesto no perdona, ni a favor ni en contra. | Plazo fijo UVA, FCI, CEDEARs, dólar MEP. Ahorrás e invertís, mes a mes. | ✏️ title is vague; consider "Hacer crecer tu plata" |
-| 5 | **La cima** | Libertad: tus activos cubren tu vida. | El trabajo pasa a ser una elección, no una obligación. | ⚠️ `map-context` says "Libertad — La cima"; decide one |
+Each chapter has three parts: a **place on the trail** (small label above the title, replaces
+"Capítulo N"), an **action title** in vos (max 5 words), and a **bajada** (one line). Details of
+the naming system are in [decisions.md](decisions.md) D13.
+
+| # | Place | Title | Bajada | Landing desc (draft, one line) | Replaces |
+|---|---|---|---|---|---|
+| 1 | Al pie del camino | **Sabé dónde estás parado** | Sacá la brújula: tus números dicen dónde estás. | Cargás lo que entra, lo que gastás, lo que tenés y lo que debés. Conocés la app entera y por dónde sigue tu ruta. | "Conocé el camino" |
+| 2 | La huella | **Cada peso, en su lugar** | Marcá el rumbo antes de gastar. | Decidís en papel, antes de que arranque el mes, adónde va tu plata. | "Presupuesto" |
+| 3 (ruta B only) | El vado | **Cruzá las deudas de a una** | Una piedra por vez, sin apuro. | Ordenás tus deudas y las cruzás de a una, a tu ritmo y sin culpa. | part of "Protección" (3.2, 3.4, 3.5) |
+| 3 | La aguada | **Llená la cantimplora** | Un colchón para cuando no llueva. | Armás un fondo de emergencia para que un imprevisto no te mande a cero. | "Protección" |
+| 4 | La cuesta | **Despacio, pero sin parar** | El interés compuesto no perdona, ni a favor ni en contra. | Ahorrás e invertís de a poco, mes a mes, y aprendés cuánta caída aguantás. | "Lo que enseña el camino" |
+| 5 | La cumbre | **Construí lo que dura** | Desde arriba, elegís. | Diversificás, pensás en tu retiro y en qué querés construir. | "La cima" / "Libertad" |
+
+Notes:
+- **Chapter 1 place ("Al pie del camino") is assumed:** Bruno picked the title "Sabé dónde estás
+  parado" and didn't confirm the place label.
+- **Order of 3 (El vado) vs. 3 (La aguada) is open:** whether debts come before or after the full
+  emergency fund. It changes numbering, not titles. See [decisions.md](decisions.md) Open.
+- **"La cima" is kept** as the name of the last apacheta (5.3) and of the summit scenery.
+- Bajadas and descs are drafts: no numbers, no promises, check again before they reach any page.
+
+### Previous chapter names (superseded, kept for old → new tracking)
+
+| # | Title | Tagline |
+|---|---|---|
+| 1 | Conocé el camino (`map-context` had "Conoce") | El primer paso es mirar. |
+| 2 | Presupuesto | Dale un nombre a cada peso. |
+| 3 | Protección | Construí el escudo. Después escalá. |
+| 4 | Lo que enseña el camino | El interés compuesto no perdona, ni a favor ni en contra. |
+| 5 | La cima ("Libertad — La cima" in `map-context`) | Libertad: tus activos cubren tu vida. |
 
 ## Steps
 
@@ -76,6 +99,17 @@ Legend: ✅ keep · ✏️ rename proposed · ⚠️ conflict/bug · ➕ missing
 | `map-context.json` stage-5 | "Libertad — La cima" | pick one |
 | `landing-brief.md` ch. 5 | "Libertad — la cima" | pick one |
 | `design-tokens.md` | "no parallax" | not a message issue; decide separately |
+
+## Conflicts found at intake (2026-09-30, not fixed)
+
+| Where | Says | Issue |
+|---|---|---|
+| `map-context.json` 1.1.2 prereq | `user.balance !== 0` | Fails for someone whose real balance is zero. Adds to the wrong-step-reference bug above. |
+| `map-context.json` 1.1.3 validation | 5 or more `expense` movements in total | Can be done in one sitting; doesn't test the habit it teaches. |
+| `map-context.json` stage-4 principle vs. 4.1 | 25% saved / 25% of that invested vs. "invertí el 15%" | Two different percentages, both unverified. Decide which lever each one names. |
+| `map-context.json` 3.2 vs. route branching | Debt question sits in Ch. 3 | The route forks on debt (D10); the question is needed at the end of Ch. 1. Decision pending. |
+| `map-context.json` `grandmaPrinciples` #4 "Enojate con las deudas y las cuotas" vs. no-shaming rule | Anger at debt | Fine if aimed at the mechanism (cuotas, interest); reads as shame if aimed at the person. Needs a wording decision, and the principle has no apacheta yet. |
+| `brand-guideline.md` §1 | "No snow, no cacti, no dramatic peaks" line removed (2026-09-30 16:03, by Bruno) | Not a conflict; noted so the scenery rule's removal is on record. Trailing space left on the line above. |
 
 ## Naming rules
 

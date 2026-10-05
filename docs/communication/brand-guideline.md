@@ -21,7 +21,7 @@ reworked for Argentina and turned into a path you walk inside an app.**
 An *apacheta* is a stone cairn travelers leave on the trails of the Sierras Cordobesas: an
 offering, a mark of progress, a sign for whoever comes next that the path is real. Córdoba is
 the real geography: pampa → Río Suquía → sierras → cima. Native scrub only (espinillo,
-algarrobo, molle, tala). No snow, no cacti, no dramatic peaks.
+algarrobo, molle, tala). 
 
 ## 2. The one message
 
@@ -126,7 +126,8 @@ type and landscape only.
 - **Palette:** Coffee Bean (ink), Muted Teal (action/progress), Burnt Peach (spending/warmth),
   Berry Crush (destructive only), Ash Grey (calm surfaces).
 - **Type:** Manrope. **Feel:** parchment map, hand-drawn cairns, Sierras de Córdoba.
-- **Mascot:** none; the cairn is the character and it grows as you progress.
+- **Mascot:** none for now; the cairn is the character and it grows as you progress. Possible
+  later: **Ceibo**, Bruno's dog (idea only, not decided, not in any copy yet).
 
 ## Open items
 

@@ -3,6 +3,7 @@
  * culmination (never an arc cut at midnight), the five reference curves of the monthly declination
  * cycle (always ordered south to north), and the 18.6-year standstill cycle.
  */
+import { project } from "./chart"
 import { moonAltAz, moonRaDec } from "./moon"
 import { SUNRISE_ALTITUDE } from "./sun"
 
@@ -247,4 +248,37 @@ export function monthlyDeclinationRange(ms: number): { min: number; max: number 
 		max = Math.max(max, dec)
 	}
 	return { min, max }
+}
+
+/**
+ * The minute of the day (0-1439, counted from `dayStart`, the instant of local midnight) at which the Moon is
+ * closest to a point of the chart (viewBox units), or null if the Moon is never above the horizon that day.
+ * It samples the Moon's real position through the day (not just one arc), so it works whichever arc the
+ * marker is on, including the ones that start before midnight. Used when dragging the Moon marker.
+ */
+export function nearestMoonMinute(loc: Loc, dayStart: number, point: { x: number; y: number }): number | null {
+	const distance = (minute: number) => {
+		const { alt, az } = moonAltAz(loc, dayStart + minute * MIN)
+		if (alt < SUNRISE_ALTITUDE) return Infinity
+		const spot = project(alt, az)
+		return (spot.x - point.x) ** 2 + (spot.y - point.y) ** 2
+	}
+	let best = -1
+	let bestDistance = Infinity
+	for (let minute = 0; minute < 1440; minute += 5) {
+		const d = distance(minute)
+		if (d < bestDistance) {
+			bestDistance = d
+			best = minute
+		}
+	}
+	if (best < 0) return null
+	for (let minute = Math.max(0, best - 5); minute <= Math.min(1439, best + 5); minute++) {
+		const d = distance(minute)
+		if (d < bestDistance) {
+			bestDistance = d
+			best = minute
+		}
+	}
+	return best
 }

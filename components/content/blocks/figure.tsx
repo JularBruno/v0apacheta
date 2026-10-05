@@ -11,6 +11,7 @@ export default function Figure({
 	height,
 	caption,
 	credit,
+	priority = false,
 }: {
 	src: string
 	alt: string
@@ -18,6 +19,8 @@ export default function Figure({
 	height: number
 	caption?: string
 	credit?: string
+	/** load right away (the image at the top of the page); the default is lazy */
+	priority?: boolean
 }) {
 	if (alt.trim() === "") throw new Error(`Figure: meaningful alt text is required (src "${src}")`)
 	if (!(src.startsWith("/") && !src.startsWith("//")) && !src.startsWith("https://")) {
@@ -25,7 +28,15 @@ export default function Figure({
 	}
 	return (
 		<figure className="overflow-hidden rounded-xl border border-border">
-			<Image src={src} alt={alt} width={width} height={height} sizes="(max-width: 768px) 100vw, 768px" className="h-auto w-full" />
+			<Image
+				src={src}
+				alt={alt}
+				width={width}
+				height={height}
+				priority={priority}
+				sizes="(max-width: 1024px) 100vw, 800px"
+				className="h-auto w-full"
+			/>
 			{(caption || credit) && (
 				<figcaption className="border-t border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
 					{caption}

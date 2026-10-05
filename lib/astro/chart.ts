@@ -237,3 +237,33 @@ export function sunAboveWindow(
 	}
 	return first < 0 ? null : { from: first / 60, to: (last + 1) / 60 }
 }
+
+/**
+ * The clock minute (0-1439) at which the Sun is closest to a point of the chart (viewBox units), or null when
+ * there is no path that day (polar night). This is what dragging the Sun marker uses: wherever the finger is,
+ * the Sun snaps to the nearest spot on its path.
+ */
+export function nearestSunMinute(
+	loc: Location,
+	doy: number,
+	utcOffset: number,
+	point: { x: number; y: number },
+	decOverride?: number,
+): number | null {
+	const dec = decOverride ?? solarDeclination(doy)
+	const path = curvePoints(loc, dec, 0.5)
+	if (path.length === 0) return null
+	let best = path[0]
+	let bestDistance = Infinity
+	for (const p of path) {
+		const spot = project(p.alt, p.az)
+		const distance = (spot.x - point.x) ** 2 + (spot.y - point.y) ** 2
+		if (distance < bestDistance) {
+			bestDistance = distance
+			best = p
+		}
+	}
+	const timeCorrection = 4 * (loc.lon - 15 * utcOffset) + equationOfTime(doy)
+	const clockHours = 12 + best.H / 15 - timeCorrection / 60
+	return ((Math.round(clockHours * 60) % 1440) + 1440) % 1440
+}

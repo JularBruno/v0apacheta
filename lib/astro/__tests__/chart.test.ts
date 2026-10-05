@@ -8,6 +8,7 @@ import {
 	formatClock,
 	formatDuration,
 	hourMarkers,
+	nearestSunMinute,
 	parseCoordinate,
 	parseUtcOffset,
 	project,
@@ -268,5 +269,37 @@ describe("sunAboveWindow (when the Sun is higher than a given altitude, for UV a
 		const w = sunAboveWindow({ lat: 80, lon: 0 }, doy(6, 21), 0, 10)!
 		expect(w.from).toBe(0)
 		expect(w.to).toBe(24)
+	})
+})
+
+describe("nearestSunMinute (dragging the Sun along its path)", () => {
+	const dec21 = doy(12, 21)
+
+	test("a point on the path maps back to the clock minute it came from, within a couple of minutes", () => {
+		for (const minute of [8 * 60, 13 * 60 + 15, 18 * 60]) {
+			const sun = sunAtClock(CORDOBA, dec21, ARGENTINA_UTC_OFFSET, minute / 60)
+			const point = project(sun.alt, sun.az)
+			const found = nearestSunMinute(CORDOBA, dec21, ARGENTINA_UTC_OFFSET, point) as number
+			expect(Math.abs(found - minute)).toBeLessThanOrEqual(3)
+		}
+	})
+
+	test("a point off the path snaps to the closest part of the path", () => {
+		const sun = sunAtClock(CORDOBA, dec21, ARGENTINA_UTC_OFFSET, 10)
+		const on = project(sun.alt, sun.az)
+		const near = nearestSunMinute(CORDOBA, dec21, ARGENTINA_UTC_OFFSET, { x: on.x + 25, y: on.y - 25 }) as number
+		expect(Math.abs(near - 10 * 60)).toBeLessThan(40)
+	})
+
+	test("always returns a minute of the day (0-1439)", () => {
+		for (const point of [{ x: 0, y: 0 }, { x: 500, y: 500 }, { x: 1000, y: 1000 }]) {
+			const m = nearestSunMinute(CORDOBA, dec21, ARGENTINA_UTC_OFFSET, point) as number
+			expect(m).toBeGreaterThanOrEqual(0)
+			expect(m).toBeLessThan(1440)
+		}
+	})
+
+	test("is null in polar night, when there is no path", () => {
+		expect(nearestSunMinute({ lat: 80, lon: 0 }, dec21, 0, { x: 500, y: 500 })).toBeNull()
 	})
 })

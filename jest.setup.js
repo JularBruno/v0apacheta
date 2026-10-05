@@ -24,3 +24,20 @@ beforeEach(() => {
 
 global.IntersectionObserver = MockIntersectionObserver
 global.MockIntersectionObserver = MockIntersectionObserver
+
+// jsdom has no PointerEvent. A MouseEvent subclass carries clientX/clientY (what drag handlers read)
+// plus the pointer fields, so fireEvent.pointerDown/Move/Up behave like a real pointer.
+if (typeof window !== 'undefined' && typeof window.PointerEvent === 'undefined') {
+	class PointerEventPolyfill extends MouseEvent {
+		constructor(type, init = {}) {
+			super(type, init)
+			this.pointerId = init.pointerId ?? 0
+			this.pointerType = init.pointerType ?? 'mouse'
+			this.isPrimary = init.isPrimary ?? true
+			this.width = init.width ?? 1
+			this.height = init.height ?? 1
+			this.pressure = init.pressure ?? 0
+		}
+	}
+	window.PointerEvent = PointerEventPolyfill
+}
