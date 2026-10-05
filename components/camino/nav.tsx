@@ -65,7 +65,7 @@ export default function CaminoNav() {
 				</div>
 			</header>
 
-			{/* side drawer — the place for future navigation (blog, etc.) */}
+			{/* side drawer — site navigation; links stay in the DOM while closed so crawlers see them */}
 			<div
 				className={`fixed inset-0 z-[60] transition-opacity duration-200 ${
 					open ? "opacity-100" : "pointer-events-none opacity-0"
@@ -97,6 +97,13 @@ export default function CaminoNav() {
 					</div>
 
 					<div className="flex flex-1 flex-col gap-0.5 p-3">
+						<Link
+							href="/blog"
+							onClick={() => setOpen(false)}
+							className="rounded-lg px-3 py-2.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-black/5 hover:text-foreground"
+						>
+							Cuadernito
+						</Link>
 						<Link
 							href="/login"
 							onClick={() => setOpen(false)}

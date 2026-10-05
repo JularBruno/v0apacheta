@@ -4,7 +4,16 @@ export default function robots(): MetadataRoute.Robots {
 	return {
 		rules: {
 			userAgent: '*',
-			allow: ['/', '/brunojular', '/brunojular/*', '/blog', '/blog/*'],
+			allow: [
+				'/',
+				'/brunojular',
+				'/brunojular/*',
+				'/blog',
+				'/blog/*',
+				'/herramientas',
+				'/herramientas/*',
+				'/donaciones',
+			],
 			disallow: [
 				'/dashboard',
 				'/dashboard/*',
