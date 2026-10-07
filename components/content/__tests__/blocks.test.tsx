@@ -11,6 +11,7 @@ import {
 	Section,
 	Summary,
 	Toc,
+	VideoEmbed,
 } from "@/components/content/blocks"
 
 jest.mock("@/lib/content/registry", () => {
@@ -186,5 +187,29 @@ describe("InlineToolCallout", () => {
 		expect(unknown.container).toBeEmptyDOMElement()
 		const post = render(<InlineToolCallout slug="un-post" />)
 		expect(post.container).toBeEmptyDOMElement()
+	})
+})
+
+describe("VideoEmbed", () => {
+	test("embeds a YouTube video through youtube-nocookie, sandboxed, lazy, with a title and a plain link as fallback", () => {
+		const { container } = render(<VideoEmbed videoId="cQj2wD4O9-4" title="Un video de prueba" caption="El video completo" />)
+		const frame = container.querySelector("iframe") as HTMLIFrameElement
+		expect(frame.getAttribute("src")).toBe("https://www.youtube-nocookie.com/embed/cQj2wD4O9-4")
+		expect(frame.getAttribute("title")).toBe("Un video de prueba")
+		expect(frame.getAttribute("loading")).toBe("lazy")
+		expect(frame.getAttribute("sandbox")).toMatch(/allow-scripts/)
+		expect(frame.getAttribute("sandbox")).not.toMatch(/allow-top-navigation/)
+		expect(screen.getByText("El video completo")).toBeInTheDocument()
+		const link = screen.getByRole("link", { name: /Ver en YouTube/ })
+		expect(link).toHaveAttribute("href", "https://www.youtube.com/watch?v=cQj2wD4O9-4")
+		expect(link).toHaveAttribute("target", "_blank")
+		expect(link.getAttribute("rel")).toMatch(/noopener/)
+	})
+
+	test("throws on an id that is not an 11-character YouTube id, and on an empty title", () => {
+		for (const bad of ["", "short", "cQj2wD4O9-4/../x", "cQj2wD4O9-4?autoplay=1", "javascript:alert(1)"]) {
+			expect(() => VideoEmbed({ videoId: bad, title: "x" })).toThrow(/videoId/)
+		}
+		expect(() => VideoEmbed({ videoId: "cQj2wD4O9-4", title: "  " })).toThrow(/title/)
 	})
 })

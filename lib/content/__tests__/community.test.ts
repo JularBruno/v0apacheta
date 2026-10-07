@@ -20,8 +20,16 @@ describe("communityLinks", () => {
 		expect(() => communityLinks([link({ href: "javascript:alert(1)" })])).toThrow(/discord.*https/i)
 	})
 
-	test("the shipped config covers discord, instagram and youtube, in that order", () => {
-		expect(COMMUNITY_LINKS.map((l) => l.platform)).toEqual(["discord", "instagram", "youtube"])
+	test("the shipped config covers discord, youtube, linkedin and twitter, in that order, with no instagram", () => {
+		expect(COMMUNITY_LINKS.map((l) => l.platform)).toEqual(["discord", "youtube", "linkedin", "twitter"])
+	})
+
+	test("Bruno's LinkedIn and Twitter profiles are linked, the channels that don't exist yet are not", () => {
+		const byPlatform = Object.fromEntries(COMMUNITY_LINKS.map((l) => [l.platform, l.href]))
+		expect(byPlatform.linkedin).toBe("https://www.linkedin.com/in/brunojular")
+		expect(byPlatform.twitter).toBe("https://x.com/jular_bruno")
+		expect(byPlatform.discord).toBeUndefined()
+		expect(byPlatform.youtube).toBeUndefined()
 	})
 
 	test("the shipped config only contains https hrefs", () => {

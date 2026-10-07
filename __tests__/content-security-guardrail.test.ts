@@ -33,6 +33,7 @@ describe("security rules flag what they should (each rule has teeth)", () => {
 	const JSON_LD = "components/content/json-ld.tsx"
 	const PAGE = "app/blog/un-post/page.tsx"
 	const SNIPPETS = "app/blog/un-post/un-post.snippets.ts"
+	const EMBED = "components/content/blocks/video-embed.tsx"
 	const cases: { rule: string; bad: [string, string]; good?: [string, string] }[] = [
 		{
 			rule: "no-raw-html",
@@ -58,7 +59,14 @@ describe("security rules flag what they should (each rule has teeth)", () => {
 		{ rule: "no-auth-or-server-code", bad: [PAGE, `import { getUser } from "@/lib/actions/user"`] },
 		{ rule: "no-auth-or-server-code", bad: [PAGE, `"use server"\nexport async function go() {}`] },
 		{ rule: "no-env-access", bad: [PAGE, `const key = process.env.SECRET`] },
-		{ rule: "no-iframes", bad: [PAGE, `<iframe src="https://www.youtube.com/embed/x" />`] },
+		{ rule: "no-iframes", bad: [PAGE, `<iframe src="https://www.youtube-nocookie.com/embed/x" sandbox="" />`] },
+		{
+			rule: "no-iframes",
+			bad: [EMBED, `<iframe src={\`https://www.youtube-nocookie.com/embed/\${id}\`} title="x" />`],
+			good: [EMBED, `<iframe src={\`https://www.youtube-nocookie.com/embed/\${id}\`} sandbox="allow-scripts" title="x" />`],
+		},
+		{ rule: "no-iframes", bad: [EMBED, `<iframe src={\`https://www.youtube.com/embed/\${id}\`} sandbox="allow-scripts" title="x" />`] },
+		{ rule: "no-iframes", bad: [EMBED, `<iframe src={url} sandbox="allow-scripts" title="x" />`] },
 		{
 			rule: "no-runtime-fetch",
 			bad: [PAGE, `const r = await fetch("/api/x")`],

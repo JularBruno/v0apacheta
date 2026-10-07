@@ -19,7 +19,8 @@ import { Movements } from "@/lib/schemas/movement";
 import { TxType } from "@/lib/schemas/definitions";
 import { CategoryBudget } from "@/lib/schemas/category";
 import { quickFilters, formatToBalance } from "@/lib/quick-spend-constants";
-import { formatDate, formatDateNoYear, getDateStringsForFilter, getLastNDays, getLastNMonths, getMonthRange } from "@/lib/dateUtils";
+import { formatDate, formatDateNoYear } from "@/lib/dateUtils";
+import { getRangeForPeriod } from "@/lib/period-filter";
 import { PeriodSelector } from "@/components/movements/period-selector"
 import { toast } from "@/hooks/use-toast"
 
@@ -63,88 +64,6 @@ export default function HistorialPage() {
 	 * FILTERS
 	 */
 
-	const getFiltersForDateSelection = () => {
-		let filters: any = {};
-		console.log();
-
-		// Bring based on filter, since is the best option for pagination
-		switch (selectedDateFilter) { // default one month
-
-			case quickFilters[0].id: { // last 24 hours (yesterday to now)
-
-				// For last 24 hours
-				const { start, end } = getLastNDays(1);
-				const result = getDateStringsForFilter(start, end);
-				filters.startDate = result.startDate;
-				filters.endDate = result.endDate;
-				break;
-			}
-
-			case quickFilters[1].id: { // last week (7 days ago to now)
-				const { start, end } = getLastNDays(7);
-				const result = getDateStringsForFilter(start, end);
-				filters.startDate = result.startDate;
-				filters.endDate = result.endDate;
-				break;
-			}
-
-			case quickFilters[2].id: {// last month (30 days ago to now)
-				const { start, end } = getLastNMonths(1);
-				const result = getDateStringsForFilter(start, end);
-				filters.startDate = result.startDate;
-				filters.endDate = result.endDate;
-
-				break;
-			}
-
-			case quickFilters[3].id: {// last 3 months (90 days ago to now)
-
-				const { start, end } = getLastNMonths(3);
-				const result = getDateStringsForFilter(start, end);
-				filters.startDate = result.startDate;
-				filters.endDate = result.endDate;
-
-				break;
-			}
-
-			case quickFilters[4].id: {// last 6 months TEST
-
-				const { start, end } = getLastNMonths(6);
-				const result = getDateStringsForFilter(start, end);
-				filters.startDate = result.startDate;
-				filters.endDate = result.endDate;
-
-				break;
-			}
-
-			// TODO REMOVE THIS
-			case quickFilters[5].id: // TEST: EVERY DATES
-				filters.startDate = null;
-				filters.endDate = null;
-
-				break;
-
-			default:
-				// Handle specific month selection: "month-9-2024"
-				if (selectedDateFilter.startsWith("month-")) {
-					const [_, monthStr, yearStr] = selectedDateFilter.split("-");
-
-					const month = parseInt(monthStr, 10); // 9 = October (0-indexed)
-					const year = parseInt(yearStr, 10);
-
-					const { start, end } = getMonthRange(month, year);
-					const result = getDateStringsForFilter(start, end);
-					filters.startDate = result.startDate;
-					filters.endDate = result.endDate;
-				}
-				break;
-
-		}
-		console.log(filters);
-
-		return filters;
-	}
-
 	/**
 	 * 
 	 * CATEGORY 
@@ -155,7 +74,7 @@ export default function HistorialPage() {
 
 	// const [budgetedCats, setBudgetedCats] = useState<CategoryBudget[]>([])
 
-	const { startDate, endDate } = useMemo(() => getFiltersForDateSelection(), [selectedDateFilter]);
+	const { startDate, endDate } = useMemo(() => getRangeForPeriod(selectedDateFilter), [selectedDateFilter]);
 	const { data: budgetedCats = [], isLoading: budgetLoading } = useBudget(startDate, endDate);
 
 	const isSpecificMonth = selectedDateFilter.startsWith("month-");

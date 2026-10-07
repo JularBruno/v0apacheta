@@ -4,12 +4,14 @@ import { byNewest } from "./sort"
 import { meta as queEsLaInflacion } from "@/app/blog/que-es-la-inflacion/meta"
 import { meta as queEsUnaPwa } from "@/app/blog/que-es-una-pwa-y-como-crear-una-en-nextjs/meta"
 import { meta as solYLuna } from "@/app/blog/el-sol-y-la-luna-en-el-cielo/meta"
+import { meta as pensarComoArgentino } from "@/app/blog/el-problema-de-pensar-como-argentino/meta"
 // [registry:imports] one import line per post/tool, appended by the generator
 
 export const entries: ContentMeta[] = [
 	queEsLaInflacion,
 	queEsUnaPwa,
 	solYLuna,
+	pensarComoArgentino,
 	// [registry:entries]
 ]
 

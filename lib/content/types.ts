@@ -1,8 +1,9 @@
 export type ContentKind = "post" | "tool"
-export type BlogCategory = "economia" | "apacheta" | "random"
+export type BlogCategory = "economia" | "pensar-argentino" | "apacheta" | "random"
 
 export const CATEGORY_LABELS: Record<BlogCategory, string> = {
 	economia: "Economía",
+	"pensar-argentino": "El problema de pensar como Argentino",
 	apacheta: "Novedades de Apacheta",
 	random: "Varios",
 }

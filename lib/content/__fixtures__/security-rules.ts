@@ -21,6 +21,10 @@ export interface SecurityRule {
 const JSON_LD_FILE = "components/content/json-ld.tsx"
 const isJsonLd = (file: string) => file.endsWith(JSON_LD_FILE)
 
+const EMBED_FILE = "components/content/blocks/video-embed.tsx"
+const isEmbed = (file: string) => file.endsWith(EMBED_FILE)
+const EMBED_ORIGIN = "https://www.youtube-nocookie.com/embed/"
+
 /** `*.snippets.ts` holds code samples a post displays as text (via CodeBlock), never executes. */
 const isSnippets = (file: string) => /\.snippets\.ts$/.test(file)
 
@@ -106,8 +110,15 @@ export const SECURITY_RULES: SecurityRule[] = [
 	},
 	{
 		id: "no-iframes",
-		description: "No <iframe>. Add a sandbox plus an origin allowlist before enabling embeds.",
-		check: (source) => matches(source, /<iframe\b/i),
+		description:
+			"No <iframe>, except in video-embed.tsx, where every frame has a sandbox and loads only from https://www.youtube-nocookie.com/embed/.",
+		check: (source, file) => {
+			if (!isEmbed(file)) return matches(source, /<iframe\b/i)
+			const tags = [...source.matchAll(/<iframe\b[^>]*>/gi)].map((m) => m[0])
+			return tags
+				.filter((tag) => !/\bsandbox\b/.test(tag) || !tag.includes(EMBED_ORIGIN))
+				.map((tag) => `iframe without sandbox or outside ${EMBED_ORIGIN}: ${tag.slice(0, 50)}`)
+		},
 	},
 	{
 		id: "snippets-are-inert",

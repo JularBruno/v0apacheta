@@ -7,6 +7,7 @@ export const meta: ContentMeta = {
 	description:
 		"Qué es una PWA, para qué sirve y cómo convertir tu app de Next.js en una: manifest, service worker, instalación y cómo probarla paso a paso.",
 	publishedAt: "2026-09-30",
+	updatedAt: "2026-10-07",
 	category: "random",
 	tags: ["pwa", "nextjs", "service-worker", "manifest", "desarrollo"],
 }

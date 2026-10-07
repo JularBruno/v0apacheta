@@ -1,11 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useRouter, useParams, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Edit, Trash2, Filter, Plus, MoreHorizontal, Trash } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ArrowLeft, Edit, Trash2, Filter, Plus, MoreHorizontal, Trash, Search, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import AssetFormModal from "@/components/assets/asset-form-modal"
 import QuickSpendCard from "@/components/movements/quick-spend-card"
@@ -25,6 +28,9 @@ import { formatToBalance } from "@/lib/quick-spend-constants"
 import { formatDate } from "@/lib/dateUtils"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import Loading from "./loading"
+import { PeriodSelector } from "@/components/movements/period-selector"
+import { useDashboard } from "../../dashboardContext"
+import { ALL_FILTER_ID, currentMonthPeriodId, filterMovements, getRangeForPeriod } from "@/lib/period-filter"
 
 
 export default function AssetDetailPage() {
@@ -46,6 +52,37 @@ export default function AssetDetailPage() {
 
 	const [showQuickSpend, setShowQuickSpend] = useState(false)
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+
+	// Same filters as /dashboard/historial; the element already ships all its movements, so they run client-side
+	const { cats } = useDashboard()
+	const [showFilters, setShowFilters] = useState(false)
+	const [searchTerm, setSearchTerm] = useState("")
+	const [selectedCategory, setSelectedCategory] = useState(ALL_FILTER_ID)
+	const [selectedType, setSelectedType] = useState(ALL_FILTER_ID)
+	const [selectedPeriod, setSelectedPeriod] = useState(currentMonthPeriodId())
+
+	const filteredMovements = useMemo(
+		() => filterMovements(asset?.movements ?? [], {
+			searchTerm,
+			categoryId: selectedCategory,
+			type: selectedType,
+			range: getRangeForPeriod(selectedPeriod),
+		}),
+		[asset?.movements, searchTerm, selectedCategory, selectedType, selectedPeriod]
+	)
+
+	const activeFiltersCount = [
+		searchTerm,
+		selectedCategory !== ALL_FILTER_ID ? selectedCategory : "",
+		selectedType !== ALL_FILTER_ID ? selectedType : "",
+	].filter(Boolean).length
+
+	const clearFilters = () => {
+		setSearchTerm("")
+		setSelectedCategory(ALL_FILTER_ID)
+		setSelectedType(ALL_FILTER_ID)
+		setSelectedPeriod(currentMonthPeriodId())
+	}
 
 	const handleDeleteMovement = async (movement: Movements) => {
 		if (!confirm(`¿Seguro que querés borrar "${movement.description}"?`)) return;
@@ -239,39 +276,83 @@ export default function AssetDetailPage() {
 				<CardHeader>
 					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 						<CardTitle>Historial de Transacciones</CardTitle>
-						{/* <div className="flex flex-wrap gap-2">
-							<Badge
-								variant={filterType === "all" ? "default" : "outline"}
-								className={cn(
-									"cursor-pointer transition-colors",
-									filterType === "all" ? "bg-primary-600 text-white hover:bg-primary-700" : "hover:bg-gray-100",
+						<div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+							<div className="relative">
+								<Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+								<Input
+									placeholder="Buscar transacciones..."
+									value={searchTerm}
+									onChange={(e) => setSearchTerm(e.target.value)}
+									className="pl-10"
+								/>
+							</div>
+							<Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-2">
+								<Filter className="w-4 h-4" />
+								<span>Filtros</span>
+								{activeFiltersCount > 0 && (
+									<Badge variant="secondary" className="ml-1">{activeFiltersCount}</Badge>
 								)}
-								onClick={() => setFilterType("all")}
-							>
-								Todas
-							</Badge>
-							<Badge
-								variant={filterType === "ingreso" ? "default" : "outline"}
-								className={cn(
-									"cursor-pointer transition-colors",
-									filterType === "ingreso" ? "bg-primary-600 text-white hover:bg-primary-700" : "hover:bg-gray-100",
-								)}
-								onClick={() => setFilterType("ingreso")}
-							>
-								Ingresos
-							</Badge>
-							<Badge
-								variant={filterType === "gasto" ? "default" : "outline"}
-								className={cn(
-									"cursor-pointer transition-colors",
-									filterType === "gasto" ? "bg-primary-600 text-white hover:bg-primary-700" : "hover:bg-gray-100",
-								)}
-								onClick={() => setFilterType("gasto")}
-							>
-								Gastos
-							</Badge>
-						</div> */}
+							</Button>
+						</div>
 					</div>
+
+					{showFilters && (
+						<div className="mt-4 pt-4 border-t space-y-4">
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+								<div>
+									<Label>Categoría</Label>
+									<Select value={selectedCategory} onValueChange={setSelectedCategory}>
+										<SelectTrigger>
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value={ALL_FILTER_ID}>
+												<div className="flex items-center gap-2">
+													<div className="w-3 h-3 rounded-full bg-gray-500" />
+													Todas
+												</div>
+											</SelectItem>
+											{cats.map((category) => (
+												<SelectItem key={category.id} value={category.id}>
+													<div className="flex items-center gap-2">
+														<div className={cn("w-3 h-3 rounded-full", category.color)} />
+														{category.name}
+													</div>
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								</div>
+								<div>
+									<Label>Tipo</Label>
+									<Select value={selectedType} onValueChange={setSelectedType}>
+										<SelectTrigger>
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value={ALL_FILTER_ID}>Todos</SelectItem>
+											<SelectItem value={TxType.EXPENSE}>Gastos</SelectItem>
+											<SelectItem value={TxType.INCOME}>Ingresos</SelectItem>
+										</SelectContent>
+									</Select>
+								</div>
+							</div>
+
+							{activeFiltersCount > 0 && (
+								<div className="flex justify-end">
+									<Button variant="ghost" size="sm" onClick={clearFilters} className="flex items-center gap-1">
+										<X className="w-4 h-4" />
+										Limpiar filtros
+									</Button>
+								</div>
+							)}
+
+							<div className="border-t pt-4">
+								<Label className="mb-3 block">Período</Label>
+								<PeriodSelector selected={selectedPeriod} onSelect={setSelectedPeriod} />
+							</div>
+						</div>
+					)}
 				</CardHeader>
 				<CardContent>
 					{
@@ -295,13 +376,22 @@ export default function AssetDetailPage() {
 								))}
 							</div>
 						) :
-							asset?.movements.length === 0 ? (
+							filteredMovements.length === 0 ? (
 								<div className="text-center py-8 text-gray-500">
-									<p>No hay transacciones para mostrar.</p>
+									{(asset?.movements.length ?? 0) === 0 ? (
+										<p>No hay transacciones para mostrar.</p>
+									) : (
+										<>
+											<p>No hay transacciones con estos filtros.</p>
+											<Button variant="ghost" size="sm" className="mt-2" onClick={clearFilters}>
+												Limpiar filtros
+											</Button>
+										</>
+									)}
 								</div>
 							) : (
 								<div className="space-y-2">
-									{asset?.movements.map((movement) => (
+									{filteredMovements.map((movement) => (
 										<Card key={movement.id} className="p-3 hover:shadow-sm transition-all md:p-4">
 											<div className="flex flex-col space-y-3">
 												{/* Top row: Category badge + Dropdown */}

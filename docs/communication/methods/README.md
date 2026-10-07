@@ -17,6 +17,7 @@ chat: [next-chat-brief.md](next-chat-brief.md).
 | Llamadas al aire (clips) | Dave Ramsey | **Diagnosis: where you stand routes the next peso**, fund sizing, risk as a ratio | [ramsey-incredible-advices.md](ramsey-incredible-advices.md) |
 | Efecto bola de nieve e interés compuesto (video) | Santiago Magnín | **Compounding in time, three levers**, lifestyle vs. income (Ch. 4) | [magning-efecto-bola-de-nieve.md](magning-efecto-bola-de-nieve.md) |
 | Principios que no cambian (entrevista) | Dave Ramsey | **The five core principles**, anger at debt, simple isn't easy | [ramsey-core-principles.md](ramsey-core-principles.md) |
+| Gastar con propósito (artículo, Kakebo y minimalismo) | Unsigned brokerage blog | **Spend by purpose**, month-end reflection. Low-quality source | [lecciones-de-la-cultura-japonesa.md](lecciones-de-la-cultura-japonesa.md) |
 
 Sources Magnín himself points to (candidates to add as their own files, each to be read at the
 original, not through him): Warren Buffett's letters to Berkshire investors (moat, circle of
@@ -49,6 +50,6 @@ Open questions:
 
 ## Status
 
-- Sources loaded: 6 (all from Bruno's pasted transcripts, 2026-09-30).
+- Sources loaded: 7 (all from Bruno's pasted transcripts, 2026-09-30).
 - Numbers verified: 0.
 - Next: map each idea to a cairn (next chat), then verify numbers for the ideas that survive.

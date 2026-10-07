@@ -22,7 +22,8 @@ Enforced by `__tests__/content-security-guardrail.test.ts` (rules live in `lib/c
 
 - **No raw HTML injection:** no `dangerouslySetInnerHTML`, `innerHTML`, `outerHTML`, `insertAdjacentHTML` or `document.write`. The single exception is the JSON-LD `<script>` in `components/content/json-ld.tsx`.
 - **JSON-LD is always escaped:** `json-ld.tsx` must serialize through `serializeJsonLd` (escapes `<`, so content can never close the script tag).
-- **No inline `<script>`** anywhere else, and no `<iframe>` (add a `sandbox` plus an origin allowlist before enabling embeds).
+- **No inline `<script>`** anywhere else.
+- **Embeds:** no `<iframe>` except in `components/content/blocks/video-embed.tsx` (the `VideoEmbed` block). Every frame there has a `sandbox` and loads only from `https://www.youtube-nocookie.com/embed/`, and `videoId` must be an 11-character YouTube id. To allow another origin, extend the rule and add a bad sample to the test first.
 - **No dynamic code:** no `eval()` or `new Function()`.
 - **External links:** every `target="_blank"` carries `rel="noopener noreferrer"`.
 - **https only:** no `http://` URLs (localhost excepted), and `seo.sources` URLs must be `https://` (enforced by the schema). No `javascript:`, `vbscript:` or `data:text/html` URLs.

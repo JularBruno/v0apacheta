@@ -14,7 +14,7 @@ export function generateMetadata() {
 
 const seo: ContentSeo = {
 	summary:
-		"Una PWA (Progressive Web App) es una aplicación web que se puede instalar en el celular o la compu, abrir en su propia ventana y, con un service worker, seguir respondiendo aunque falle la conexión. En Next.js alcanza con un manifest, un service worker y HTTPS.",
+		"Una PWA es una web que se instala como una app, abre en su propia ventana y puede seguir andando sin conexión. En Next.js alcanza con un manifest, un service worker y HTTPS.",
 	faq: [
 		{
 			question: "¿Necesito una librería como next-pwa para hacer una PWA en Next.js?",
@@ -38,6 +38,12 @@ const seo: ContentSeo = {
 		},
 	],
 	sources: [
+		{
+			name: "Alex Russell: Progressive Web Apps, Escaping Tabs Without Losing Our Soul (2015)",
+			url: "https://infrequently.org/2015/06/progressive-apps-escaping-tabs-without-losing-our-soul/",
+		},
+		{ name: "Wikipedia: Progressive web app", url: "https://en.wikipedia.org/wiki/Progressive_web_app" },
+		{ name: "iMore: la historia de la App Store", url: "https://imore.com/history-app-store-year-zero" },
 		{ name: "Next.js: guía de Progressive Web Apps", url: "https://nextjs.org/docs/app/guides/progressive-web-apps" },
 		{ name: "MDN: Progressive web apps", url: "https://developer.mozilla.org/es/docs/Web/Progressive_web_apps" },
 		{ name: "web.dev: Learn PWA", url: "https://web.dev/learn/pwa" },
@@ -45,12 +51,14 @@ const seo: ContentSeo = {
 }
 
 const sections = [
+	{ id: "caso-real", label: "Un caso real" },
 	{ id: "que-es", label: "Qué es una PWA" },
+	{ id: "de-donde-viene", label: "De dónde viene" },
 	{ id: "para-que-sirve", label: "Para qué sirve" },
-	{ id: "como-crear", label: "Cómo crearla con Next.js" },
-	{ id: "como-probar", label: "Cómo probarla" },
 	{ id: "como-instalar", label: "Cómo se instala" },
 	{ id: "push", label: "Notificaciones push" },
+	{ id: "como-crear", label: "Cómo crearla con Next.js" },
+	{ id: "como-probar", label: "Cómo probarla" },
 ]
 
 function C({ children }: { children: ReactNode }) {
@@ -63,11 +71,31 @@ export default function QueEsUnaPwaPage() {
 			<Summary text={seo.summary} />
 			<Toc items={sections} />
 
+			<Section id="caso-real" heading="Guía de escalada">
+				<p>
+					Pocas páginas conozco que aprovechen bien las PWA, y creí que aplicarlas era una mala idea porque no las veía en el
+					mercado. Una PWA se instala desde el navegador y después abre en su propia ventana, como cualquier app.
+				</p>
+				<p>
+					Después vi la app de un amigo,{" "}
+					<a
+						href="https://www.viasdeescaladacordoba.com/"
+						target="_blank"
+						rel="noopener noreferrer"
+						className="text-primary hover:underline"
+					>
+						Vías de Escalada Córdoba
+					</a>
+					, una guía de sectores y vías de escalada de la provincia. Es muy simple de conseguir, ayuda a manejar la información
+					de las vías y, después de una descarga inicial, funciona sin conexión, una ventaja enorme para quien va a las sierras. Me
+					encantó cómo quedó.
+				</p>
+			</Section>
+
 			<Section id="que-es" heading="Qué es una PWA">
 				<p>
-					Una PWA es un sitio web que se comporta como una app: se instala desde el navegador, tiene su propio ícono y abre
-					en su propia ventana, sin barra de direcciones. No es una tecnología nueva, sino un conjunto de capacidades del
-					navegador que, combinadas, dan esa experiencia.
+					Una PWA es un sitio web que se comporta como una app: se instala, tiene su propio ícono y abre en su propia ventana. No es
+					una tecnología nueva, sino capacidades del navegador combinadas.
 				</p>
 				<DataTable
 					caption="Las tres piezas de una PWA y dónde viven en Next.js"
@@ -84,11 +112,34 @@ export default function QueEsUnaPwaPage() {
 				/>
 				<Callout title="Una PWA no es una app nativa">
 					<p>
-						Corre dentro del navegador y accede a menos funciones del dispositivo que una app nativa. A cambio, tenés una sola
-						base de código para web y celular, y se actualiza sola cada vez que desplegás.
+						Corre dentro del navegador y accede a menos funciones del dispositivo, pero tenés una sola base de código y se actualiza
+						sola cada vez que desplegás.
 					</p>
 				</Callout>
 			</Section>
+
+			<Section id="de-donde-viene" heading="De dónde viene">
+				<p>
+					Las PWA no aparecieron de golpe: son el final de una historia de la web y las apps que empieza con el primer iPhone.
+				</p>
+				<DataTable
+					caption="De las apps web a las PWA"
+					columns={["Cuándo", "Qué pasó"]}
+					rows={[
+						["2007", "Sale el iPhone. Para los desarrolladores externos, la propuesta de Apple es hacer apps web, sin SDK."],
+						["2008", "Apple cambia de rumbo: lanza el SDK en febrero y abre la App Store en julio. Las apps nativas pasan a ser el camino."],
+						["Fines de 2014", "Chrome empieza a implementar los service workers, la pieza que permite funcionar sin conexión."],
+						[
+							"2015",
+							"Alex Russell, ingeniero de Chrome, y la diseñadora Frances Berriman le ponen nombre: Progressive Web Apps. Russell describe sus rasgos: se adaptan a cualquier pantalla, andan sin conexión, se sienten como apps, se actualizan solas, son seguras, se pueden instalar sin tienda y se comparten con un link.",
+						],
+					]}
+				/>
+				<p>
+					Se llaman progresivas porque funcionan en cualquier navegador y suman capacidades donde el navegador las soporta.
+				</p>
+			</Section>
+
 
 			<Section id="para-que-sirve" heading="Para qué sirve">
 				<ul className="list-disc space-y-2 pl-5">
@@ -98,6 +149,30 @@ export default function QueEsUnaPwaPage() {
 					<li>Es una sola base de código para todos los dispositivos.</li>
 					<li>Se actualiza cuando desplegás, sin esperar la revisión de una tienda.</li>
 				</ul>
+			</Section>
+
+			<Section id="como-instalar" heading="Cómo se instala">
+				<p>
+					Instalar una PWA es tan simple como apretar un botón, pero ese botón no lo pone la página: es una acción de compartir del
+					propio navegador. La web no se instala sola; vos elegís agregarla desde el menú de tu navegador.
+				</p>
+				<ul className="list-disc space-y-2 pl-5">
+					<li>
+						<strong>Chrome y Edge (compu y Android):</strong> el ícono de instalar en la barra de direcciones, o el menú del
+						navegador y la opción de instalar la app o agregarla a la pantalla de inicio.
+					</li>
+					<li>
+						<strong>iPhone y iPad (Safari):</strong> el botón Compartir y luego &ldquo;Agregar a inicio&rdquo;.
+					</li>
+				</ul>
+			</Section>
+
+			<Section id="push" heading="Notificaciones push">
+				<p>
+					El mismo service worker puede recibir eventos <C>push</C> y mostrar notificaciones aunque la app esté cerrada. En
+					Next.js se suele combinar con la librería <C>web-push</C> y un par de claves VAPID. Apacheta usa estas mismas piezas:
+					un manifest, un service worker y notificaciones push.
+				</p>
 			</Section>
 
 			<Section id="como-crear" heading="Cómo crearla con Next.js">
@@ -165,26 +240,6 @@ export default function QueEsUnaPwaPage() {
 						<C>mi-app-v2</C>) para que se borre el caché viejo.
 					</p>
 				</Callout>
-			</Section>
-
-			<Section id="como-instalar" heading="Cómo se instala">
-				<ul className="list-disc space-y-2 pl-5">
-					<li>
-						<strong>Chrome y Edge (compu y Android):</strong> ícono de instalar en la barra de direcciones, o el menú y la
-						opción de instalar la app o agregarla a la pantalla de inicio.
-					</li>
-					<li>
-						<strong>iPhone y iPad (Safari):</strong> botón Compartir y luego &ldquo;Agregar a inicio&rdquo;.
-					</li>
-				</ul>
-			</Section>
-
-			<Section id="push" heading="Notificaciones push">
-				<p>
-					El mismo service worker puede recibir eventos <C>push</C> y mostrar notificaciones aunque la app esté cerrada. En
-					Next.js se suele combinar con la librería <C>web-push</C> y un par de claves VAPID. Apacheta usa estas mismas piezas:
-					un manifest, un service worker y notificaciones push.
-				</p>
 			</Section>
 
 			<Glossary

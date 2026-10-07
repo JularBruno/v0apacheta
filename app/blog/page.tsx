@@ -15,7 +15,7 @@ export const metadata: Metadata = buildPageMetadata({
 	path: "/blog",
 })
 
-const CATEGORY_ORDER: BlogCategory[] = ["economia", "apacheta", "random"]
+const CATEGORY_ORDER: BlogCategory[] = ["economia", "pensar-argentino", "apacheta", "random"]
 
 export default function BlogIndexPage() {
 	const posts = listByKind("post")

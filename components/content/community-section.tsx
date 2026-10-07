@@ -16,17 +16,17 @@ export default function CommunitySection({ links = communityLinks() }: { links?:
 				Comunidad
 			</h2>
 			<p className="mt-2 text-muted-foreground">Sumate y seguí el camino con más gente.</p>
-			<ul className="mt-4 grid gap-4 sm:grid-cols-3">
+			<ul className="mt-4 grid gap-4 sm:grid-cols-2">
 				{links.map((link) => {
 					const Icon = COMMUNITY_ICONS[link.platform]
 					const heading = (
 						<span className="flex items-center gap-2 font-bold text-foreground">
-							<Icon className="h-5 w-5 text-primary" aria-hidden="true" />
+							<Icon className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
 							{link.label}
 							{link.href ? (
-								<ExternalLink className="ml-auto h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+								<ExternalLink className="ml-auto h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
 							) : (
-								<span className="ml-auto rounded-full bg-muted px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+								<span className="ml-auto shrink-0 rounded-full bg-muted px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
 									Próximamente
 								</span>
 							)}

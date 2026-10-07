@@ -56,7 +56,7 @@ describe("Cuadernito index (/blog)", () => {
 	})
 
 	test("a channel without a url yet shows as Próximamente on the Cuadernito page", () => {
-		mockCommunity = [{ platform: "instagram", label: "Instagram", description: "Seguinos." }]
+		mockCommunity = [{ platform: "linkedin", label: "LinkedIn", description: "Seguí a Bruno." }]
 		render(<BlogIndexPage />)
 		const section = screen.getByRole("region", { name: "Comunidad" })
 		expect(within(section).getByText("Próximamente")).toBeInTheDocument()

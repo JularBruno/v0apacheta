@@ -1,5 +1,5 @@
 import { z } from "zod"
-import type { ContentMeta, ContentSeo } from "./types"
+import { CATEGORY_LABELS, type BlogCategory, type ContentMeta, type ContentSeo } from "./types"
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}(T[\d:.]+Z?)?$/, "must be an ISO date like 2026-09-30")
 
@@ -11,7 +11,7 @@ export const metaSchema = z
 		description: z.string().min(1).max(155),
 		publishedAt: isoDate,
 		updatedAt: isoDate.optional(),
-		category: z.enum(["economia", "apacheta", "random"]).optional(),
+		category: z.enum(Object.keys(CATEGORY_LABELS) as [BlogCategory, ...BlogCategory[]]).optional(),
 		tags: z.array(z.string().min(1)),
 		pinnedRelated: z.array(z.string().min(1)).optional(),
 		cover: z.string().startsWith("/").optional(),

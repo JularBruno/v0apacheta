@@ -1,5 +1,6 @@
 import { assertValidRegistry, metaSchema, parseMeta, parseSeo, seoSchema } from "../schema"
 import { makeMeta, makeTool } from "../__fixtures__/meta"
+import { CATEGORY_LABELS } from "../types"
 
 describe("metaSchema", () => {
 	test("accepts a valid post and a valid tool", () => {
@@ -15,6 +16,12 @@ describe("metaSchema", () => {
 	test("rejects a description over 155 chars", () => {
 		expect(metaSchema.safeParse(makeMeta({ description: "x".repeat(156) })).success).toBe(false)
 		expect(metaSchema.safeParse(makeMeta({ description: "x".repeat(155) })).success).toBe(true)
+	})
+
+	test("accepts the pensar-argentino category, labelled \"El problema de pensar como Argentino\"", () => {
+		expect(metaSchema.safeParse(makeMeta({ category: "pensar-argentino" })).success).toBe(true)
+		expect(CATEGORY_LABELS["pensar-argentino"]).toBe("El problema de pensar como Argentino")
+		expect(metaSchema.safeParse(makeMeta({ category: "inventada" as never })).success).toBe(false)
 	})
 
 	test("requires category on posts and forbids it on tools", () => {

@@ -10,8 +10,8 @@ jest.mock("@/lib/content/community", () => ({
 beforeEach(() => {
 	mockCommunity = [
 		{ platform: "discord", label: "Discord", description: "Sumate al canal." },
-		{ platform: "instagram", label: "Instagram", description: "Seguinos." },
 		{ platform: "youtube", label: "YouTube", description: "Mirá los videos." },
+		{ platform: "linkedin", label: "LinkedIn", description: "Seguí a Bruno." },
 	]
 })
 
@@ -57,7 +57,7 @@ describe("ApachetaHeader (compact landing-style trail header)", () => {
 	test("the social stop only redirects to the links at the bottom: no social pills or external links in the header", () => {
 		const { container } = render(<ApachetaHeader variant="post" />)
 		const header = container.querySelector('[data-variant="header"]') as HTMLElement
-		for (const name of ["Discord", "Instagram", "YouTube"]) expect(within(header).queryByText(name)).toBeNull()
+		for (const name of ["Discord", "YouTube", "LinkedIn"]) expect(within(header).queryByText(name)).toBeNull()
 		expect(header.querySelectorAll('a[target="_blank"]')).toHaveLength(0)
 	})
 

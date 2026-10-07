@@ -14,7 +14,7 @@ them invent copy on their own.
 |---|---|---|---|
 | 1 | [brand-guideline.md](brand-guideline.md) | What is Apacheta, what's the one message, how do we sound, what do we never do? **Start here.** | draft v1 |
 | 2 | [audiences.md](audiences.md) | Who reads us: Marcos (user) and the builder/peer (LinkedIn, blog) | draft v1 |
-| 3 | [methods/](methods/README.md) | Internal research: where the ideas come from, what we adopted, numbers to verify | draft v1 — 6 sources |
+| 3 | [methods/](methods/README.md) | Internal research: where the ideas come from, what we adopted, numbers to verify | draft v1 — 7 sources |
 | 4 | [trail-naming.md](trail-naming.md) | The canonical names of chapters and steps, and the conflicts to fix | draft v1 — needs decisions |
 | 5 | [channels.md](channels.md) | LinkedIn first (two voices), then blog and tools | draft v1 |
 | 6 | [methods/next-chat-brief.md](methods/next-chat-brief.md) | Hand-off to start the **method-design chat** (the map as pedagogy) | ready to use |
