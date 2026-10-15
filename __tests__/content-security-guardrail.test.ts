@@ -11,8 +11,10 @@ const SURFACE = [
 	"app/donaciones",
 	"components/content",
 	"components/donations/public-donations.tsx",
+	"components/breathing",
 	"components/sky",
 	"lib/astro",
+	"lib/breathing",
 	"lib/content",
 ]
 const SKIP_DIRS = new Set(["__tests__", "__fixtures__", "node_modules"])

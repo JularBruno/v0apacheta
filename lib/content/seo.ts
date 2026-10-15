@@ -100,7 +100,7 @@ export function webApplicationJsonLd(meta: ContentMeta): JsonLd {
 		name: meta.title,
 		description: meta.description,
 		url: contentUrl(meta),
-		applicationCategory: "FinanceApplication",
+		applicationCategory: meta.applicationCategory ?? "FinanceApplication",
 		operatingSystem: "Any",
 		inLanguage: LANGUAGE,
 		offers: { "@type": "Offer", price: "0", priceCurrency: "ARS" },

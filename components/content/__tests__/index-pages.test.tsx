@@ -76,7 +76,7 @@ describe("Cuadernito index (/blog)", () => {
 		expect(within(header).getByRole("link", { name: "Comenzá tu camino" })).toHaveAttribute("href", "/onboarding")
 		expect(within(header).getByRole("link", { name: "Doná a Apacheta" })).toHaveAttribute("href", "/donaciones")
 		expect(screen.getAllByRole("link", { name: /Doná/ })).toHaveLength(1)
-		expect(within(screen.getByRole("navigation", { name: "Breadcrumb" })).getByText("Cuadernito")).toHaveAttribute(
+		expect(within(screen.getByRole("navigation", { name: "Breadcrumb" })).getByText("Inicio")).toHaveAttribute(
 			"aria-current",
 			"page",
 		)

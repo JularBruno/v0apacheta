@@ -24,6 +24,11 @@ describe("metaSchema", () => {
 		expect(metaSchema.safeParse(makeMeta({ category: "inventada" as never })).success).toBe(false)
 	})
 
+	test("accepts an optional applicationCategory on tools, rejects an empty one", () => {
+		expect(metaSchema.safeParse(makeTool({ applicationCategory: "HealthApplication" })).success).toBe(true)
+		expect(metaSchema.safeParse(makeTool({ applicationCategory: "" })).success).toBe(false)
+	})
+
 	test("requires category on posts and forbids it on tools", () => {
 		expect(metaSchema.safeParse(makeMeta({ category: undefined })).success).toBe(false)
 		expect(metaSchema.safeParse(makeTool({ category: "economia" })).success).toBe(false)

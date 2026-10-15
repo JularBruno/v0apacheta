@@ -15,6 +15,7 @@ export const metaSchema = z
 		tags: z.array(z.string().min(1)),
 		pinnedRelated: z.array(z.string().min(1)).optional(),
 		cover: z.string().startsWith("/").optional(),
+		applicationCategory: z.string().min(1).optional(),
 	})
 	.superRefine((meta, ctx) => {
 		if (meta.kind === "post" && !meta.category) {

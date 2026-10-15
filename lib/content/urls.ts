@@ -21,8 +21,9 @@ export function contentUrl(meta: Pick<ContentMeta, "kind" | "slug">): string {
 	return `${SITE_URL}${contentPath(meta)}`
 }
 
+/** "Inicio" is the start of the section you are in (the Cuadernito list for posts), not the app's home, which may redirect elsewhere. */
 export function sectionCrumbs(kind: ContentKind): Crumb[] {
-	return [{ name: "Inicio", path: "/" }, SECTIONS[kind]]
+	return [{ name: "Inicio", path: SECTIONS[kind].path }]
 }
 
 export function breadcrumbsFor(meta: ContentMeta): Crumb[] {

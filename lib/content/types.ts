@@ -24,6 +24,8 @@ export interface ContentMeta {
 	tags: string[]
 	/** optional manual slugs, shown first in the sidebar */
 	pinnedRelated?: string[]
+	/** schema.org applicationCategory for tools, e.g. "HealthApplication"; defaults to "FinanceApplication" */
+	applicationCategory?: string
 	/** path under /public, e.g. "/blog/inflacion.webp" */
 	cover?: string
 }

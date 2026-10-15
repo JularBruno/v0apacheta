@@ -11,15 +11,16 @@ describe("content urls", () => {
 		expect(contentUrl(makeMeta({ slug: "mi-post" }))).toBe(`${SITE_URL}/blog/mi-post`)
 	})
 
-	test("breadcrumbs go Inicio > section > title, the blog section is called Cuadernito", () => {
+	test("breadcrumbs go Inicio > title, and Inicio is the start of the section you are in, never the app's home", () => {
 		expect(breadcrumbsFor(makeMeta({ slug: "mi-post", title: "Mi post" }))).toEqual([
-			{ name: "Inicio", path: "/" },
-			{ name: "Cuadernito", path: "/blog" },
+			{ name: "Inicio", path: "/blog" },
 			{ name: "Mi post", path: "/blog/mi-post" },
 		])
-		expect(sectionCrumbs("tool")).toEqual([
-			{ name: "Inicio", path: "/" },
-			{ name: "Herramientas", path: "/herramientas" },
+		expect(breadcrumbsFor(makeTool({ slug: "mi-tool", title: "Mi tool" }))).toEqual([
+			{ name: "Inicio", path: "/herramientas" },
+			{ name: "Mi tool", path: "/herramientas/mi-tool" },
 		])
+		expect(sectionCrumbs("post")).toEqual([{ name: "Inicio", path: "/blog" }])
+		expect(sectionCrumbs("tool")).toEqual([{ name: "Inicio", path: "/herramientas" }])
 	})
 })

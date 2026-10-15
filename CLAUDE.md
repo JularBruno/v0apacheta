@@ -8,7 +8,7 @@ Applies to every generated page under `/blog/<slug>` and `/herramientas/<slug>`,
 
 - **Metadata:** build it with `generateMetadata` from the page's `meta` object. Set a canonical URL, `es_AR` OpenGraph (`type: "article"` for posts), and a Twitter card. Don't set `<title>` inside the shell. Use the title template `%s | Apacheta`.
 - **Structured data (JSON-LD):** emit `Article` for posts, and `WebApplication` for tools. Add `FAQPage` whenever the page has an FAQ block. Add `BreadcrumbList` on every page. The shell emits all of these from `meta` and the template's sections, so individual pages don't hand-write them.
-- **Semantic markup:** use exactly one `<h1>` (the title), `<h2>` for sections, the body in `<article>`, the sidebar in `<aside>`, and visible breadcrumbs (`Inicio > Cuadernito|Herramientas > Título`). The blog's public name is "Cuadernito"; its URLs stay under `/blog`.
+- **Semantic markup:** use exactly one `<h1>` (the title), `<h2>` for sections, the body in `<article>`, the sidebar in `<aside>`, and visible breadcrumbs (`Inicio > Título`, where Inicio links to the section's own start: `/blog` for posts, `/herramientas` for tools). The blog's public name is "Cuadernito"; its URLs stay under `/blog`.
 - **Rendering:** the page must be fully static (`export const dynamic = "force-static"`). All explanatory text must be in server-rendered HTML. Interactive widgets on tool pages are client components embedded in the server-rendered page, and they must not be the only place the content lives.
 - **Freshness:** show a visible "Actualizado el <fecha>" date (`updatedAt ?? publishedAt`). Economics data goes stale, so update `updatedAt` whenever figures change.
 - **Internal links:** related posts and tools in the sidebar must be real `<a href>` links (`next/link`), not click handlers.
@@ -18,7 +18,7 @@ Applies to every generated page under `/blog/<slug>` and `/herramientas/<slug>`,
 
 ## Blog and tools pages: security requirements
 
-Enforced by `__tests__/content-security-guardrail.test.ts` (rules live in `lib/content/__fixtures__/security-rules.ts`) over the public surface: `app/blog`, `app/herramientas`, `app/donaciones`, `components/content`, `components/donations/public-donations.tsx`, `components/sky`, `lib/astro`, `lib/content`. Comments are ignored; code is scanned. To add a rule: add it to the rules file, add a bad sample to the test, add a line here.
+Enforced by `__tests__/content-security-guardrail.test.ts` (rules live in `lib/content/__fixtures__/security-rules.ts`) over the public surface: `app/blog`, `app/herramientas`, `app/donaciones`, `components/content`, `components/donations/public-donations.tsx`, `components/breathing`, `components/sky`, `lib/astro`, `lib/breathing`, `lib/content`. Comments are ignored; code is scanned. To add a rule: add it to the rules file, add a bad sample to the test, add a line here.
 
 - **No raw HTML injection:** no `dangerouslySetInnerHTML`, `innerHTML`, `outerHTML`, `insertAdjacentHTML` or `document.write`. The single exception is the JSON-LD `<script>` in `components/content/json-ld.tsx`.
 - **JSON-LD is always escaped:** `json-ld.tsx` must serialize through `serializeJsonLd` (escapes `<`, so content can never close the script tag).

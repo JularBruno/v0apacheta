@@ -109,6 +109,13 @@ describe("JSON-LD", () => {
 		expect(ld.url).toBe("https://apacheta.ar/herramientas/calc")
 	})
 
+	test("a tool can say its own application category (default FinanceApplication)", () => {
+		expect(webApplicationJsonLd(makeTool({ slug: "a" })).applicationCategory).toBe("FinanceApplication")
+		expect(webApplicationJsonLd(makeTool({ slug: "b", applicationCategory: "HealthApplication" })).applicationCategory).toBe(
+			"HealthApplication",
+		)
+	})
+
 	test("faq maps to FAQPage questions", () => {
 		const ld = faqJsonLd([{ question: "¿Q?", answer: "A." }])
 		expect(ld["@type"]).toBe("FAQPage")

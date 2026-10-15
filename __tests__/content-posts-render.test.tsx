@@ -12,18 +12,18 @@ describe("every registered post page renders", () => {
 	})
 
 	for (const post of posts) {
-		test(`${post.slug}: one h1 with its title, a FAQ in the HTML, and its JSON-LD`, () => {
+		test(`${post.slug}: one h1 with its title and its JSON-LD (FAQPage exactly when the post has a FAQ)`, () => {
 			// eslint-disable-next-line @typescript-eslint/no-require-imports
 			const Page = require(`@/app/blog/${post.slug}/page`).default as () => ReactNode
 			const { container } = render(<Page />)
 			const h1s = container.querySelectorAll("h1")
 			expect(h1s).toHaveLength(1)
 			expect(h1s[0]).toHaveTextContent(post.title)
-			expect(container.querySelectorAll("details").length).toBeGreaterThan(0)
+			const hasFaq = container.querySelectorAll("details").length > 0
 			const types = Array.from(container.querySelectorAll('script[type="application/ld+json"]')).map(
 				(script) => JSON.parse(script.textContent ?? "{}")["@type"],
 			)
-			expect(types).toEqual(["Article", "BreadcrumbList", "FAQPage"])
+			expect(types).toEqual(hasFaq ? ["Article", "BreadcrumbList", "FAQPage"] : ["Article", "BreadcrumbList"])
 		})
 	}
 })

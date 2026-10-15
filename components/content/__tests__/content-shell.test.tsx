@@ -71,8 +71,8 @@ describe("ContentShell", () => {
 	test("renders visible breadcrumbs ending at the current page", () => {
 		render(<ContentShell meta={makeMeta({ title: "Mi título" })} seo={seo}>x</ContentShell>)
 		const nav = screen.getByRole("navigation", { name: "Breadcrumb" })
-		expect(within(nav).getByRole("link", { name: "Inicio" })).toHaveAttribute("href", "/")
-		expect(within(nav).getByRole("link", { name: "Cuadernito" })).toHaveAttribute("href", "/blog")
+		expect(within(nav).getByRole("link", { name: "Inicio" })).toHaveAttribute("href", "/blog")
+		expect(within(nav).queryByRole("link", { name: "Cuadernito" })).toBeNull()
 		expect(within(nav).getByText("Mi título")).toHaveAttribute("aria-current", "page")
 	})
 
