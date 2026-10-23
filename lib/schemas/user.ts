@@ -17,6 +17,7 @@ export interface User {
 /** User State type to reuse in forms **/
 export type UserState = {
 	errors?: {
+		name?: string[];
 		email?: string[];
 		password?: string[];
 	};
@@ -25,7 +26,6 @@ export type UserState = {
 		// Add this property
 		name?: string;
 		email?: string;
-		password?: string;
 	};
 };
 
