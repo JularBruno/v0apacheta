@@ -20,7 +20,8 @@ import { TxType } from "@/lib/schemas/definitions";
 import { CategoryBudget } from "@/lib/schemas/category";
 import { quickFilters, formatToBalance } from "@/lib/quick-spend-constants";
 import { formatDate, formatDateNoYear } from "@/lib/dateUtils";
-import { getRangeForPeriod } from "@/lib/period-filter";
+import { currentMonthPeriodId, getPeriodLabel, getRangeForPeriod } from "@/lib/period-filter";
+import { ActiveFilters } from "@/components/movements/active-filters";
 import { PeriodSelector } from "@/components/movements/period-selector"
 import { toast } from "@/hooks/use-toast"
 
@@ -125,7 +126,7 @@ export default function HistorialPage() {
 		setSearchTerm("")
 		setSelectedCategory("all")
 		setSelectedType("all")
-		setSelectedDateFilter("month")
+		setSelectedDateFilter(currentMonthPeriodId())
 	}
 
 	// counting active filters for badge
@@ -272,6 +273,18 @@ export default function HistorialPage() {
 								</div>
 							</div>
 						</div>
+
+						<ActiveFilters
+							periodLabel={getPeriodLabel(selectedDateFilter)}
+							onPeriodClick={() => setShowFilters(true)}
+							searchTerm={searchTerm}
+							onClearSearch={() => setSearchTerm("")}
+							category={selectedCategory !== allFilteredId ? cats.find((c) => c.id === selectedCategory) : undefined}
+							onClearCategory={() => setSelectedCategory(allFilteredId)}
+							typeLabel={selectedType === TxType.EXPENSE ? "Gastos" : selectedType === TxType.INCOME ? "Ingresos" : undefined}
+							onClearType={() => setSelectedType(allFilteredId)}
+							onClearAll={clearFilters}
+						/>
 
 						{/* 
 					* Rest of the filters section remains the same 

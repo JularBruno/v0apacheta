@@ -102,7 +102,7 @@ export default function AssetsPage() {
 								<CardTitle className="text-sm font-medium text-gray-600">Total Activos</CardTitle>
 							</CardHeader>
 							<CardContent>
-								<p className="text-2xl font-bold text-green-600">{formatToBalance(totalAssets)}</p>
+								<p className="text-2xl font-bold text-green-600">{formatToBalance(totalAssets, mainCurrency)}</p>
 							</CardContent>
 						</Card>
 						<Card>
@@ -110,7 +110,7 @@ export default function AssetsPage() {
 								<CardTitle className="text-sm font-medium text-gray-600">Total Pasivos</CardTitle>
 							</CardHeader>
 							<CardContent>
-								<p className="text-2xl font-bold text-red-600">{formatToBalance(totalLiabilities)}</p>
+								<p className="text-2xl font-bold text-red-600">{formatToBalance(totalLiabilities, mainCurrency)}</p>
 							</CardContent>
 						</Card>
 						<Card>
@@ -119,7 +119,7 @@ export default function AssetsPage() {
 							</CardHeader>
 							<CardContent>
 								<p className={`text-2xl font-bold ${netWorth >= 0 ? "text-green-600" : "text-red-600"}`}>
-									{formatToBalance(netWorth)}
+									{formatToBalance(netWorth, mainCurrency)}
 								</p>
 							</CardContent>
 						</Card>

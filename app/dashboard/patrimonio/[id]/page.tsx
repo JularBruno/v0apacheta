@@ -30,7 +30,8 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import Loading from "./loading"
 import { PeriodSelector } from "@/components/movements/period-selector"
 import { useDashboard } from "../../dashboardContext"
-import { ALL_FILTER_ID, currentMonthPeriodId, filterMovements, getRangeForPeriod } from "@/lib/period-filter"
+import { ALL_FILTER_ID, SIX_MONTHS_PERIOD_ID, filterMovements, getPeriodLabel, getRangeForPeriod } from "@/lib/period-filter"
+import { ActiveFilters } from "@/components/movements/active-filters"
 
 
 export default function AssetDetailPage() {
@@ -59,7 +60,7 @@ export default function AssetDetailPage() {
 	const [searchTerm, setSearchTerm] = useState("")
 	const [selectedCategory, setSelectedCategory] = useState(ALL_FILTER_ID)
 	const [selectedType, setSelectedType] = useState(ALL_FILTER_ID)
-	const [selectedPeriod, setSelectedPeriod] = useState(currentMonthPeriodId())
+	const [selectedPeriod, setSelectedPeriod] = useState(SIX_MONTHS_PERIOD_ID)
 
 	const filteredMovements = useMemo(
 		() => filterMovements(asset?.movements ?? [], {
@@ -81,7 +82,7 @@ export default function AssetDetailPage() {
 		setSearchTerm("")
 		setSelectedCategory(ALL_FILTER_ID)
 		setSelectedType(ALL_FILTER_ID)
-		setSelectedPeriod(currentMonthPeriodId())
+		setSelectedPeriod(SIX_MONTHS_PERIOD_ID)
 	}
 
 	const handleDeleteMovement = async (movement: Movements) => {
@@ -242,7 +243,7 @@ export default function AssetDetailPage() {
 					<div className="text-center">
 						<p className="text-sm text-gray-500 mb-2">Valor Actual</p>
 						<p className={cn("text-4xl font-bold", valueColorClass)}>
-							{currencyInfo?.symbol ?? ""} {formatToBalance(currentAmount)}
+							{formatToBalance(currentAmount, asset?.currency)}
 						</p>
 					</div>
 				</CardContent>
@@ -295,6 +296,18 @@ export default function AssetDetailPage() {
 							</Button>
 						</div>
 					</div>
+
+					<ActiveFilters
+						periodLabel={getPeriodLabel(selectedPeriod)}
+						onPeriodClick={() => setShowFilters(true)}
+						searchTerm={searchTerm}
+						onClearSearch={() => setSearchTerm("")}
+						category={selectedCategory !== ALL_FILTER_ID ? cats.find((c) => c.id === selectedCategory) : undefined}
+						onClearCategory={() => setSelectedCategory(ALL_FILTER_ID)}
+						typeLabel={selectedType === TxType.EXPENSE ? "Gastos" : selectedType === TxType.INCOME ? "Ingresos" : undefined}
+						onClearType={() => setSelectedType(ALL_FILTER_ID)}
+						onClearAll={clearFilters}
+					/>
 
 					{showFilters && (
 						<div className="mt-4 pt-4 border-t space-y-4">
@@ -434,7 +447,7 @@ export default function AssetDetailPage() {
 													</span>
 													<span className={movement.type === TxType.INCOME ? "font-bold text-lg text-green-600" : "font-bold text-lg text-gray-900"}>
 														{movement.type === TxType.INCOME ? "+" : "-"}
-														{formatToBalance(movement.amount)}
+														{formatToBalance(movement.amount, asset?.currency)}
 													</span>
 												</div>
 											</div>

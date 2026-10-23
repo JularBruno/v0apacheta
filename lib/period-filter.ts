@@ -10,6 +10,21 @@ export type PeriodRange = { startDate?: string; endDate?: string };
 /** Id of the current calendar month, as PeriodSelector emits it ("month-<0-11>-<year>"). */
 export const currentMonthPeriodId = (now = new Date()) => `month-${now.getMonth()}-${now.getFullYear()}`;
 
+/** Default period for an asset's history ("Últimos 6 meses"). */
+export const SIX_MONTHS_PERIOD_ID = quickFilters[4].id;
+
+/** Human label for a PeriodSelector id: quick filter label, or "Octubre 2026" for a month id. */
+export function getPeriodLabel(periodId: string): string {
+	if (periodId.startsWith("month-")) {
+		const [, monthStr, yearStr] = periodId.split("-");
+		const label = new Date(parseInt(yearStr, 10), parseInt(monthStr, 10), 1)
+			.toLocaleDateString("es-AR", { month: "long", year: "numeric" })
+			.replace(" de ", " ");
+		return label.charAt(0).toUpperCase() + label.slice(1);
+	}
+	return quickFilters.find((f) => f.id === periodId)?.label ?? "";
+}
+
 /** Translates a PeriodSelector id into an ISO date range. Missing bounds mean "no limit". */
 export function getRangeForPeriod(periodId: string): PeriodRange {
 	const quickRanges: Record<string, () => { start: Date; end: Date }> = {

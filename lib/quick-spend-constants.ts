@@ -127,12 +127,20 @@ export const quickFilters = [
 ]
 
 // Cool af formated number
-export function formatToBalance(balance: number) {
-	const formatted = new Intl.NumberFormat('es-AR', {
+// Includes the currency symbol already (ARS by default), so never prefix it with another one
+export function formatToBalance(balance: number, currency: string = 'ARS') {
+	const format = (code: string) => new Intl.NumberFormat('es-AR', {
 		style: 'currency',
-		currency: 'ARS',
+		currency: code,
 		minimumFractionDigits: 0,
 	}).format(balance);
+
+	let formatted: string;
+	try {
+		formatted = format(currency);
+	} catch {
+		formatted = format('ARS'); // unknown currency code
+	}
 
 	// if (!balance && balance !== 0) return '';
 	// const numValue = typeof balance === 'string' ? parseFloat(balance) : balance;

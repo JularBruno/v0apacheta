@@ -79,7 +79,7 @@ export default function AssetCard({
 					</div>
 					<div className="text-right">
 						<p className={cn("text-2xl font-bold", valueColorClass)}>
-							{formatToBalance(displayValue)}
+							{formatToBalance(displayValue, mainCurrency)}
 						</p>
 						{needsConversion && (
 							<p className="text-xs text-gray-500">
