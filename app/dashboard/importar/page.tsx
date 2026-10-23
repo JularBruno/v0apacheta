@@ -29,6 +29,7 @@ import type { FinancialElements } from "@/lib/schemas/financialElement"
 import { useFinancialElements } from "@/lib/hooks/use-financial-elements"
 import { formatToBalance } from "@/lib/quick-spend-constants"
 import AssetFormModal from "@/components/assets/asset-form-modal"
+import UndoLastImport from "@/components/importar/undo-last-import"
 import {
 	type ImportError,
 	type ImportResult,
@@ -45,40 +46,58 @@ import {
 const MAX_ROWS = 1000
 
 /**
- * Column reference for the "Formato del archivo Excel" card.
- * Verified against a real dry-run of docs/ejemplo-movimientos.xlsx: blank
- * Tipo, Categoría, and Etiqueta all import cleanly (Tipo inferred from the
- * sign of Monto, Categoría defaults to "Otros", Etiqueta falls back to
- * Descripción). Patrimonio's exact columns aren't confirmed yet — point
- * people at the live template instead of guessing (see the card below).
+ * Column reference for the "Formato del archivo Excel" card. Mirrors what the
+ * backend parser accepts (neptuno src/common/excel: coerceDate, coerceAmount,
+ * MOVEMENT_TYPE_SYNONYMS, CURRENCY_SYNONYMS) and the worked examples in
+ * docs/import-examples/, which every row of was validated against that parser.
  */
 type ColumnSpec = { label: string; required: boolean; hint: string }
 
 const MOVEMENT_SHEET_NAME = "Movimientos"
 const PATRIMONY_SHEET_NAME = "Movimientos Patrimonio"
 
+const DATE_HINT = "Por ejemplo 15/01/2026. También sirve 2026-01-15 o una celda con formato de fecha de Excel."
+const AMOUNT_HINT =
+	"Número o texto: 45200, -45200,50, 1.234.567,89 o $ 12.500. No puede ser 0. Un monto negativo se toma como gasto."
+const CATEGORY_HINT =
+	'Si ya tenés una categoría con ese nombre se usa esa (no importan mayúsculas ni tildes); si no, se crea. Vacía → "Otros".'
+
 const MOVEMENT_COLUMNS: ColumnSpec[] = [
-	{ label: "Fecha", required: true, hint: "Formato dd/mm/aaaa (ej. 15/01/2025)." },
-	{
-		label: "Descripción",
-		required: false,
-		hint: "Texto libre para identificar el movimiento (ej. Compra supermercado). Podés dejarlo vacío.",
-	},
-	{
-		label: "Categoría",
-		required: false,
-		hint: 'Si el nombre coincide con una categoría que ya tenés, se reutiliza; si no, se crea. Vacía → se usa "Otros".',
-	},
-	{ label: "Etiqueta", required: false, hint: "Vacía → se usa el texto de Descripción." },
-	{
-		label: "Monto",
-		required: true,
-		hint: "Solo números (ej. 45200,50 o -45200,50). Negativo lo marca como gasto sin necesidad de la columna Tipo.",
-	},
+	{ label: "Fecha", required: true, hint: DATE_HINT },
+	{ label: "Monto", required: true, hint: AMOUNT_HINT },
 	{
 		label: "Tipo",
 		required: false,
-		hint: "Opcional: Ingreso o Gasto. Vacío → se detecta automáticamente por el signo del Monto.",
+		hint: "Ingreso o Gasto. Vacío → lo decide el signo del Monto. Si lo completás, manda sobre el signo: un monto positivo con Tipo Gasto se carga como gasto.",
+	},
+	{ label: "Categoría", required: false, hint: CATEGORY_HINT },
+	{
+		label: "Etiqueta",
+		required: false,
+		hint: "Agrupa movimientos parecidos (Super, Alquiler, Sueldo). Si ya existe se reutiliza. Vacía → se usa la Descripción.",
+	},
+	{ label: "Descripción", required: false, hint: 'Texto libre para reconocer el movimiento. Vacía → "Sin descripción".' },
+]
+
+const PATRIMONY_COLUMNS: ColumnSpec[] = [
+	{ label: "Fecha", required: true, hint: DATE_HINT },
+	{ label: "Monto", required: true, hint: AMOUNT_HINT.replace("se toma como gasto", "resta al valor del elemento") },
+	{
+		label: "Tipo",
+		required: false,
+		hint: "Ingreso suma al valor del elemento, Gasto lo resta. Vacío → lo decide el signo del Monto.",
+	},
+	{ label: "Categoría", required: false, hint: CATEGORY_HINT },
+	{ label: "Descripción", required: false, hint: 'Texto libre. Vacía → "Movimiento de patrimonio".' },
+	{
+		label: "Moneda",
+		required: false,
+		hint: "ARS, USD, BRL, CLP o NOK (también pesos, dólares, u$s…). Sirve de control: si no coincide con la moneda del elemento, esa fila no se importa.",
+	},
+	{
+		label: "Elemento",
+		required: false,
+		hint: "Solo si el archivo trae varios activos o pasivos: el nombre de cada uno tal como está en la app (o la columna ID Elemento si dos se llaman igual). Las filas sin Elemento van al que elegiste.",
 	},
 ]
 
@@ -289,7 +308,7 @@ export default function ImportarPage() {
 		if (!isXlsx) {
 			toast({
 				title: "Archivo no válido",
-				description: "Por favor selecciona un archivo Excel (.xlsx)",
+				description: "Elegí un archivo de Excel (.xlsx).",
 				variant: "destructive",
 			})
 			return
@@ -333,6 +352,7 @@ export default function ImportarPage() {
 			} else {
 				queryClient.invalidateQueries({ queryKey: ["user-movements"] })
 				queryClient.invalidateQueries({ queryKey: ["user-profile"] })
+				queryClient.invalidateQueries({ queryKey: ["last-movement-import"] })
 			}
 		} catch {
 			setFormatError({ message: "No pudimos conectar con el servidor. Probá de nuevo.", status: 0 })
@@ -396,6 +416,7 @@ export default function ImportarPage() {
 			)}
 
 			{/* Step 1 — mode chooser */}
+			{step === "mode-select" && <UndoLastImport />}
 			{step === "mode-select" && (
 				<Card>
 					<CardHeader>
@@ -542,7 +563,12 @@ export default function ImportarPage() {
 					<Card>
 						<CardHeader>
 							<CardTitle>{uploadStepNumber}. Subir archivo Excel</CardTitle>
-							<CardDescription>Selecciona un archivo .xlsx con tus movimientos financieros</CardDescription>
+							<CardDescription>
+								{mode === "patrimonio"
+									? `Un .xlsx con el historial de ${selectedElement?.name ?? "tu elemento"}: depósitos, retiros, intereses, pagos.`
+									: "Un .xlsx con tus ingresos y gastos, una fila por movimiento."}{" "}
+								Antes de guardar nada te mostramos qué se va a importar.
+							</CardDescription>
 						</CardHeader>
 						<CardContent className="space-y-4">
 							{uploadPhase === "idle" || uploadPhase === "validating" ? (
@@ -558,10 +584,14 @@ export default function ImportarPage() {
 										<label htmlFor="excel-upload" className="cursor-pointer">
 											<Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
 											<p className="text-lg font-medium text-gray-900 mb-2">
-												{selectedFile ? selectedFile.name : "Haz clic para seleccionar archivo"}
+												{selectedFile ? selectedFile.name : "Tocá para elegir el archivo"}
 											</p>
-											<p className="text-sm text-gray-600">o arrastra y suelta tu archivo Excel aquí</p>
-											<p className="text-xs text-gray-500 mt-2">Solo archivos .xlsx, hasta 5 MB</p>
+											<p className="text-sm text-gray-600">
+												{selectedFile ? "Tocá de nuevo para cambiarlo" : "Desde tu computadora o tu celular"}
+											</p>
+											<p className="text-xs text-gray-500 mt-2">
+												Solo .xlsx, hasta 5 MB y {MAX_ROWS} filas
+											</p>
 										</label>
 									</div>
 
@@ -624,6 +654,7 @@ export default function ImportarPage() {
 								<div className="space-y-3">
 									<ImportResultPanel result={finalResult} mode={mode} isPreview={false} />
 									{finalResult.errors.length > 0 && <ImportErrorList errors={finalResult.errors} />}
+									{mode === "movimientos" && <UndoLastImport />}
 									<Button variant="outline" className="gap-2 bg-transparent" onClick={handleImportAnotherFile}>
 										<Upload className="w-4 h-4" />
 										Importar otro archivo
@@ -659,9 +690,13 @@ export default function ImportarPage() {
 							<div className="flex items-start gap-4">
 								<Download className="w-8 h-8 text-blue-600 shrink-0 mt-1" />
 								<div className="flex-1">
-									<h3 className="font-semibold text-blue-900 mb-2">Descarga la plantilla de ejemplo</h3>
+									<h3 className="font-semibold text-blue-900 mb-2">Mirá un ejemplo completo</h3>
 									<p className="text-blue-800 mb-4">
-										Usa nuestra plantilla para asegurarte de que tu archivo tiene el formato correcto
+										{mode === "patrimonio"
+											? "El historial de una caja de ahorro en pesos durante cuatro meses."
+											: "Tres meses de ingresos y gastos."}{" "}
+										Cada fila muestra una forma válida de cargar los datos y la columna gris &quot;Nota&quot; explica
+										cuál. Podés reemplazar las filas por las tuyas y subirlo.
 									</p>
 									<Button
 										asChild
@@ -670,7 +705,7 @@ export default function ImportarPage() {
 									>
 										<a href={`/api/examples/${exampleFile}`} download={exampleFile}>
 											<Download className="w-4 h-4 mr-2" />
-											Descargar Plantilla Excel
+											Descargar ejemplo
 										</a>
 									</Button>
 								</div>
@@ -686,26 +721,19 @@ export default function ImportarPage() {
 								Formato del archivo Excel
 							</CardTitle>
 							<CardDescription>
-								{mode === "movimientos" ? (
-									<>
-										Usá una hoja llamada <span className="font-medium">&quot;{MOVEMENT_SHEET_NAME}&quot;</span>. La primera
-										fila tiene que tener estos nombres de columna exactos — el orden no importa — y después una fila por
-										movimiento.
-									</>
-								) : (
-									<>
-										La plantilla usa una hoja llamada <span className="font-medium">&quot;{PATRIMONY_SHEET_NAME}&quot;</span>{" "}
-										para este historial. Todavía no tenemos el detalle columna por columna confirmado acá — descargá la
-										plantilla de arriba: trae una hoja &quot;Instrucciones&quot; con la explicación oficial de cada una.
-									</>
-								)}
+								Una hoja llamada{" "}
+								<span className="font-medium">
+									&quot;{mode === "movimientos" ? MOVEMENT_SHEET_NAME : PATRIMONY_SHEET_NAME}&quot;
+								</span>{" "}
+								con los nombres de columna en la primera fila y después una fila por movimiento. El orden de las
+								columnas no importa y las que no reconocemos se ignoran.
 							</CardDescription>
 						</CardHeader>
 						<CardContent>
 							<div className="space-y-4">
-								{mode === "movimientos" && (
+								{mode && (
 									<div className="grid gap-3">
-										{MOVEMENT_COLUMNS.map((col) => (
+										{(mode === "movimientos" ? MOVEMENT_COLUMNS : PATRIMONY_COLUMNS).map((col) => (
 											<div
 												key={col.label}
 												className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200"
@@ -733,25 +761,23 @@ export default function ImportarPage() {
 									</h4>
 									<ul className="text-sm text-amber-800 space-y-1 list-disc list-inside">
 										<li>
-											La hoja tiene que llamarse exactamente{" "}
-											<span className="font-medium">
-												&quot;{mode === "movimientos" ? MOVEMENT_SHEET_NAME : PATRIMONY_SHEET_NAME}&quot;
-											</span>
-										</li>
-										<li>La primera fila tiene que tener los nombres de las columnas, tal cual figuran arriba</li>
-										<li>
-											Hasta {MAX_ROWS} filas y 5 MB por archivo — &quot;Validar archivo&quot; te muestra qué se va a
-											importar antes de confirmar, sin guardar nada todavía
+											&quot;Validar archivo&quot; no guarda nada: te muestra cuántas filas entran, cómo queda tu saldo y
+											qué filas tienen errores. Las filas con errores se saltean y el resto se importa igual.
 										</li>
 										{mode === "movimientos" ? (
 											<>
-												<li>Un monto negativo se interpreta como gasto aunque dejes Tipo vacío</li>
-												<li>Las categorías que todavía no existan se crean automáticamente con esa fila</li>
+												<li>Las categorías y etiquetas que no existan se crean solas</li>
+												<li>
+													Si importás algo por error, podés deshacer la última migración desde esta misma página
+												</li>
 											</>
 										) : (
-											<li>Esta importación nunca crea, edita ni borra elementos — solo agrega historial al que ya elegiste</li>
+											<li>
+												Primero creá el activo o pasivo en la app. Esta importación solo agrega historial: nunca crea, edita
+												ni borra elementos, y no cambia tu saldo de movimientos
+											</li>
 										)}
-										<li>Volver a subir el mismo archivo lo importa de nuevo entero — no se detectan duplicados</li>
+										<li>No detectamos duplicados: si subís el mismo archivo dos veces, se importa dos veces</li>
 									</ul>
 								</div>
 							</div>
