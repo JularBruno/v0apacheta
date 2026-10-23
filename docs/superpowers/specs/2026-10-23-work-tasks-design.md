@@ -14,7 +14,7 @@ They are separate GitHub repos. Never mix them: separate branches, commits and p
 
 | | app | api |
 |---|---|---|
-| Path | `/home/bruno/projects/v0apacheta` | `/home/bruno/projects/neptuno` |
+| Path | `/home/bruno/projects/apacheta/v0apacheta` | `/home/bruno/projects/apacheta/neptuno` |
 | Stack | Next.js App Router, Tailwind | NestJS, Sequelize, Postgres (docker) |
 | Package manager | pnpm (`pnpm-lock.yaml`) | npm (`package-lock.json`; ignore the yarn and pnpm lockfiles) |
 | Run | `npm run dev` on :3000 | `npm run start:dev` on :8080 (`PORT` in `.env`) |
@@ -48,7 +48,7 @@ Bruno plans to move both repos into one `apacheta/` folder later. All paths are 
 
 ## Task file
 
-`/home/bruno/projects/TASKS.md`. It lives outside both repos, so switching branches never changes it. Bruno writes the tasks; the agent updates only each task's `Status` line and appends a `### Result` section.
+`/home/bruno/projects/apacheta/TASKS.md`. It lives outside both repos, so switching branches never changes it. Bruno writes the tasks; the agent updates only each task's `Status` line and appends a `### Result` section.
 
 ```markdown
 ## T-001: Short title
@@ -75,10 +75,10 @@ The skill has one section, "Task source", that defines exactly three operations.
 
 1. **Preflight.**
    - Both repos are on `main` with clean working trees, synced with `origin/main` (`git pull --ff-only`). If one is dirty, stop and say so.
-   - Start the dev servers in the background with logs to `/home/bruno/projects/.work-tasks/logs/{app,api}.log`. If a server is already listening on its port, reuse it.
+   - Start the dev servers in the background with logs to `/home/bruno/projects/apacheta/.work-tasks/logs/{app,api}.log`. If a server is already listening on its port, reuse it.
 2. **Load context, once per run.**
    - Both CLAUDE.md files and both projects' docs.
-   - Saved memory for both projects: `~/.claude/projects/-home-bruno-projects-v0apacheta/memory/` and `-home-bruno-projects-neptuno/memory/`.
+   - Saved memory for both projects: `~/.claude/projects/-home-bruno-projects-apacheta-v0apacheta/memory/` and `-home-bruno-projects-apacheta-neptuno/memory/`.
    - Past session transcripts (`*.jsonl` in those same project folders), searched by keyword per task rather than read whole.
 3. **For each pending task, in order:**
    1. Pull more context relevant to the task: the specific docs, the code, transcript search hits. Record in the result which docs, memories and sessions were used.
@@ -103,7 +103,7 @@ The skill has one section, "Task source", that defines exactly three operations.
    - Run the full test suite once in each repo, on each task branch that touched it.
    - If a suite fails because of the agent's change, try to fix it once on that branch. Otherwise report the failure as is. Never weaken tests.
    - Leave the dev servers running so Bruno can test.
-   - Write the report to `/home/bruno/projects/.work-tasks/reports/<YYYY-MM-DD-HHMM>.md` and print a short summary.
+   - Write the report to `/home/bruno/projects/apacheta/.work-tasks/reports/<YYYY-MM-DD-HHMM>.md` and print a short summary.
 
 ## Report contents
 
@@ -124,10 +124,10 @@ At the top: counts, plus anything that needs Bruno's attention first.
 
 Bruno asked for no prompts during a run. Both repos' `.claude/settings.json` get these settings, so they apply whichever repo the session starts in:
 - a broad allow list, `defaultMode: acceptEdits`
-- `additionalDirectories` for the other repo, `/home/bruno/projects` and `~/.claude/projects`
+- `additionalDirectories` for the other repo, `/home/bruno/projects/apacheta` and `~/.claude/projects`
 - one PreToolUse hook: `python3 ~/.claude/skills/work-tasks/hooks/guard.py`
 
-**The guard only enforces while `/home/bruno/projects/.work-tasks/RUNNING` exists.** The skill creates that file at the start of a run and removes it at the end. That way normal sessions, such as publishing a blog post with a push to `main`, are unaffected.
+**The guard only enforces while `/home/bruno/projects/apacheta/.work-tasks/RUNNING` exists.** The skill creates that file at the start of a run and removes it at the end. That way normal sessions, such as publishing a blog post with a push to `main`, are unaffected.
 
 During a run it blocks:
 - pushes to `main`/`master`
@@ -142,7 +142,7 @@ If a run crashes, the marker stays behind and the guard keeps enforcing until so
 
 ## Pieces to build
 
-1. The skill `~/.claude/skills/work-tasks/SKILL.md`, user-level so it works from a session in either repo (and later the `apacheta/` folder), plus `hooks/guard.py`. Workspace rules (running the projects, the dev DB, precedence) go in `/home/bruno/projects/CLAUDE.md`, which sessions in both repos load as a parent CLAUDE.md.
+1. The skill `~/.claude/skills/work-tasks/SKILL.md`, user-level so it works from a session in either repo (and later the `apacheta/` folder), plus `hooks/guard.py`. Workspace rules (running the projects, the dev DB, precedence) go in `/home/bruno/projects/apacheta/CLAUDE.md`, which sessions in both repos load as a parent CLAUDE.md.
 2. `neptuno/CLAUDE.md`: short, pointing to the existing docs, not repeating them. Covers:
    - npm
    - how to run and test
@@ -150,7 +150,7 @@ If a run crashes, the marker stays behind and the guard keeps enforcing until so
    - every new route uses `CurrentUser` and the ownership helpers and gets a case in `src/security.spec.ts`
    - the docs index
 3. The settings changes in both repos.
-4. `/home/bruno/projects/TASKS.md` with a format header and one small sample task that touches both repos, for a dry run together.
+4. `/home/bruno/projects/apacheta/TASKS.md` with a format header and one small sample task that touches both repos, for a dry run together.
 
 ## Decided by Bruno
 
@@ -165,7 +165,7 @@ If a run crashes, the marker stays behind and the guard keeps enforcing until so
 
 - One branch per task per repo, `task/<id>-<slug>`.
 - The skill lives in `~/.claude/skills`, not in a repo.
-- Reports go in `/home/bruno/projects/.work-tasks/`.
+- Reports go in `/home/bruno/projects/apacheta/.work-tasks/`.
 - Destructive schema changes are rejected; additive ones are allowed and flagged.
 - The run stops at preflight if a repo has uncommitted changes to tracked files. Untracked files are ignored.
 - The setup pieces (both settings files, `neptuno/CLAUDE.md`, the CLAUDE.md edit, this spec) go on a `setup/work-tasks` branch in each repo and get pushed. Bruno merges them to `main` before the first run.
