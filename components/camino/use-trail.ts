@@ -206,7 +206,11 @@ export function useTrail({ trailRef, fullRef, walkedRef, count }: Args) {
 		}
 
 		window.addEventListener("scroll", onScroll, { passive: true })
-		window.addEventListener("resize", onResize)
+		// Watch the trail box itself, not the window: milestone images load late and
+		// push the cairns down without a window resize.
+		const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(onResize) : null
+		if (ro) ro.observe(trail)
+		else window.addEventListener("resize", onResize)
 		if (document.fonts?.ready) document.fonts.ready.then(build)
 		build()
 
@@ -214,6 +218,7 @@ export function useTrail({ trailRef, fullRef, walkedRef, count }: Args) {
 			cancelled = true
 			window.removeEventListener("scroll", onScroll)
 			window.removeEventListener("resize", onResize)
+			ro?.disconnect()
 			io.disconnect()
 			window.clearTimeout(resizeTimer)
 		}

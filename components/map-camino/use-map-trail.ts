@@ -119,17 +119,41 @@ export function useMapTrail({ trailRef, fullRef, walkedRef, currentIndex, count 
 
 		build()
 		let resizeTimer: number | undefined
-		const onResize = () => {
-			window.clearTimeout(resizeTimer)
-			resizeTimer = window.setTimeout(build, 150)
+		let fadeTimer: number | undefined
+		let lastWidth = trail.clientWidth
+		const rebuild = () => {
+			build()
+			// let <Scenery> re-measure and regenerate before fading back in
+			fadeTimer = window.setTimeout(() => delete trail.dataset.resizing, 120)
 		}
-		window.addEventListener("resize", onResize)
+		const onResize = () => {
+			// A width change (sidebar opening/closing, window resize) moves every cairn
+			// sideways: fade the trail and scenery out while it settles (CSS keys off
+			// data-resizing), redraw, then fade back in. Height-only changes (milestone
+			// images loading) just redraw.
+			if (trail.clientWidth !== lastWidth) {
+				lastWidth = trail.clientWidth
+				window.clearTimeout(fadeTimer)
+				trail.dataset.resizing = ""
+			}
+			window.clearTimeout(resizeTimer)
+			resizeTimer = window.setTimeout(rebuild, 150)
+		}
+		// Watch the trail box itself, not the window: milestone images load late and
+		// push the cairns down, and the dashboard sidebar changes the width without a
+		// window resize — either one leaves the path off the cairns until rebuilt.
+		const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(onResize) : null
+		if (ro) ro.observe(trail)
+		else window.addEventListener("resize", onResize)
 		if (document.fonts?.ready) document.fonts.ready.then(build)
 
 		return () => {
 			cancelled = true
+			ro?.disconnect()
 			window.removeEventListener("resize", onResize)
 			window.clearTimeout(resizeTimer)
+			window.clearTimeout(fadeTimer)
+			delete trail.dataset.resizing
 		}
 	}, [trailRef, fullRef, walkedRef, currentIndex, count])
 
