@@ -24,6 +24,8 @@ export type MovementImportResult = {
 	summary: { dataRows: number; successful: number; failed: number }
 	balance: { previous: number; current: number }
 	created: { categories: string[]; tags: string[] }
+	/** set on a real (non-dry-run) import — what DELETE /movement/upload/:importId takes */
+	importId?: string
 	errors: ImportError[]
 }
 
@@ -48,4 +50,25 @@ export type ImportResult = MovementImportResult | PatrimonyImportResult
  */
 export function importableRowCount(result: ImportResult): number {
 	return Math.max(result.summary.dataRows - result.errors.length, 0)
+}
+
+/**
+ * The most recent movements import that hasn't been undone
+ * (GET /v1/movement/upload/last — 404 when there is none).
+ */
+export type LastMovementImport = {
+	importId: string
+	/** when the import ran (ISO) — the movements' own dates come from the sheet */
+	importedAt: string
+	/** movements still alive from that import */
+	movements: number
+}
+
+/** DELETE /v1/movement/upload/:importId — the whole import, undone in one transaction. */
+export type UndoMovementImportResult = {
+	importId: string
+	deleted: number
+	balance: { previous: number; current: number }
+	/** categories/tags the import created and nothing else uses anymore */
+	removed: { categories: string[]; tags: string[] }
 }
