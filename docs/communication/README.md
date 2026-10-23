@@ -16,6 +16,7 @@ them invent copy on their own.
 | 2 | [audiences.md](audiences.md) | Who reads us: Marcos (user) and the builder/peer (LinkedIn, blog) | draft v1 |
 | 3 | [methods/](methods/README.md) | Internal research: where the ideas come from, what we adopted, numbers to verify | draft v1 — 7 sources |
 | 4 | [trail-naming.md](trail-naming.md) | The canonical names of chapters and steps, and the conflicts to fix | draft v1 — needs decisions |
+| 4b | [map-ch1-ch2.md](map-ch1-ch2.md) | The full step model for chapters 1 and 2 (lesson, action, signal, change of course) | draft for review |
 | 5 | [channels.md](channels.md) | LinkedIn first (two voices), then blog and tools | draft v1 |
 | 6 | [methods/next-chat-brief.md](methods/next-chat-brief.md) | Hand-off to start the **method-design chat** (the map as pedagogy) | ready to use |
 

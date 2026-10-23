@@ -39,6 +39,30 @@ Notes:
 | 4 | Lo que enseña el camino | El interés compuesto no perdona, ni a favor ni en contra. |
 | 5 | La cima ("Libertad — La cima" in `map-context`) | Libertad: tus activos cubren tu vida. |
 
+## Old → new ids, chapters 1–2 (draft 2026-10-19, nothing deleted)
+
+Full model per step (lesson, action, signal, change of course) in [map-ch1-ch2.md](map-ch1-ch2.md).
+
+| Old id | Old title | New id | New title | How |
+|---|---|---|---|---|
+| 1.0 | Primera Apacheta | 1.1 | Tu primera piedra | renamed; install-app instructions moved to 1.9 |
+| 1.1 | Empezá a registrar (group) | 1.2 and 1.6 | — | group retired; its text is split between 1.2 and 1.6 |
+| 1.1.1 | Conocé el Centro de Ayuda | 1.9 | Ayuda y avisos | merged with install and notification notes |
+| 1.1.2 | Anotá tu balance | 1.2 | Traé tu último mes | renamed, goal widened to a full month |
+| 1.1.3 | Seguí registrando | 1.6 | Seguí registrando | moved after the first budget |
+| 1.1.4 | — (never existed) | — | — | ⚠️ stays listed |
+| 1.2 | Gastá menos de lo que ganás | 1.4 | Gastá menos de lo que ganás | moved |
+| 2.0 | Hacé un presupuesto | 1.5 | Tu primer presupuesto | merged with 2.1 |
+| 2.1 | Dale un nombre a cada peso | 1.5 | Tu primer presupuesto | merged with 2.0 |
+| 2.2 | Sabé cuánto te queda | 2.1 | Sabé cuánto te queda | moved |
+| 2.3 | "HOLA HICE HASTA ACA ESPERAME Revisá tu historial" | 1.3 | Mirá adónde fue tu plata | moved and retitled; ⚠️ the stray note is gone from the new title, recorded here |
+| 2.4 | Gastá en papel antes que en la realidad | 2.4 | same | same id; check now verifiable |
+| 3.0 | Conocé tu patrimonio | 1.7 | Lo que tenés | moved from chapter 3 |
+| 3.2 | ¿Tenés deudas? | 1.8 | Lo que debés | moved; now forks the route |
+| — | — | 1.10, 1.11, 2.2, 2.3, 2.5 | Tus otras herramientas, Tu lugar en el mapa, Gastá con propósito, Compará plan y realidad, Cerrá el mes | new |
+
+Steps of chapters 3–5 not listed here keep their current ids until those chapters are designed.
+
 ## Steps
 
 ### Capítulo 1 — Conocé el camino

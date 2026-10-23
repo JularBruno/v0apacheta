@@ -52,4 +52,7 @@ Open questions:
 
 - Sources loaded: 7 (all from Bruno's pasted transcripts, 2026-09-30).
 - Numbers verified: 0.
+- `el-problema-de-pensar-como-argentino.md` (added 2026-10-12) opens with the same text as the raw
+  paste in `magnin-pensar-en-grande.md`, so it looks like a duplicate. Not processed; Bruno to
+  confirm whether it's a different cut or can go.
 - Next: map each idea to a cairn (next chat), then verify numbers for the ideas that survive.

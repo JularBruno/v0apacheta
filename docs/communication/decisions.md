@@ -19,8 +19,12 @@ Newest first. This file overrides every other file in `docs/communication/`.
 | D11 | **The whole map is open to rework.** Every current step is mapped, not defended. D2 still applies: old → new id is recorded. | Validation is mixed (habit steps by action, wealth steps by result); its design comes later. |
 | D12 | **Chapter 1 is the full diagnostic plus the whole app's usability.** Patrimonio (3.0) and the debt question (3.2) move into it; each app screen is introduced in Ch. 1. | Chapter 1 redesign; old → new ids go in `trail-naming.md` once the map is approved. |
 | D13 | **Chapter naming system: place + action title + bajada.** Places are stretches of a Sierras trail (Al pie del camino, La huella, El vado, La aguada, La cuesta, La cumbre). Chapter 1 title: "Sabé dónde estás parado". Voice: baqueano (someone who knows the trail, doesn't push), Córdoba tone via humor and local places, not forced slang. | Titles recorded in `trail-naming.md`. Next: update the brand voice and write landing copy in docs. |
+| D14 | **The first budget lives in chapter 1** (Bruno: budget income and expenses in the first chapter). Old 2.0 and 2.1 merge into 1.5; chapter 2 becomes "live with your budget". | `map-ch1-ch2.md`; old → new ids in `trail-naming.md`. |
 
 ## Open
+
+- "Gastá con propósito" as a chapter 2 principle: proposed, not confirmed.
+- Route B timing: right after 1.8, or after chapter 2.
 
 - Mascot: Ceibo (Bruno's dog) as a possible future mascot. Idea only.
 - Final chapter count: 5, plus "El vado" for ruta B (order vs. "La aguada" open).
