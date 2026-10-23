@@ -132,10 +132,15 @@ export default function QuickSpendCard({
 			type: next,
 			tagId: undefined,
 			tagName: '',
-			amount: undefined,
+			amount: keptAmount(undefined),
 			description: '',
 		})
 	}
+
+	// When the real amount is known up front (bulk-load from a bank movement), switching
+	// type or category only re-tags the movement — keep whatever amount is in the field.
+	const keptAmount = (fallback: number | undefined) =>
+		initialValues?.amount !== undefined ? getValues('amount') : fallback
 
 
 	// fitlered cats
@@ -183,7 +188,7 @@ export default function QuickSpendCard({
 				type: type,
 				tagId: undefined,
 				tagName: '',
-				amount: 0,
+				amount: keptAmount(0),
 				description: ''
 			});
 		}
@@ -306,6 +311,7 @@ export default function QuickSpendCard({
 		formState: { errors, isSubmitting },
 		reset,
 		setValue,
+		getValues,
 		clearErrors,
 		watch,
 	} = useForm<MovementFormData>({
