@@ -19,6 +19,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import SubscriptionButtonNotification from "@/components/notifications/subscription-notification-button"
+import { ServerStatus } from "@/components/ayuda/server-status"
 
 type ItemType = "major" | "minor"
 
@@ -474,6 +475,8 @@ export default function HelpPage() {
 					</div>
 				</CardContent>
 			</Card>
+
+			<ServerStatus />
 		</div>
 	)
 }
