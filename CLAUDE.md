@@ -42,4 +42,3 @@ Not covered by tests (do these by hand when relevant): response headers and CSP,
 4. Run `pnpm exec jest lib/content components/content __tests__/content-pages-guardrail.test.ts`. The registry validates at import, and the guardrail test checks the page rules above.
 5. Commit and push. Publishing is a deploy.
 
-Never run `next dev` or `next build` from an agent session here: a second process corrupts the user's `.next`.
