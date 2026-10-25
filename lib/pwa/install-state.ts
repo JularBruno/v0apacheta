@@ -49,11 +49,17 @@ export function subscribeInstallState(fn: () => void) {
 	}
 }
 
-function isStandalone() {
+/** Opened as an installed app (home screen), not in a browser tab. */
+export function isStandalone() {
 	return (
 		window.matchMedia?.("(display-mode: standalone)").matches === true ||
 		(window.navigator as Navigator & { standalone?: boolean }).standalone === true
 	)
+}
+
+/** iPhone, iPad or iPod (iPadOS reports itself as a Mac). */
+export function isIOS() {
+	return iosBrowser() !== null
 }
 
 function iosBrowser(): "ios-safari" | "ios-other-browser" | null {

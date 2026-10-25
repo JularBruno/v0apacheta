@@ -46,6 +46,8 @@ export async function deleteSubscriptionNotifications(endpoint: string) {
 		},
 	});
 
+	// 404: it's already gone (expired, or another user took this browser over)
+	if (response.status === 404) return null;
 	if (!response.ok) {
 		throw new Error(`Failed to delete subscription: ${response.status}`);
 	}

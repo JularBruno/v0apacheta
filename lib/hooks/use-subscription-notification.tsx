@@ -20,9 +20,12 @@ export function useSubscribe() {
 		mutationFn: (data: { endpoint: string; p256dh: string; auth: string }) =>
 			postSubscriptionNotifications(data),
 		onSuccess: (newSub) => {
-			queryClient.setQueryData(['subscription-notifications'], (old: any[]) =>
-				old ? [...old, newSub] : [newSub],
-			);
+			// the API returns the existing row when this browser was already stored
+			// (T-010), so replace by endpoint instead of appending a duplicate
+			queryClient.setQueryData(['subscription-notifications'], (old: any[]) => [
+				...(old ?? []).filter((s) => s.endpoint !== newSub?.endpoint),
+				newSub,
+			]);
 			queryClient.invalidateQueries({ queryKey: ['step-valid', '1.0'] });
 		},
 		onError: (error) => {
