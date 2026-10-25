@@ -185,31 +185,14 @@ export default function PresupuestoPage() {
 						</div>
 					) : (
 						sortedIncomeCats
-							.map((category) => {
-								const percentageUsed =
-									category.budget > 0 ? (category.totalExpenses / category.budget) * 100 : 0
-								const isOverBudget = category.totalExpenses > category.budget
-
-								const getProgressColor = (pct: number) => {
-									if (pct > 100) return "[&>div]:bg-red-600"
-									if (pct > 90) return "[&>div]:bg-red-500"
-									if (pct > 75) return "[&>div]:bg-orange-500"
-									if (pct > 50) return "[&>div]:bg-amber-500"
-									if (pct > 25) return "[&>div]:bg-emerald-500"
-									return "[&>div]:bg-green-500"
-								}
-
-								return (
+							.map((category) => (
 									<CategoryCard
 										key={category.id}
 										category={category}
+										kind="income"
 										updateCategoryBudget={updateCategoryBudget}
-										percentageUsed={percentageUsed}
-										isOverBudget={isOverBudget}
-										getProgressColor={getProgressColor}
 									/>
-								)
-							})
+								))
 					)}
 				</CardContent>
 			</Card>
@@ -235,31 +218,14 @@ export default function PresupuestoPage() {
 						</div>
 					) : (
 						sortedExpenseCats
-							.map((category) => {
-								const percentageUsed =
-									category.budget > 0 ? (category.totalExpenses / category.budget) * 100 : 0
-								const isOverBudget = category.totalExpenses > category.budget
-
-								const getProgressColor = (pct: number) => {
-									if (pct > 100) return "[&>div]:bg-red-600"
-									if (pct > 90) return "[&>div]:bg-red-500"
-									if (pct > 75) return "[&>div]:bg-orange-500"
-									if (pct > 50) return "[&>div]:bg-amber-500"
-									if (pct > 25) return "[&>div]:bg-emerald-500"
-									return "[&>div]:bg-green-500"
-								}
-
-								return (
+							.map((category) => (
 									<CategoryCard
 										key={category.id}
 										category={category}
+										kind="expense"
 										updateCategoryBudget={updateCategoryBudget}
-										percentageUsed={percentageUsed}
-										isOverBudget={isOverBudget}
-										getProgressColor={getProgressColor}
 									/>
-								)
-							})
+								))
 					)}
 				</CardContent>
 			</Card>
