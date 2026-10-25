@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Bell, BellOff } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import { Loading } from "../ui/loading"
-import { useSubscriptionNotifications, useSubscribe, useUnsubscribe } from "@/lib/hooks/use-subscription-notification"
+import { useSubscriptionNotifications, useSubscribe, useUnsubscribe, useUnsubscribeAll } from "@/lib/hooks/use-subscription-notification"
 import { InstallAppButton } from "@/components/pwa/install-app-button"
 import { isIOS, isStandalone } from "@/lib/pwa/install-state"
 
@@ -26,14 +26,23 @@ export default function SubscriptionButtonNotification() {
 
 	const [isSupported, setIsSupported] = useState(false)
 	const [blocker, setBlocker] = useState<Blocker>(null)
+	// true once we know whether this browser has a push subscription; until then
+	// its own row in the API would look like "another device"
+	const [browserChecked, setBrowserChecked] = useState(false)
 	const [isRegistered, setIsRegistered] = useState(false)
 	const [subscription, setSubscription] = useState<PushSubscription | null>(null)
 
 	const { data: userSubscriptions, isLoading: isLoadingSubscriptions, isError: subscriptionsFailed, isFetching: refetchingSubscriptions, refetch: refetchSubscriptions } = useSubscriptionNotifications()
 	const subscribeMutation = useSubscribe()
 	const unsubscribeMutation = useUnsubscribe()
+	const unsubscribeAllMutation = useUnsubscribeAll()
 
-	const isBusy = isLoadingSubscriptions || subscribeMutation.isPending || unsubscribeMutation.isPending
+	const isBusy = isLoadingSubscriptions || subscribeMutation.isPending || unsubscribeMutation.isPending || unsubscribeAllMutation.isPending
+	// the user's devices other than this browser (a phone, another computer); 0 until
+	// this browser's own subscription is known, so it never counts itself
+	const otherDevices = browserChecked
+		? (userSubscriptions ?? []).filter((s) => s.endpoint !== subscription?.endpoint).length
+		: 0
 
 	function urlBase64ToUint8Array(base64String: string) {
 		const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
@@ -73,6 +82,8 @@ export default function SubscriptionButtonNotification() {
 				setSubscription(sub)
 			} catch (error) {
 				console.error('Service worker init failed:', error)
+			} finally {
+				if (mounted) setBrowserChecked(true)
 			}
 		}
 
@@ -216,20 +227,50 @@ export default function SubscriptionButtonNotification() {
 		)
 	}
 
+	async function unsubscribeEverywhere() {
+		try {
+			await unsubscribeAllMutation.mutateAsync()
+		} catch {
+			toast({ title: "Error", description: "No se pudieron desactivar las notificaciones. Probá de nuevo.", variant: "destructive" })
+			return
+		}
+		await subscription?.unsubscribe()
+		setSubscription(null)
+		setIsRegistered(false)
+		toast({ title: "Notificaciones desactivadas", description: "Ya no las vas a recibir en ningún dispositivo." })
+	}
+
 	return (
-		<Button
-			onClick={handleClick}
-			disabled={isBusy || !isSupported}
-			className="w-full gap-2"
-		>
-			{isBusy ? (
-				<Loading />
-			) : (
-				<>
-					{isRegistered ? <BellOff className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
-					{isRegistered ? 'Desactivar notificaciones' : 'Activar notificaciones'}
-				</>
+		<div className="space-y-2">
+			{!isRegistered && otherDevices > 0 && (
+				<p className="text-sm text-foreground/80">Ya las recibís en otro dispositivo.</p>
 			)}
-		</Button>
+			<Button
+				onClick={handleClick}
+				disabled={isBusy || !isSupported}
+				className="w-full gap-2"
+			>
+				{isBusy ? (
+					<Loading />
+				) : (
+					<>
+						{isRegistered ? <BellOff className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
+						{isRegistered
+							? 'Desactivar notificaciones'
+							: otherDevices > 0 ? 'Activar también en este dispositivo' : 'Activar notificaciones'}
+					</>
+				)}
+			</Button>
+			{otherDevices > 0 && (
+				<Button
+					variant="ghost"
+					onClick={(e) => { e.stopPropagation(); void unsubscribeEverywhere() }}
+					disabled={isBusy}
+					className="w-full text-sm text-muted-foreground"
+				>
+					Desactivar en todos los dispositivos
+				</Button>
+			)}
+		</div>
 	)
 }

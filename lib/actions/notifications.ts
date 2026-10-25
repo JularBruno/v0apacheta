@@ -55,3 +55,22 @@ export async function deleteSubscriptionNotifications(endpoint: string) {
 	const text = await response.text();
 	return text ? JSON.parse(text) : null;
 }
+
+/** DELETE notifications/mine: every device of the logged-in user (T-015). */
+export async function deleteAllSubscriptionNotifications(): Promise<{ deleted: number }> {
+	const session = await getSession();
+	const apiUrl = process.env.API_URL;
+
+	const response = await fetch(`${apiUrl}/notifications/mine`, {
+		method: 'DELETE',
+		headers: {
+			Authorization: `Bearer ${session?.accessToken}`,
+			'Content-Type': 'application/json',
+		},
+	});
+
+	if (!response.ok) {
+		throw new Error(`Failed to delete subscriptions: ${response.status}`);
+	}
+	return await response.json();
+}

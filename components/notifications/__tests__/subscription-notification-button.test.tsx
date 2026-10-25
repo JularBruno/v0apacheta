@@ -9,6 +9,7 @@ jest.mock("@/components/pwa/install-app-button", () => ({ InstallAppButton: () =
 
 const subscribeMutate = jest.fn()
 const unsubscribeMutate = jest.fn()
+const unsubscribeAllMutate = jest.fn()
 const refetch = jest.fn()
 let query: { data?: { endpoint: string }[]; isLoading: boolean; isError: boolean; isFetching?: boolean; refetch: jest.Mock }
 
@@ -16,6 +17,7 @@ jest.mock("@/lib/hooks/use-subscription-notification", () => ({
 	useSubscriptionNotifications: () => query,
 	useSubscribe: () => ({ mutateAsync: subscribeMutate, isPending: false }),
 	useUnsubscribe: () => ({ mutateAsync: unsubscribeMutate, isPending: false }),
+	useUnsubscribeAll: () => ({ mutateAsync: unsubscribeAllMutate, isPending: false }),
 }))
 
 const DESKTOP = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
@@ -55,6 +57,7 @@ beforeEach(() => {
 	query = { data: [], isLoading: false, isError: false, refetch }
 	subscribeMutate.mockResolvedValue({})
 	unsubscribeMutate.mockResolvedValue({})
+	unsubscribeAllMutate.mockResolvedValue({ deleted: 2 })
 	process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY = "BElmAQ"
 })
 
@@ -140,5 +143,58 @@ describe("SubscriptionButtonNotification", () => {
 		render(<SubscriptionButtonNotification />)
 		await userEvent.setup().click(await screen.findByRole("button", { name: /Reintentar/ }))
 		expect(refetch).toHaveBeenCalled()
+	})
+
+	describe("other devices", () => {
+		it("active only on another device: says so, and offers to turn it on here too", async () => {
+			setBrowser()
+			query.data = [{ endpoint: "https://push.example/phone" }]
+			render(<SubscriptionButtonNotification />)
+			expect(await screen.findByText("Ya las recibís en otro dispositivo.")).toBeInTheDocument()
+			expect(screen.getByRole("button", { name: /Activar también en este dispositivo/ })).toBeInTheDocument()
+			expect(screen.getByRole("button", { name: /Desactivar en todos los dispositivos/ })).toBeInTheDocument()
+		})
+
+		it("active here and elsewhere: Desactivar plus the all-devices option", async () => {
+			setBrowser({ existing: browserSub("https://push.example/laptop") })
+			query.data = [{ endpoint: "https://push.example/laptop" }, { endpoint: "https://push.example/phone" }]
+			render(<SubscriptionButtonNotification />)
+			expect(await screen.findByRole("button", { name: /^Desactivar notificaciones$/ })).toBeInTheDocument()
+			expect(screen.getByRole("button", { name: /Desactivar en todos los dispositivos/ })).toBeInTheDocument()
+			expect(screen.queryByText(/otro dispositivo/)).not.toBeInTheDocument()
+		})
+
+		it("while this browser's own subscription is still loading, it doesn't count as another device", async () => {
+			const sub = browserSub("https://push.example/laptop")
+			setBrowser()
+			let resolveSub!: (s: unknown) => void
+			pushManager.getSubscription.mockReturnValue(new Promise((r) => (resolveSub = r)))
+			query.data = [{ endpoint: "https://push.example/laptop" }]
+			render(<SubscriptionButtonNotification />)
+			await act(async () => {})
+			expect(screen.queryByText(/otro dispositivo/)).not.toBeInTheDocument()
+			expect(screen.queryByRole("button", { name: /todos los dispositivos/ })).not.toBeInTheDocument()
+			await act(async () => resolveSub(sub))
+			expect(await screen.findByRole("button", { name: /^Desactivar notificaciones$/ })).toBeInTheDocument()
+			expect(screen.queryByText(/otro dispositivo/)).not.toBeInTheDocument()
+		})
+
+		it("active only here: no all-devices option", async () => {
+			setBrowser({ existing: browserSub("https://push.example/laptop") })
+			query.data = [{ endpoint: "https://push.example/laptop" }]
+			render(<SubscriptionButtonNotification />)
+			expect(await screen.findByRole("button", { name: /^Desactivar notificaciones$/ })).toBeInTheDocument()
+			expect(screen.queryByRole("button", { name: /todos los dispositivos/ })).not.toBeInTheDocument()
+		})
+
+		it("'Desactivar en todos' removes them all and unsubscribes this browser", async () => {
+			const sub = browserSub("https://push.example/laptop")
+			setBrowser({ existing: sub })
+			query.data = [{ endpoint: "https://push.example/laptop" }, { endpoint: "https://push.example/phone" }]
+			render(<SubscriptionButtonNotification />)
+			await userEvent.setup().click(await screen.findByRole("button", { name: /Desactivar en todos los dispositivos/ }))
+			await waitFor(() => expect(unsubscribeAllMutate).toHaveBeenCalled())
+			expect(sub.unsubscribe).toHaveBeenCalled()
+		})
 	})
 })
