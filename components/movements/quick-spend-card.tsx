@@ -113,9 +113,13 @@ export default function QuickSpendCard({
 
 	// Switch between "gasto" (expense) and "ingreso" (income) types
 	// and make sure a valid category is selected for the new type
+	// set when the person tries to save with something missing; see missingHint
+	const [triedSubmit, setTriedSubmit] = useState(false);
+
 	const switchType = (next: TxType) => {
 		if (next === type) return
 		setType(next)
+		setTriedSubmit(false)
 
 		// Clear the incoming type's category so nothing appears pre-selected
 		if (next === TxType.EXPENSE) {
@@ -337,6 +341,18 @@ export default function QuickSpendCard({
 		return 5;
 	}, [categoryId, tagId, descriptionDone, watchedAmount]);
 
+	// What's still missing before the movement can be saved. The submit button
+	// says it underneath, and once the person has typed an amount (or tried to
+	// save) the category grid is highlighted at every width, not only on mobile.
+	const missingHint = !categoryId && !watchedAmount
+		? "Elegí una categoría e ingresá un monto"
+		: !categoryId
+			? "Elegí una categoría"
+			: !watchedAmount
+				? "Ingresá un monto"
+				: null;
+	const categoryNeedsAttention = !categoryId && (!!watchedAmount || triedSubmit);
+
 	// Refs for each section so we can scroll the active one into view on mobile.
 	const categoryRef = useRef<HTMLDivElement>(null);
 	const descriptionRef = useRef<HTMLDivElement>(null);
@@ -442,6 +458,7 @@ export default function QuickSpendCard({
 
 		// Reset immediately so the form feels instant on mobile
 		reset({ type: type, tagId: undefined, tagName: '', amount: undefined, description: '' });
+		setTriedSubmit(false);
 		setTagInput("");
 		setTagId("");
 		setDescriptionDone(false);
@@ -884,7 +901,14 @@ export default function QuickSpendCard({
 							{/* Category: grid */}
 							<div
 								ref={categoryRef}
-								className={cn("rounded-lg transition-colors", currentStep === 2 && "md:bg-transparent md:ring-0 ring-1 ring-primary/30 bg-primary/5 px-2 pt-2 pb-2")}
+								data-testid="category-section"
+								data-attention={categoryNeedsAttention || undefined}
+								className={cn(
+									"rounded-lg transition-colors",
+									categoryNeedsAttention
+										? "ring-2 ring-primary-400 bg-primary-50 px-2 pt-2 pb-2"
+										: currentStep === 2 && "md:bg-transparent md:ring-0 ring-1 ring-primary/30 bg-primary/5 px-2 pt-2 pb-2",
+								)}
 							>
 								<CategoryGrid
 									items={shownCategories}
@@ -950,12 +974,28 @@ export default function QuickSpendCard({
 							/>
 
 							{/* submit button */}
+							{/* aria-disabled, not disabled: a disabled button gets no clicks, and a
+							    click is how we point the person at what's missing */}
 							<Button
 								ref={submitRef}
 								data-testid="submit-button"
 								type="submit"
-								className="w-full h-12 text-base font-semibold transition-opacity"
-								disabled={isSubmitting || !categoryId || !watchedAmount}
+								className={cn("w-full h-12 text-base font-semibold transition-opacity", missingHint && "opacity-50 cursor-not-allowed")}
+								disabled={isSubmitting}
+								aria-disabled={missingHint ? true : undefined}
+								aria-describedby={missingHint ? "submit-hint" : undefined}
+								onClick={(e) => {
+									if (!missingHint) return;
+									e.preventDefault();
+									setTriedSubmit(true);
+									if (!categoryId) {
+										categoryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+										categoryRef.current?.querySelector<HTMLButtonElement>('button')?.focus();
+									} else {
+										amountRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+										amountRef.current?.querySelector<HTMLInputElement>('input')?.focus();
+									}
+								}}
 							>
 								{isSubmitting
 									? <Loading />
@@ -963,6 +1003,11 @@ export default function QuickSpendCard({
 										? "Gastar"
 										: "Agregar"}
 							</Button>
+							{missingHint && !isSubmitting && (
+								<p id="submit-hint" data-testid="submit-hint" className="text-center text-sm font-medium text-burnt-peach-700" role="status">
+									{missingHint}
+								</p>
+							)}
 						</>
 					)}
 
