@@ -60,6 +60,23 @@ function renderPage() {
 const listed = () =>
 	screen.queryAllByText(/^(Alquiler|Super|Verdulería|Sueldo)$/).map((el) => el.textContent)
 
+/** the day headers' text, in display order (only the day sections' headings) */
+const dayHeaders = () => Array.from(document.querySelectorAll("section[aria-label] h3")).map((h) => h.textContent)
+
+/**
+ * The day labels depend on "today" (Hoy, Ayer, the year): pin the clock to
+ * 25 Oct 2026 so the fixtures (1-9 Oct 2026) always read the same. Only Date
+ * is faked; real timers keep react-query and user-event working.
+ */
+function pinToday() {
+	jest.useFakeTimers({
+		now: new Date(2026, 9, 25, 12),
+		doNotFake: ["setTimeout", "clearTimeout", "setInterval", "clearInterval", "setImmediate", "clearImmediate", "queueMicrotask", "nextTick", "requestAnimationFrame", "cancelAnimationFrame", "requestIdleCallback", "cancelIdleCallback", "hrtime", "performance"],
+	})
+}
+
+afterEach(() => jest.useRealTimers())
+
 async function pick(user: ReturnType<typeof userEvent.setup>, comboIndex: number, option: string) {
 	await user.click(screen.getAllByRole("combobox")[comboIndex])
 	await user.click(await screen.findByRole("option", { name: option }))
@@ -81,6 +98,28 @@ describe("Historial", () => {
 		renderPage()
 		await waitFor(() => expect(listed()).toEqual(["Verdulería", "Super", "Sueldo", "Alquiler"]))
 		expect(screen.getByText("4 movimientos")).toBeInTheDocument()
+	})
+
+	it("puts a day header above each day's movements", async () => {
+		pinToday()
+		renderPage()
+		await waitFor(() => expect(listed()).toHaveLength(4))
+		expect(dayHeaders()).toEqual(["viernes 9 de octubre", "lunes 5 de octubre", "viernes 2 de octubre", "jueves 1 de octubre"])
+		// each header comes right before its day's movement
+		const verduleria = screen.getByText("Verdulería")
+		const lunes = screen.getByText("lunes 5 de octubre")
+		expect(lunes.compareDocumentPosition(verduleria) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy()
+		expect(lunes.compareDocumentPosition(screen.getByText("Super")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+	})
+
+	it("headers cover only the movements a filter leaves", async () => {
+		pinToday()
+		const user = userEvent.setup()
+		renderPage()
+		await waitFor(() => expect(listed()).toHaveLength(4))
+		await user.type(screen.getByPlaceholderText(/buscar/i), "super")
+		await waitFor(() => expect(listed()).toEqual(["Super"]))
+		expect(dayHeaders()).toEqual(["lunes 5 de octubre"])
 	})
 
 	it("asks the backend for the current month by default", async () => {
