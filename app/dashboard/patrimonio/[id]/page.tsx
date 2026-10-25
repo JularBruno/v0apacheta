@@ -30,6 +30,8 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import Loading from "./loading"
 import { PeriodSelector } from "@/components/movements/period-selector"
 import { useDashboard } from "../../dashboardContext"
+import CategoryDonutChart from "@/components/dashboard/category-donut-chart"
+import { movementsByCategory } from "@/lib/financial-elements/movements-by-category"
 import { ALL_FILTER_ID, SIX_MONTHS_PERIOD_ID, filterMovements, getPeriodLabel, getRangeForPeriod } from "@/lib/period-filter"
 import { ActiveFilters } from "@/components/movements/active-filters"
 
@@ -71,6 +73,9 @@ export default function AssetDetailPage() {
 		}),
 		[asset?.movements, searchTerm, selectedCategory, selectedType, selectedPeriod]
 	)
+
+	// the same movements the list shows (period + filters), per category, for the donut
+	const movementsPerCategory = useMemo(() => movementsByCategory(filteredMovements, cats), [filteredMovements, cats])
 
 	const activeFiltersCount = [
 		searchTerm,
@@ -270,6 +275,17 @@ export default function AssetDetailPage() {
 						</Button>
 					</CardContent>
 				</Card>
+			)}
+
+			{/* Income and expenses per category, for the list's period and filters */}
+			{filteredMovements.length === 0 ? (
+				<Card data-testid="element-donut-empty">
+					<CardContent className="p-6 text-center text-sm text-muted-foreground">
+						Sin movimientos en {getPeriodLabel(selectedPeriod).toLowerCase()} para graficar.
+					</CardContent>
+				</Card>
+			) : (
+				<CategoryDonutChart budgetedCategories={movementsPerCategory} label={getPeriodLabel(selectedPeriod)} currency={asset?.currency} />
 			)}
 
 			{/* Transaction History */}
