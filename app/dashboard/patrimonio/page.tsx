@@ -3,10 +3,11 @@
 import { useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, RotateCw } from "lucide-react"
 import AssetCard from "@/components/assets/asset-card"
 import AssetFormModal from "@/components/assets/asset-form-modal"
+import MainCurrencyCard from "@/components/assets/main-currency-card"
+import { toast } from "@/hooks/use-toast"
 import { useFinancialElements } from "@/lib/hooks/use-financial-elements"
 import { useCurrencies } from "@/lib/hooks/use-currencies"
 import { useProfile } from "@/lib/hooks/use-profile"
@@ -15,6 +16,12 @@ import { useQueryClient } from "@tanstack/react-query"
 import { formatToBalance } from "@/lib/quick-spend-constants"
 import { Currency } from "@/lib/schemas/definitions"
 import { Loading } from "@/components/ui/loading"
+import { cn } from "@/lib/utils"
+
+/** Placeholder for a total while it's being recomputed in a new currency. */
+function TotalLoading() {
+	return <span data-testid="total-loading" aria-label="Cargando" className="inline-block h-7 w-32 animate-pulse rounded bg-muted align-middle" />
+}
 
 export default function AssetsPage() {
 	const queryClient = useQueryClient();
@@ -29,7 +36,7 @@ export default function AssetsPage() {
 	const mainCurrency = profile?.preferredCurrency || Currency.ARS;
 
 	const sortedCurrencies = useMemo(
-		() => [...(currencies ?? [])].sort((a, b) => a.label.localeCompare(b.label)),
+		() => [...(currencies ?? [])].sort((a, b) => a.currency.localeCompare(b.currency)),
 		[currencies]
 	);
 
@@ -41,11 +48,23 @@ export default function AssetsPage() {
 		queryClient.invalidateQueries({ queryKey: ['financial-elements-patrimony'] });
 	}
 
+	// true from the pick until the totals come back in the new currency
+	const [changingCurrency, setChangingCurrency] = useState(false);
+
 	const handleCurrencyChange = async (value: string) => {
-		await updateUserMutation.mutateAsync({ preferredCurrency: value });
-		// convertedAmount/totals are computed server-side off preferredCurrency, so the
-		// elements refetch has to wait until the user update actually lands
-		queryClient.invalidateQueries({ queryKey: ['financial-elements-patrimony'] });
+		if (value === mainCurrency) return;
+		setChangingCurrency(true);
+		try {
+			await updateUserMutation.mutateAsync({ preferredCurrency: value });
+			// convertedAmount/totals are computed server-side off preferredCurrency, so the
+			// elements refetch has to wait until the user update actually lands
+			await queryClient.invalidateQueries({ queryKey: ['financial-elements-patrimony'] });
+		} catch {
+			// the profile cache wasn't touched, so the picker shows the saved currency again
+			toast({ title: "No pudimos cambiar la moneda", description: "Probá de nuevo en unos segundos.", variant: "destructive" });
+		} finally {
+			setChangingCurrency(false);
+		}
 	}
 
 	const totalAssets = data?.totalAssets ?? 0;
@@ -55,25 +74,10 @@ export default function AssetsPage() {
 	return (
 		<div className="space-y-6">
 			{/* Header */}
-			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+			<div data-testid="patrimonio-header" className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 				<div>
 					<h1 className="text-3xl font-bold text-gray-900">Elementos Financieros</h1>
 					<p className="text-gray-600 mt-1">Gestiona tus activos y pasivos</p>
-				</div>
-				<div className="flex items-center gap-2 order-first sm:order-none">
-					<span className="text-sm text-gray-600">Moneda principal</span>
-					<Select value={mainCurrency} onValueChange={handleCurrencyChange}>
-						<SelectTrigger className="w-24">
-							<SelectValue />
-						</SelectTrigger>
-						<SelectContent>
-							{sortedCurrencies.map((currency) => (
-								<SelectItem key={currency.currency} value={currency.currency}>
-									{currency.label}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
 				</div>
 				<Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2">
 					<Plus className="w-4 h-4" />
@@ -95,6 +99,13 @@ export default function AssetsPage() {
 				</div>
 			) : (
 				<>
+					<MainCurrencyCard
+						currencies={sortedCurrencies}
+						value={mainCurrency}
+						saving={changingCurrency}
+						onChange={handleCurrencyChange}
+					/>
+
 					{/* Summary Cards */}
 					<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 						<Card>
@@ -102,7 +113,7 @@ export default function AssetsPage() {
 								<CardTitle className="text-sm font-medium text-gray-600">Total Activos</CardTitle>
 							</CardHeader>
 							<CardContent>
-								<p className="text-2xl font-bold text-green-600">{formatToBalance(totalAssets, mainCurrency)}</p>
+								<p className="text-2xl font-bold text-green-600">{changingCurrency ? <TotalLoading /> : formatToBalance(totalAssets, mainCurrency)}</p>
 							</CardContent>
 						</Card>
 						<Card>
@@ -110,7 +121,7 @@ export default function AssetsPage() {
 								<CardTitle className="text-sm font-medium text-gray-600">Total Pasivos</CardTitle>
 							</CardHeader>
 							<CardContent>
-								<p className="text-2xl font-bold text-red-600">{formatToBalance(totalLiabilities, mainCurrency)}</p>
+								<p className="text-2xl font-bold text-red-600">{changingCurrency ? <TotalLoading /> : formatToBalance(totalLiabilities, mainCurrency)}</p>
 							</CardContent>
 						</Card>
 						<Card>
@@ -119,7 +130,7 @@ export default function AssetsPage() {
 							</CardHeader>
 							<CardContent>
 								<p className={`text-2xl font-bold ${netWorth >= 0 ? "text-green-600" : "text-red-600"}`}>
-									{formatToBalance(netWorth, mainCurrency)}
+									{changingCurrency ? <TotalLoading /> : formatToBalance(netWorth, mainCurrency)}
 								</p>
 							</CardContent>
 						</Card>
@@ -135,7 +146,9 @@ export default function AssetsPage() {
 							</Button>
 						</div>
 					) : (
-						<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+						// dimmed while the amounts are recomputed in a new currency: the cards would
+						// otherwise show the old numbers with the new currency's symbol for a moment
+						<div className={cn("grid grid-cols-1 lg:grid-cols-2 gap-6 transition-opacity", changingCurrency && "opacity-40")} aria-busy={changingCurrency || undefined}>
 							{assets.map((asset) => (
 								<AssetCard
 									key={asset.id}
