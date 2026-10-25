@@ -28,6 +28,18 @@ describe("CategoryCard", () => {
 		expect(container.querySelector("[class*='bg-red-']")).not.toBeNull()
 	})
 
+	it("just over budget is a soft red, not the hard red of overspending a lot", () => {
+		const { container } = card(1050)
+		expect(container.querySelector("[class*='bg-red-300']")).not.toBeNull()
+		expect(container.innerHTML).not.toMatch(/red-600/)
+		expect(screen.getByText("+5%")).toBeInTheDocument()
+	})
+
+	it("far over budget is the full red", () => {
+		const { container } = card(2000)
+		expect(container.querySelector("[class*='bg-red-600']")).not.toBeNull()
+	})
+
 	it("an income category past its goal is not red", () => {
 		const { container } = card(1500, 1000, "income")
 		expect(container.innerHTML).not.toMatch(/red-/)

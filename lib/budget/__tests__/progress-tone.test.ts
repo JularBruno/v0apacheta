@@ -1,5 +1,5 @@
 import { budgetTone } from "@/lib/budget/progress-tone"
-import { TONE_CLASSES } from "@/components/budget/tone-classes"
+import { OVER_CLASSES, TONE_CLASSES } from "@/components/budget/tone-classes"
 
 // spent / budget as a percentage of a 1000 budget
 const expense = (pct: number) => budgetTone("expense", (pct / 100) * 1000, 1000).tone
@@ -35,11 +35,36 @@ describe("budgetTone", () => {
 		expect(budgetTone("income", 500, 0).tone).toBe("neutral")
 	})
 
+	it("each over level is a deeper red than the one before", () => {
+		const shade = (level: 1 | 2 | 3 | 4) => Number(OVER_CLASSES[level].bar.match(/red-(\d+)/)![1])
+		expect(shade(1)).toBeLessThan(shade(2))
+		expect(shade(2)).toBeLessThan(shade(3))
+		expect(shade(3)).toBeLessThan(shade(4))
+	})
+
 	it("only 'over' is red", () => {
 		for (const [tone, c] of Object.entries(TONE_CLASSES)) {
 			if (tone === "over") expect(c.bar + c.text).toMatch(/red/)
 			else expect(c.bar + c.text).not.toMatch(/red/)
 		}
+	})
+
+	it.each([
+		[100.01, 1],
+		[110, 1],
+		[110.5, 2],
+		[125, 2],
+		[130, 3],
+		[150, 3],
+		[151, 4],
+		[300, 4],
+	])("an expense at %s%% is over level %s (softer red when just over)", (pct, level) => {
+		expect(budgetTone("expense", (pct / 100) * 1000, 1000).overLevel).toBe(level)
+	})
+
+	it("has no over level when not over", () => {
+		expect(budgetTone("expense", 1000, 1000).overLevel).toBe(0)
+		expect(budgetTone("income", 3000, 1000).overLevel).toBe(0)
 	})
 
 	it("reports how far over the budget an expense went", () => {
