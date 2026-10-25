@@ -36,7 +36,7 @@ export function ServerStatus() {
 	}, [])
 
 	return (
-		<p className="flex items-center justify-center gap-2 text-xs text-muted-foreground" role="status">
+		<p className="flex items-center gap-2 text-xs text-muted-foreground" role="status">
 			<span
 				aria-hidden
 				className={cn(

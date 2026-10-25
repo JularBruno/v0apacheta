@@ -323,7 +323,10 @@ export default function HelpPage() {
 				<div className="flex items-center gap-3">
 					<HelpCircle className="w-8 h-8 text-primary" />
 					<div>
-						<h1 className="text-2xl font-bold text-foreground">Centro de Ayuda</h1>
+						<div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+							<h1 className="text-2xl font-bold text-foreground">Centro de Ayuda</h1>
+							<ServerStatus />
+						</div>
 						<p className="text-muted-foreground text-sm">Guía paso a paso del camino financiero</p>
 					</div>
 				</div>
@@ -475,8 +478,6 @@ export default function HelpPage() {
 					</div>
 				</CardContent>
 			</Card>
-
-			<ServerStatus />
 		</div>
 	)
 }
