@@ -63,6 +63,17 @@ Full model per step (lesson, action, signal, change of course) in [map-ch1-ch2.m
 
 Steps of chapters 3–5 not listed here keep their current ids until those chapters are designed.
 
+### Old → new ids, El vado (draft 2026-10-25)
+
+Detail and reasoning in [map-bifurcation.md](map-bifurcation.md).
+
+| Old id | Old title | New id | How |
+|---|---|---|---|
+| 3.1 | Fondo de emergencia inicial | 3.1 | stays; on route B it comes before the vado; retitled "Tu colchón mínimo" |
+| 3.4 | Liquidá tus deudas | V.2, V.4 | split: method teaching to V.2, paying to V.4 ("Limpiá tus deudas") |
+| 3.5 | Cómo salir de la deuda | V.1, V.2, A.1 | split by its teaching concepts, commitment action and "aunque no tengas deuda" intent |
+| — | — | V.3 | new: Frená la deuda nueva (the draft's V.5 "La otra orilla" was merged into V.4, 2026-10-25) |
+
 ## Steps
 
 ### Capítulo 1 — Conocé el camino
@@ -134,6 +145,15 @@ Steps of chapters 3–5 not listed here keep their current ids until those chapt
 | `map-context.json` 3.2 vs. route branching | Debt question sits in Ch. 3 | The route forks on debt (D10); the question is needed at the end of Ch. 1. Decision pending. |
 | `map-context.json` `grandmaPrinciples` #4 "Enojate con las deudas y las cuotas" vs. no-shaming rule | Anger at debt | Fine if aimed at the mechanism (cuotas, interest); reads as shame if aimed at the person. Needs a wording decision, and the principle has no apacheta yet. |
 | `brand-guideline.md` §1 | "No snow, no cacti, no dramatic peaks" line removed (2026-09-30 16:03, by Bruno) | Not a conflict; noted so the scenery rule's removal is on record. Trailing space left on the line above. |
+
+## Conflicts found at intake (2026-10-25, Ecodiem workbook, not fixed)
+
+| Where | Says | Issue |
+|---|---|---|
+| `methods/ecodiem-marketing.md`, sales station | Persuasion biases: urgency, scarcity, price anchoring; 50%-off copy | Clashes with no-promises / anti-humo ([brand-guideline.md](brand-guideline.md) §5). Not adopted; Bruno to confirm it stays out of every channel. |
+| Same, storytelling | One story element is the failure the hero avoids | Fine as "qué te evitás" (a cuota que no te ahoga); reads as fear or shame if aimed at the person. Same tension as principle 4. |
+| Same, goals station | Growth goals as % (×2 revenue, +50 % reach) | OK for Apacheta's own channel metrics (internal); never as a promise to the user. |
+| `methods/README.md` | "Sources" are money methods | First non-money source. Kept in `methods/` for now; could move to a `docs/communication/marketing/` folder if more arrive. |
 
 ## Naming rules
 

@@ -2,6 +2,16 @@
 
 Newest first. This file overrides every other file in `docs/communication/`.
 
+## 2026-10-25
+
+| # | Decision | Effect |
+|---|---|---|
+| D15 | **Focus now: the academy (the map as a method), the community, and donations.** A stable coin ("nuestra moneda") and an account/cash/stock manager for businesses are **possible future forks**, not current scope. Revenue comes later, probably as a fintech or a business tool. | No crypto or coin in current copy. Bruno's earlier vision in [brand-workbook.md](brand-workbook.md) is superseded by its v2. |
+| D16 | **Main marketing is the street, not social media:** apacheta stickers, real apachetas, pasacalles, pasquines. Social media and the Cuadernito support it. | [brand-workbook.md](brand-workbook.md) reads every station street-first; `channels.md` to be updated when station 3 closes. |
+| D17 | **The map is told as a method that leads to building wealth:** a set of financial principles, in order, adapted to Argentina, that ends in patrimonio. Stronger tone than before, still no promises of amounts or timelines. | Storytelling and value proposition in [brand-workbook.md](brand-workbook.md); brand-guideline §2 to follow. |
+| D18 | **The fork (El vado).** "Con deudas" = a recorded pasivo with a balance to pay; an activo alone (a truck) is not a debt. The vado has one paying stone with two exits (all clean, or "sigo por mi cuenta"). The route and baselines live as string references inside the step. Both routes aim at a colchón. The map keeps one trail and changes the landscape. | `map-bifurcation.md` (draft v2). |
+| D19 | **Figures come from the evidence register.** The numbers in the old step texts (100% annual, 120% TEA, US$500–1000, 3–6 months) are dropped or regraded. Only ✅ rows reach public copy, with their "as of" date. | `methods/evidence-register.md`. |
+
 ## 2026-09-30
 
 | # | Decision | Effect |
@@ -24,8 +34,8 @@ Newest first. This file overrides every other file in `docs/communication/`.
 ## Open
 
 - "Gastá con propósito" as a chapter 2 principle: proposed, not confirmed.
-- Route B timing: right after 1.8, or after chapter 2.
-
+- (Accepted as the default, 2026-10-25) The vado starts after chapter 2; right after 1.8 stays an option.
+- Debt data model (rate, cuotas, due date) and its notifications: proposed in `product-requirements-debts.md`, not decided.
 - Mascot: Ceibo (Bruno's dog) as a possible future mascot. Idea only.
 - Final chapter count: 5, plus "El vado" for ruta B (order vs. "La aguada" open).
 - Real Córdoba phrases from Bruno to season the tone.
