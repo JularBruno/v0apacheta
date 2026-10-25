@@ -16,6 +16,7 @@ import { useDashboard } from '@/app/dashboard/dashboardContext';
 import { toast } from "@/hooks/use-toast"
 import { getSubscriptionNotifications, postSubscriptionNotifications } from '@/lib/actions/notifications'
 import SubscriptionButtonNotification from '@/components/notifications/subscription-notification-button'
+import { InstallAppButton } from '@/components/pwa/install-app-button'
 import DeleteAccountDialog from '@/components/settings/delete-account-dialog'
 
 export default function SettingsPage() {
@@ -64,6 +65,16 @@ export default function SettingsPage() {
 						<p className="text-sm text-gray-500 mt-1">El email no puede ser cambiado aquí.</p>
 					</div>
 					{/* <Button onClick={handleSaveProfile}>Guardar Cambios</Button> */}
+				</CardContent>
+			</Card>
+
+			{/* Install the app */}
+			<Card>
+				<CardHeader>
+					<CardTitle>App</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<InstallAppButton />
 				</CardContent>
 			</Card>
 

@@ -10,6 +10,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { DashboardProvider } from '@/app/dashboard/dashboardContext';
 import { QueryClientProvider, QueryClient, QueryCache } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
+import { InstallPromptListener } from '@/components/pwa/install-prompt-listener';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
 	const pathname = usePathname()
@@ -88,6 +89,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 			<DashboardProvider>
 				<SidebarProvider>
 					<Toaster />
+					<InstallPromptListener />
 
 					<AppSidebar variant="inset" />
 					<SidebarInset className="overflow-hidden">
