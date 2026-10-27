@@ -991,7 +991,7 @@ export default function QuickSpendCard({
 								ref={submitRef}
 								data-testid="submit-button"
 								type="submit"
-								className={cn("w-full h-12 text-base font-semibold transition-opacity", missingHint && "opacity-50 cursor-not-allowed")}
+								className={cn("mt-4 w-full h-12 text-base font-semibold transition-opacity", missingHint && "opacity-50 cursor-not-allowed")}
 								disabled={isSubmitting}
 								aria-disabled={missingHint ? true : undefined}
 								aria-describedby={missingHint ? "submit-hint" : undefined}
