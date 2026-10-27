@@ -58,71 +58,75 @@ function renderCard(initialValues?: { amount?: number }) {
 }
 
 const hint = () => screen.queryByTestId("submit-hint")
-const grid = () => screen.getByTestId("category-section")
 const submit = () => screen.getByTestId("submit-button")
+const section = (name: "category" | "description" | "amount") => screen.getByTestId(`${name}-section`)
+
+async function fill(user: ReturnType<typeof userEvent.setup>, { category = false, description = false, amount = false }) {
+	if (category) await user.click(screen.getByRole("button", { name: "Comida" }))
+	if (description) await user.type(screen.getByTestId("description-input"), "Super")
+	if (amount) await user.type(screen.getByTestId("amount-input"), "500")
+}
 
 describe("QuickSpendCard: what's missing before saving", () => {
 	beforeEach(() => jest.clearAllMocks())
 
-	it("an empty form names both things, without flagging the categories yet", () => {
+	it("an empty form lists everything that's missing, in one quiet line", () => {
 		renderCard()
-		expect(hint()).toHaveTextContent("Elegí una categoría e ingresá un monto")
-		expect(grid()).not.toHaveAttribute("data-attention")
+		expect(hint()).toHaveTextContent("Falta la categoría, la descripción y el monto")
 		expect(submit()).toHaveAttribute("aria-disabled", "true")
 	})
 
-	it("with an amount but no category, asks for the category and highlights the grid", async () => {
+	it("category and amount but no description: the button is NOT ready (the bug)", async () => {
 		const user = userEvent.setup()
 		renderCard()
-		await user.type(screen.getByTestId("amount-input"), "500")
-		expect(hint()).toHaveTextContent(/^Elegí una categoría$/)
-		expect(grid()).toHaveAttribute("data-attention", "true")
+		await fill(user, { category: true, amount: true })
+		expect(submit()).toHaveAttribute("aria-disabled", "true")
+		expect(hint()).toHaveTextContent(/^Falta la descripción$/)
 	})
 
-	it("with a category but no amount, asks for the amount", async () => {
+	it.each([
+		[{ description: true, amount: true }, "Falta la categoría"],
+		[{ category: true, description: true }, "Falta el monto"],
+		[{ description: true }, "Falta la categoría y el monto"],
+	])("with %o filled, says %s", async (filled, text) => {
 		const user = userEvent.setup()
 		renderCard()
-		await user.click(screen.getByRole("button", { name: "Comida" }))
-		expect(hint()).toHaveTextContent(/^Ingresá un monto$/)
-		expect(grid()).not.toHaveAttribute("data-attention")
+		await fill(user, filled)
+		expect(hint()).toHaveTextContent(new RegExp(`^${text}$`))
 	})
 
-	it("with both, no hint and the button works", async () => {
+	it("with everything filled: no hint and the button is ready", async () => {
 		const user = userEvent.setup()
 		renderCard()
-		await user.click(screen.getByRole("button", { name: "Comida" }))
-		await user.type(screen.getByTestId("amount-input"), "500")
+		await fill(user, { category: true, description: true, amount: true })
 		expect(hint()).not.toBeInTheDocument()
-		expect(submit()).not.toHaveAttribute("aria-disabled", "true")
+		expect(submit()).not.toHaveAttribute("aria-disabled")
 	})
 
-	it("clicking the button without a category points to the categories instead of doing nothing", async () => {
+	it("doesn't wrap the categories in a highlight box (no layout jump)", async () => {
 		const user = userEvent.setup()
 		renderCard()
-		await user.type(screen.getByTestId("amount-input"), "500")
+		await fill(user, { amount: true })
+		expect(section("category").className).not.toMatch(/ring-2|bg-primary-50/)
+	})
+
+	it("clicking while something is missing goes to the first missing field, flashes it, and saves nothing", async () => {
+		const user = userEvent.setup()
+		renderCard()
+		await fill(user, { category: true, amount: true })
 		;(Element.prototype.scrollIntoView as jest.Mock).mockClear()
 		await user.click(submit())
-		expect(Element.prototype.scrollIntoView).toHaveBeenCalled()
-		expect((Element.prototype.scrollIntoView as jest.Mock).mock.contexts.at(-1)).toBe(grid())
+		expect((Element.prototype.scrollIntoView as jest.Mock).mock.contexts.at(-1)).toBe(section("description"))
+		expect(screen.getByTestId("description-input")).toHaveFocus()
+		expect(section("description")).toHaveAttribute("data-flash", "true")
+		expect(postMovement).not.toHaveBeenCalled()
+	})
+
+	it("with no category, the click focuses the first category", async () => {
+		const user = userEvent.setup()
+		renderCard()
+		await user.click(submit())
 		expect(screen.getByRole("button", { name: "Hogar" })).toHaveFocus()
-		expect(postMovement).not.toHaveBeenCalled()
-	})
-
-	it("clicking it on an empty form also flags the categories", async () => {
-		const user = userEvent.setup()
-		renderCard()
-		await user.click(submit())
-		expect(grid()).toHaveAttribute("data-attention", "true")
-		expect(postMovement).not.toHaveBeenCalled()
-	})
-
-	it("switching between Gasto and Ingreso clears the 'tried to save' highlight", async () => {
-		const user = userEvent.setup()
-		renderCard()
-		await user.click(submit())
-		expect(grid()).toHaveAttribute("data-attention", "true")
-		await user.click(screen.getByRole("tab", { name: /Ingreso/ }))
-		await user.click(screen.getByRole("tab", { name: /Gasto/ }))
-		expect(grid()).not.toHaveAttribute("data-attention")
+		expect(section("category")).toHaveAttribute("data-flash", "true")
 	})
 })

@@ -113,13 +113,12 @@ export default function QuickSpendCard({
 
 	// Switch between "gasto" (expense) and "ingreso" (income) types
 	// and make sure a valid category is selected for the new type
-	// set when the person tries to save with something missing; see missingHint
-	const [triedSubmit, setTriedSubmit] = useState(false);
+	// the section a click on the not-ready button points at, outlined for a moment
+	const [flash, setFlash] = useState<'category' | 'description' | 'amount' | null>(null);
 
 	const switchType = (next: TxType) => {
 		if (next === type) return
 		setType(next)
-		setTriedSubmit(false)
 
 		// Clear the incoming type's category so nothing appears pre-selected
 		if (next === TxType.EXPENSE) {
@@ -341,17 +340,19 @@ export default function QuickSpendCard({
 		return 5;
 	}, [categoryId, tagId, descriptionDone, watchedAmount]);
 
-	// What's still missing before the movement can be saved. The submit button
-	// says it underneath, and once the person has typed an amount (or tried to
-	// save) the category grid is highlighted at every width, not only on mobile.
-	const missingHint = !categoryId && !watchedAmount
-		? "Elegí una categoría e ingresá un monto"
-		: !categoryId
-			? "Elegí una categoría"
-			: !watchedAmount
-				? "Ingresá un monto"
-				: null;
-	const categoryNeedsAttention = !categoryId && (!!watchedAmount || triedSubmit);
+	// What's still missing before the movement can be saved (the same three things
+	// the schema requires). The button looks disabled and says it underneath.
+	const watchedTagName = watch('tagName');
+	const missing = [
+		!categoryId && { key: 'category' as const, label: 'la categoría' },
+		!watchedTagName?.trim() && { key: 'description' as const, label: 'la descripción' },
+		!watchedAmount && { key: 'amount' as const, label: 'el monto' },
+	].filter(Boolean) as { key: 'category' | 'description' | 'amount'; label: string }[];
+	const missingHint = missing.length === 0
+		? null
+		: `Falta ${missing.length === 1
+			? missing[0].label
+			: `${missing.slice(0, -1).map((m) => m.label).join(', ')} y ${missing[missing.length - 1].label}`}`;
 
 	// Refs for each section so we can scroll the active one into view on mobile.
 	const categoryRef = useRef<HTMLDivElement>(null);
@@ -458,7 +459,6 @@ export default function QuickSpendCard({
 
 		// Reset immediately so the form feels instant on mobile
 		reset({ type: type, tagId: undefined, tagName: '', amount: undefined, description: '' });
-		setTriedSubmit(false);
 		setTagInput("");
 		setTagId("");
 		setDescriptionDone(false);
@@ -902,12 +902,11 @@ export default function QuickSpendCard({
 							<div
 								ref={categoryRef}
 								data-testid="category-section"
-								data-attention={categoryNeedsAttention || undefined}
+								data-flash={flash === 'category' || undefined}
 								className={cn(
-									"rounded-lg transition-colors",
-									categoryNeedsAttention
-										? "ring-2 ring-primary-400 bg-primary-50 px-2 pt-2 pb-2"
-										: currentStep === 2 && "md:bg-transparent md:ring-0 ring-1 ring-primary/30 bg-primary/5 px-2 pt-2 pb-2",
+									"rounded-lg transition-[box-shadow,background-color] duration-300",
+									currentStep === 2 && "md:bg-transparent md:ring-0 ring-1 ring-primary/30 bg-primary/5 px-2 pt-2 pb-2",
+									flash === 'category' && "ring-2 ring-primary-300 ring-offset-2 md:ring-2",
 								)}
 							>
 								<CategoryGrid
@@ -921,7 +920,13 @@ export default function QuickSpendCard({
 							{/* Tags */}
 							<div
 								ref={descriptionRef}
-								className={cn("rounded-lg transition-colors mt-1", currentStep === 3 && "md:bg-transparent md:ring-0 ring-1 ring-primary/30 bg-primary/5 px-2")}
+								data-testid="description-section"
+								data-flash={flash === 'description' || undefined}
+								className={cn(
+									"rounded-lg transition-[box-shadow,background-color] duration-300 mt-1",
+									currentStep === 3 && "md:bg-transparent md:ring-0 ring-1 ring-primary/30 bg-primary/5 px-2",
+									flash === 'description' && "ring-2 ring-primary-300 ring-offset-2 md:ring-2",
+								)}
 							>
 								<TagRow
 									tagInput={tagInput}
@@ -950,7 +955,13 @@ export default function QuickSpendCard({
 							{/* Amount */}
 							<div
 								ref={amountRef}
-								className={cn("space-y-2 pb-4 rounded-lg transition-colors", currentStep === 4 && "md:bg-transparent md:ring-0 ring-1 ring-primary/30 bg-primary/5 px-2 pt-2")}
+								data-testid="amount-section"
+								data-flash={flash === 'amount' || undefined}
+								className={cn(
+									"space-y-2 pb-4 rounded-lg transition-[box-shadow,background-color] duration-300",
+									currentStep === 4 && "md:bg-transparent md:ring-0 ring-1 ring-primary/30 bg-primary/5 px-2 pt-2",
+									flash === 'amount' && "ring-2 ring-primary-300 ring-offset-2 md:ring-2",
+								)}
 							>
 								<Label htmlFor="amount" className="text-sm text-muted-foreground">Monto</Label>
 								<div className="relative gap-2 ">
@@ -985,16 +996,15 @@ export default function QuickSpendCard({
 								aria-disabled={missingHint ? true : undefined}
 								aria-describedby={missingHint ? "submit-hint" : undefined}
 								onClick={(e) => {
-									if (!missingHint) return;
+									if (missing.length === 0) return;
 									e.preventDefault();
-									setTriedSubmit(true);
-									if (!categoryId) {
-										categoryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-										categoryRef.current?.querySelector<HTMLButtonElement>('button')?.focus();
-									} else {
-										amountRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-										amountRef.current?.querySelector<HTMLInputElement>('input')?.focus();
-									}
+									// go to the first missing field, focus it and outline it for a moment
+									const first = missing[0].key;
+									const ref = { category: categoryRef, description: descriptionRef, amount: amountRef }[first];
+									ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+									ref.current?.querySelector<HTMLElement>(first === 'category' ? 'button' : 'input')?.focus();
+									setFlash(first);
+									window.setTimeout(() => setFlash(null), 1200);
 								}}
 							>
 								{isSubmitting
@@ -1004,7 +1014,7 @@ export default function QuickSpendCard({
 										: "Agregar"}
 							</Button>
 							{missingHint && !isSubmitting && (
-								<p id="submit-hint" data-testid="submit-hint" className="text-center text-sm font-medium text-burnt-peach-700" role="status">
+								<p id="submit-hint" data-testid="submit-hint" className="text-center text-xs text-muted-foreground" role="status">
 									{missingHint}
 								</p>
 							)}
