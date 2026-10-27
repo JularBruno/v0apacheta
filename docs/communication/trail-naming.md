@@ -39,6 +39,41 @@ Notes:
 | 4 | Lo que enseña el camino | El interés compuesto no perdona, ni a favor ni en contra. |
 | 5 | La cima ("Libertad — La cima" in `map-context`) | Libertad: tus activos cubren tu vida. |
 
+## Old → new ids, chapters 1–2 (draft 2026-10-19, nothing deleted)
+
+Full model per step (lesson, action, signal, change of course) in [map-ch1-ch2.md](map-ch1-ch2.md).
+
+| Old id | Old title | New id | New title | How |
+|---|---|---|---|---|
+| 1.0 | Primera Apacheta | 1.1 | Tu primera piedra | renamed; install-app instructions moved to 1.9 |
+| 1.1 | Empezá a registrar (group) | 1.2 and 1.6 | — | group retired; its text is split between 1.2 and 1.6 |
+| 1.1.1 | Conocé el Centro de Ayuda | 1.9 | Ayuda y avisos | merged with install and notification notes |
+| 1.1.2 | Anotá tu balance | 1.2 | Traé tu último mes | renamed, goal widened to a full month |
+| 1.1.3 | Seguí registrando | 1.6 | Seguí registrando | moved after the first budget |
+| 1.1.4 | — (never existed) | — | — | ⚠️ stays listed |
+| 1.2 | Gastá menos de lo que ganás | 1.4 | Gastá menos de lo que ganás | moved |
+| 2.0 | Hacé un presupuesto | 1.5 | Tu primer presupuesto | merged with 2.1 |
+| 2.1 | Dale un nombre a cada peso | 1.5 | Tu primer presupuesto | merged with 2.0 |
+| 2.2 | Sabé cuánto te queda | 2.1 | Sabé cuánto te queda | moved |
+| 2.3 | "HOLA HICE HASTA ACA ESPERAME Revisá tu historial" | 1.3 | Mirá adónde fue tu plata | moved and retitled; ⚠️ the stray note is gone from the new title, recorded here |
+| 2.4 | Gastá en papel antes que en la realidad | 2.4 | same | same id; check now verifiable |
+| 3.0 | Conocé tu patrimonio | 1.7 | Lo que tenés | moved from chapter 3 |
+| 3.2 | ¿Tenés deudas? | 1.8 | Lo que debés | moved; now forks the route |
+| — | — | 1.10, 1.11, 2.2, 2.3, 2.5 | Tus otras herramientas, Tu lugar en el mapa, Gastá con propósito, Compará plan y realidad, Cerrá el mes | new |
+
+Steps of chapters 3–5 not listed here keep their current ids until those chapters are designed.
+
+### Old → new ids, El vado (draft 2026-10-25)
+
+Detail and reasoning in [map-bifurcation.md](map-bifurcation.md).
+
+| Old id | Old title | New id | How |
+|---|---|---|---|
+| 3.1 | Fondo de emergencia inicial | 3.1 | stays; on route B it comes before the vado; retitled "Tu colchón mínimo" |
+| 3.4 | Liquidá tus deudas | V.2, V.4 | split: method teaching to V.2, paying to V.4 ("Limpiá tus deudas") |
+| 3.5 | Cómo salir de la deuda | V.1, V.2, A.1 | split by its teaching concepts, commitment action and "aunque no tengas deuda" intent |
+| — | — | V.3 | new: Frená la deuda nueva (the draft's V.5 "La otra orilla" was merged into V.4, 2026-10-25) |
+
 ## Steps
 
 ### Capítulo 1 — Conocé el camino
@@ -110,6 +145,15 @@ Notes:
 | `map-context.json` 3.2 vs. route branching | Debt question sits in Ch. 3 | The route forks on debt (D10); the question is needed at the end of Ch. 1. Decision pending. |
 | `map-context.json` `grandmaPrinciples` #4 "Enojate con las deudas y las cuotas" vs. no-shaming rule | Anger at debt | Fine if aimed at the mechanism (cuotas, interest); reads as shame if aimed at the person. Needs a wording decision, and the principle has no apacheta yet. |
 | `brand-guideline.md` §1 | "No snow, no cacti, no dramatic peaks" line removed (2026-09-30 16:03, by Bruno) | Not a conflict; noted so the scenery rule's removal is on record. Trailing space left on the line above. |
+
+## Conflicts found at intake (2026-10-25, Ecodiem workbook, not fixed)
+
+| Where | Says | Issue |
+|---|---|---|
+| `methods/ecodiem-marketing.md`, sales station | Persuasion biases: urgency, scarcity, price anchoring; 50%-off copy | Clashes with no-promises / anti-humo ([brand-guideline.md](brand-guideline.md) §5). Not adopted; Bruno to confirm it stays out of every channel. |
+| Same, storytelling | One story element is the failure the hero avoids | Fine as "qué te evitás" (a cuota que no te ahoga); reads as fear or shame if aimed at the person. Same tension as principle 4. |
+| Same, goals station | Growth goals as % (×2 revenue, +50 % reach) | OK for Apacheta's own channel metrics (internal); never as a promise to the user. |
+| `methods/README.md` | "Sources" are money methods | First non-money source. Kept in `methods/` for now; could move to a `docs/communication/marketing/` folder if more arrive. |
 
 ## Naming rules
 

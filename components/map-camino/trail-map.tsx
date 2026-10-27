@@ -144,7 +144,8 @@ export default function TrailMap({ steps: initialSteps }: Props) {
 								className={cn(styles.milestone, styles[`shift_${m.shift}` as const])}
 								style={{ ["--mw" as string]: `${m.width}px` }}
 							>
-								<img src={m.src} alt="" />
+								{/* the trail starts on the river (useMapTrail reads data-trail-start) */}
+								<img src={m.src} alt="" data-trail-start />
 							</figure>
 						))}
 

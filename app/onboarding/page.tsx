@@ -119,11 +119,27 @@ export default function OnboardingPage() {
 				setLocalErrors({ name: 'Ingresa un nombre' });
 				return;
 			}
+			// same limit as the API (RegisterUserDto), otherwise it only fails at the last step
+			if (localFormData.name.trim().length > 30) {
+				setLocalErrors({ name: 'El nombre debe tener 30 caracteres o menos' });
+				return;
+			}
 			// Clear any previous errors and proceed
 			setLocalErrors({});
 		}
 
 		setCurrentStep(prev => prev + 1);
+	};
+
+	/**
+	 * Enter in a text field submits the form (implicit submission), even on step 1
+	 * where there is no submit button. Only the last step may submit; on step 1
+	 * Enter acts like "Siguiente".
+	 */
+	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+		if (currentStep === 6) return;
+		e.preventDefault();
+		if (currentStep === 1) handleNext();
 	};
 
 	/** handle back button on onboarding **/
@@ -186,7 +202,7 @@ export default function OnboardingPage() {
 	return (
 		<AuthShell title="Comienza tu camino" subtitle={subtitle} illustrationSrc={getImageSrc()}>
 				{/* STEPS */}
-				<form action={formAction} noValidate className="space-y-6">
+				<form action={formAction} onSubmit={handleSubmit} noValidate className="space-y-6">
 
 					{/* Step 1: Name */}
 					{currentStep === 1 && (
@@ -201,7 +217,7 @@ export default function OnboardingPage() {
 									required
 									placeholder="tu nombre"
 									className="mt-1"
-									value={state.formData?.name || localFormData.name}
+									value={localFormData.name}
 									onChange={handleInputChange}
 								/>
 								{/* client-side errors */}
@@ -418,7 +434,7 @@ export default function OnboardingPage() {
 									required
 									autoComplete="email"
 									onChange={handleInputChange}
-									defaultValue={state.formData?.email || localFormData.email}
+									defaultValue={localFormData.email}
 								/>
 								<div id="email-error" aria-live="polite" aria-atomic="true">
 									{displayErrors?.email &&
@@ -440,7 +456,7 @@ export default function OnboardingPage() {
 									className="mt-1"
 									onChange={handleInputChange}
 									autoComplete="new-password"
-									defaultValue={state.formData?.password || localFormData.password}  // This preserves the value
+									defaultValue={localFormData.password} // restores the field after React resets the form on submit
 
 								/>
 								<div id="password-error" aria-live="polite" aria-atomic="true">

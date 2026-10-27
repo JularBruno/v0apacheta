@@ -18,6 +18,7 @@ chat: [next-chat-brief.md](next-chat-brief.md).
 | Efecto bola de nieve e interés compuesto (video) | Santiago Magnín | **Compounding in time, three levers**, lifestyle vs. income (Ch. 4) | [magning-efecto-bola-de-nieve.md](magning-efecto-bola-de-nieve.md) |
 | Principios que no cambian (entrevista) | Dave Ramsey | **The five core principles**, anger at debt, simple isn't easy | [ramsey-core-principles.md](ramsey-core-principles.md) |
 | Gastar con propósito (artículo, Kakebo y minimalismo) | Unsigned brokerage blog | **Spend by purpose**, month-end reflection. Low-quality source | [lecciones-de-la-cultura-japonesa.md](lecciones-de-la-cultura-japonesa.md) |
+| Método Ecodiem (guía de ejercicios, PDF) | Rodrigo Ferreri | **Marketing, not money:** brand as guide, ideal customer, content grid, hypothesis per goal. Feeds brand and channels; two small map additions | [ecodiem-marketing.md](ecodiem-marketing.md) |
 
 Sources Magnín himself points to (candidates to add as their own files, each to be read at the
 original, not through him): Warren Buffett's letters to Berkshire investors (moat, circle of
@@ -50,6 +51,10 @@ Open questions:
 
 ## Status
 
-- Sources loaded: 7 (all from Bruno's pasted transcripts, 2026-09-30).
+- Sources loaded: 8 (7 from Bruno's pasted transcripts, 2026-09-30; the Ecodiem workbook PDF,
+  2026-10-25).
 - Numbers verified: 0.
+- `el-problema-de-pensar-como-argentino.md` (added 2026-10-12) opens with the same text as the raw
+  paste in `magnin-pensar-en-grande.md`, so it looks like a duplicate. Not processed; Bruno to
+  confirm whether it's a different cut or can go.
 - Next: map each idea to a cairn (next chat), then verify numbers for the ideas that survive.

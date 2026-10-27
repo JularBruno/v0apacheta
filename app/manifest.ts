@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
 		description: 'Tu guía financiera personal',
 		start_url: '/dashboard/mapa',
 		display: 'standalone',
-		background_color: '#ffffff',
+		background_color: '#f6f8f8', // --background in globals.css; the launcher icons sit on it too
 		theme_color: '#ffffff',
 		icons: [
 			{
@@ -21,6 +21,12 @@ export default function manifest(): MetadataRoute.Manifest {
 				sizes: '512x512',
 				type: 'image/png',
 				purpose: 'any',
+			},
+			{
+				src: '/iconwbg-maskable-512x512.png',
+				sizes: '512x512',
+				type: 'image/png',
+				purpose: 'maskable',
 			},
 		],
 	}

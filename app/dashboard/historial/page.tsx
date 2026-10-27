@@ -20,7 +20,9 @@ import { TxType } from "@/lib/schemas/definitions";
 import { CategoryBudget } from "@/lib/schemas/category";
 import { quickFilters, formatToBalance } from "@/lib/quick-spend-constants";
 import { formatDate, formatDateNoYear } from "@/lib/dateUtils";
-import { getRangeForPeriod } from "@/lib/period-filter";
+import { currentMonthPeriodId, getPeriodLabel, getRangeForPeriod } from "@/lib/period-filter";
+import { groupByDay } from "@/lib/movements/group-by-day";
+import { ActiveFilters } from "@/components/movements/active-filters";
 import { PeriodSelector } from "@/components/movements/period-selector"
 import { toast } from "@/hooks/use-toast"
 
@@ -125,7 +127,7 @@ export default function HistorialPage() {
 		setSearchTerm("")
 		setSelectedCategory("all")
 		setSelectedType("all")
-		setSelectedDateFilter("month")
+		setSelectedDateFilter(currentMonthPeriodId())
 	}
 
 	// counting active filters for badge
@@ -273,6 +275,18 @@ export default function HistorialPage() {
 							</div>
 						</div>
 
+						<ActiveFilters
+							periodLabel={getPeriodLabel(selectedDateFilter)}
+							onPeriodClick={() => setShowFilters(true)}
+							searchTerm={searchTerm}
+							onClearSearch={() => setSearchTerm("")}
+							category={selectedCategory !== allFilteredId ? cats.find((c) => c.id === selectedCategory) : undefined}
+							onClearCategory={() => setSelectedCategory(allFilteredId)}
+							typeLabel={selectedType === TxType.EXPENSE ? "Gastos" : selectedType === TxType.INCOME ? "Ingresos" : undefined}
+							onClearType={() => setSelectedType(allFilteredId)}
+							onClearAll={clearFilters}
+						/>
+
 						{/* 
 					* Rest of the filters section remains the same 
 					* If tilters not hidden on mobile, this will show
@@ -394,7 +408,14 @@ export default function HistorialPage() {
 													<p>No se encontraron transacciones con los filtros aplicados</p>
 												</div>
 												:
-												filteredMovements.map((movement) => {
+												groupByDay(filteredMovements).map((day) => (
+												<section key={day.key} aria-label={day.label} className="space-y-2 pt-3 first:pt-0">
+													{/* day header: makes it easy to see where one day ends */}
+													<div className="flex items-center gap-3">
+														<h3 className="shrink-0 text-xs font-semibold text-gray-600 first-letter:uppercase">{day.label}</h3>
+														<div className="h-px flex-1 bg-gray-200" />
+													</div>
+													{day.movements.map((movement) => {
 
 													return (
 														<Card key={movement.id} className="p-3 hover:shadow-sm transition-all md:p-4">
@@ -453,6 +474,8 @@ export default function HistorialPage() {
 														</Card>
 													)
 												})}
+												</section>
+												))}
 									</div>
 								)}
 					</CardContent>

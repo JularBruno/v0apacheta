@@ -6,17 +6,41 @@ import { signIn, signOut } from '@/auth';
 import { User, UserState, NotificationFrequency } from '../schemas/user';
 import { z } from 'zod';
 import { getSession, getMethodWithoutSession, postMethod, putMethod } from './utils';
+import { PASSWORD_ERRORS, passwordProblem } from '../schemas/password';
 
+/** Limits the API's isEmail enforces on top of the format: 64-char local part, 63-char domain labels, 254 total. */
+const withinEmailLimits = (email: string) => {
+	const [local, domain = ''] = email.split('@');
+	return email.length <= 254 && local.length <= 64 && domain.split('.').every((label) => label.length <= 63);
+};
+
+/** Mirrors the API's RegisterUserDto, so anything that passes here is accepted there. */
 const PostUserFormSchema = z.object({
-	name: z.string().nonempty({ message: 'Ingresa un nombre' }),
-	email: z.string().email({ message: 'Formato de email incorrecto' }),
+	name: z
+		.string({ required_error: 'Ingresa un nombre', invalid_type_error: 'Ingresa un nombre' })
+		.trim()
+		.min(1, { message: 'Ingresa un nombre' })
+		.max(30, { message: 'El nombre debe tener 30 caracteres o menos' }),
+	email: z
+		.string({ invalid_type_error: 'Formato de email incorrecto' })
+		.trim()
+		.email({ message: 'Formato de email incorrecto' })
+		.refine(withinEmailLimits, { message: 'Formato de email incorrecto' }),
 	password: z
-		.string()
-		.min(6, { message: 'La contraseña al menos debe tener 6 caracteres' })
-		.max(50, { message: 'La contraseña debe tener 50 caracteres o menos' }),
+		.string({ invalid_type_error: PASSWORD_ERRORS.tooShort })
+		.superRefine((password, ctx) => {
+			const problem = passwordProblem(password);
+			if (problem) ctx.addIssue({ code: z.ZodIssueCode.custom, message: problem });
+		}),
 });
 
-export async function register(prevState: UserState, formData: FormData) {
+/** What the form gets back after an error: name and email to refill, never the password. */
+const echoFormData = (formData: FormData) => ({
+	name: (formData.get('name') as string | null) ?? '',
+	email: (formData.get('email') as string | null) ?? '',
+});
+
+export async function register(prevState: UserState, formData: FormData): Promise<UserState> {
 	const url = 'user/register';
 
 	const validatedData = PostUserFormSchema.safeParse({
@@ -29,11 +53,7 @@ export async function register(prevState: UserState, formData: FormData) {
 		return {
 			errors: validatedData.error.flatten().fieldErrors,
 			message: 'Missing fields.',
-			formData: {
-				name: formData.get('name') as string,
-				email: formData.get('email') as string,
-				password: formData.get('password') as string,
-			},
+			formData: echoFormData(formData),
 		};
 	}
 
@@ -45,19 +65,15 @@ export async function register(prevState: UserState, formData: FormData) {
 
 		try {
 			await signIn('credentials', {
-				email: formData.get('email'),
-				password: formData.get('password'),
+				email: validatedData.data.email,
+				password: validatedData.data.password,
 			});
 		} catch (error: any) {
 			if (error.statusCode === 401 && error.message === 'Invalid username') {
 				return {
 					errors: { email: ['This email is already registered'] },
 					message: 'Email already exists.',
-					formData: {
-						name: formData.get('name') as string,
-						email: formData.get('email') as string,
-						password: formData.get('password') as string,
-					},
+					formData: echoFormData(formData),
 				};
 			}
 		}
@@ -71,22 +87,14 @@ export async function register(prevState: UserState, formData: FormData) {
 			return {
 				errors: { email: ['Este email está en uso'] },
 				message: 'Email already exists.',
-				formData: {
-					name: formData.get('name') as string,
-					email: formData.get('email') as string,
-					password: formData.get('password') as string,
-				},
+				formData: echoFormData(formData),
 			};
 		}
 
 		return {
 			errors: { email: ['Algo salió mal.'] },
 			message: 'Something went wrong. ',
-			formData: {
-				name: formData.get('name') as string,
-				email: formData.get('email') as string,
-				password: formData.get('password') as string,
-			},
+			formData: echoFormData(formData),
 		};
 	}
 
@@ -137,7 +145,7 @@ export type ResetPasswordState = {
 /**
  * @title Set a new password from the token in the reset-password email link
  * @param token - raw token from the `?token=` query param, single-use, 1h TTL
- * @param password - new password, 6-50 chars (same rule as registration)
+ * @param password - new password, same rules as registration (lib/schemas/password.ts)
  * @notes POST /v1/user/reset-password — no auth. 201 clears the token on the
  *   API side and this redirects to /login (throws, never returns). A 400
  *   means the token is invalid/expired/already used — returned as `{ error }`
@@ -147,6 +155,10 @@ export async function resetPassword(
 	token: string,
 	password: string,
 ): Promise<ResetPasswordState | void> {
+	// checked here because any 400 from the API reads as "invalid link" below
+	const problem = passwordProblem(password);
+	if (problem) return { error: problem };
+
 	try {
 		await postMethod('user/reset-password', { token, password }, false);
 	} catch (error: any) {

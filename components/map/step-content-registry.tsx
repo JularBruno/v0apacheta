@@ -4,6 +4,7 @@ import type { ComponentType } from "react"
 import Link from "next/link"
 import { ArrowRight, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { InstallAppButton } from "@/components/pwa/install-app-button"
 
 export interface StepContentProps {
 	id: string
@@ -65,6 +66,17 @@ function IncomeWithImportContent({ description, longDescription, appInstruction 
 	)
 }
 
+/** 1.0 — install the app: a real install button where the browser allows it */
+function InstallAppContent({ longDescription }: StepContentProps) {
+	return (
+		<div className="space-y-3">
+			<p className="text-sm leading-relaxed text-foreground/80">{renderBold(longDescription)}</p>
+			<InstallAppButton />
+		</div>
+	)
+}
+
 export const STEP_CONTENT_REGISTRY: Record<string, ComponentType<StepContentProps>> = {
 	"income-with-import": IncomeWithImportContent,
+	"install-app": InstallAppContent,
 }

@@ -3,5 +3,43 @@
     "frontend-design@claude-plugins-official": true,
     "superpowers@claude-plugins-official": true,
     "superdesign@claude-plugins-official": true
+  },
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Bash",
+      "Read",
+      "Edit",
+      "Write",
+      "Glob",
+      "Grep",
+      "WebFetch",
+      "WebSearch",
+      "Agent",
+      "Skill",
+      "TodoWrite",
+      "Read(//home/bruno/projects/apacheta/**)",
+      "Edit(//home/bruno/projects/apacheta/**)",
+      "Write(//home/bruno/projects/apacheta/**)",
+      "Read(//home/bruno/.claude/projects/**)"
+    ],
+    "additionalDirectories": [
+      "/home/bruno/projects/apacheta/neptuno",
+      "/home/bruno/projects/apacheta",
+      "/home/bruno/.claude/projects"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Read|Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/bruno/.claude/skills/work-tasks/hooks/guard.py"
+          }
+        ]
+      }
+    ]
   }
 }

@@ -24,10 +24,10 @@ export async function authenticate(
 					return 'Fomato incorrecto de email';
 				case 'PASSWORD_VALIDATIONERROR':
 					return 'Fomato incorrecto de contraseña';
-				case 'LOGIN_EMAIL_ERROR':
-					return 'Ese mail no está registrado';
-				case 'LOGIN_PASSWORD_ERROR':
-					return 'Contraseña incorrecta';
+				case 'LOGIN_CREDENTIALS_ERROR':
+					return 'Email o contraseña incorrectos';
+				case 'LOGIN_THROTTLED':
+					return 'Demasiados intentos. Esperá unos minutos y volvé a probar.';
 				case 'LOGIN_ERROR':
 					return 'Algo salió mal.';
 				default:

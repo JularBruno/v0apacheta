@@ -88,6 +88,18 @@
 	pointer-events: none;
 	overflow: visible;
 }
+/* trail + scenery fade out while the panel width settles, then back in once
+   redrawn (use-map-trail sets data-resizing on .trail) */
+.svg,
+.content > svg {
+	transition: opacity 0.25s ease;
+}
+.trail[data-resizing] .svg,
+.content:has(> [data-resizing]) > svg {
+	opacity: 0;
+	transition-duration: 0.12s;
+}
+
 .svg path {
 	fill: none;
 	stroke-linecap: round;

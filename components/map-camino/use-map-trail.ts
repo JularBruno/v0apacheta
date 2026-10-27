@@ -25,6 +25,17 @@ function smoothPath(pts: Point[]): string {
 	return d
 }
 
+/**
+ * The points the trail curve passes through: from the start landmark (the
+ * river, so the walk begins on its bank) or else from the top edge, through
+ * every cairn, and off the bottom edge.
+ */
+export function trailPoints(cairns: Point[], height: number, start?: Point): Point[] {
+	const first = cairns[0]
+	const last = cairns[cairns.length - 1]
+	return [start ?? { x: first.x, y: 0 }, ...cairns, { x: last.x, y: height }]
+}
+
 interface Args {
 	trailRef: RefObject<HTMLDivElement | null>
 	fullRef: RefObject<SVGPathElement | null>
@@ -36,7 +47,7 @@ interface Args {
 }
 
 /**
- * Curve through the cairns, solid up to the current step (dotted after), and
+ * Curve from the river through the cairns, solid up to the current step (dotted after), and
  * scroll to the current step once. SSR / jsdom safe. Returns geometry for
  * `<Scenery>`.
  */
@@ -68,8 +79,12 @@ export function useMapTrail({ trailRef, fullRef, walkedRef, currentIndex, count 
 			})
 			if (nodes.length < 2) return
 
-			const pts: Point[] = [{ x: nodes[0].x, y: 0 }, ...nodes, { x: nodes[nodes.length - 1].x, y: h }]
-			const d = smoothPath(pts)
+			const startEl = trail!.querySelector<HTMLElement>("[data-trail-start]")
+			const startBox = startEl?.getBoundingClientRect()
+			const start = startBox
+				? { x: startBox.left - box.left + startBox.width / 2, y: startBox.top - box.top + startBox.height / 2 }
+				: undefined
+			const d = smoothPath(trailPoints(nodes, h, start))
 			full!.setAttribute("d", d)
 			walked!.setAttribute("d", d)
 
@@ -100,13 +115,13 @@ export function useMapTrail({ trailRef, fullRef, walkedRef, currentIndex, count 
 			const cur = nodes[Math.min(Math.max(currentIndex, 0), nodes.length - 1)]
 			walked!.style.strokeDashoffset = String(len - lenNear(cur))
 
-			const trailPoints: Point[] = []
-			for (let i = 0; i <= N; i += 20) trailPoints.push(sample[i])
+			const points: Point[] = []
+			for (let i = 0; i <= N; i += 20) points.push(sample[i])
 			setGeometry({
 				pathD: d,
 				width: w,
 				height: h,
-				trailPoints,
+				trailPoints: points,
 				cairns: nodes.map((n) => ({ x: n.x, y: n.y, side: n.x < w / 2 ? "left" : "right" })),
 			})
 
@@ -119,17 +134,41 @@ export function useMapTrail({ trailRef, fullRef, walkedRef, currentIndex, count 
 
 		build()
 		let resizeTimer: number | undefined
-		const onResize = () => {
-			window.clearTimeout(resizeTimer)
-			resizeTimer = window.setTimeout(build, 150)
+		let fadeTimer: number | undefined
+		let lastWidth = trail.clientWidth
+		const rebuild = () => {
+			build()
+			// let <Scenery> re-measure and regenerate before fading back in
+			fadeTimer = window.setTimeout(() => delete trail.dataset.resizing, 120)
 		}
-		window.addEventListener("resize", onResize)
+		const onResize = () => {
+			// A width change (sidebar opening/closing, window resize) moves every cairn
+			// sideways: fade the trail and scenery out while it settles (CSS keys off
+			// data-resizing), redraw, then fade back in. Height-only changes (milestone
+			// images loading) just redraw.
+			if (trail.clientWidth !== lastWidth) {
+				lastWidth = trail.clientWidth
+				window.clearTimeout(fadeTimer)
+				trail.dataset.resizing = ""
+			}
+			window.clearTimeout(resizeTimer)
+			resizeTimer = window.setTimeout(rebuild, 150)
+		}
+		// Watch the trail box itself, not the window: milestone images load late and
+		// push the cairns down, and the dashboard sidebar changes the width without a
+		// window resize — either one leaves the path off the cairns until rebuilt.
+		const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(onResize) : null
+		if (ro) ro.observe(trail)
+		else window.addEventListener("resize", onResize)
 		if (document.fonts?.ready) document.fonts.ready.then(build)
 
 		return () => {
 			cancelled = true
+			ro?.disconnect()
 			window.removeEventListener("resize", onResize)
 			window.clearTimeout(resizeTimer)
+			window.clearTimeout(fadeTimer)
+			delete trail.dataset.resizing
 		}
 	}, [trailRef, fullRef, walkedRef, currentIndex, count])
 

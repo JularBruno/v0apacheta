@@ -1,4 +1,4 @@
-import { filterMovements, getRangeForPeriod, currentMonthPeriodId, ALL_FILTER_ID } from "@/lib/period-filter";
+import { filterMovements, getRangeForPeriod, getPeriodLabel, currentMonthPeriodId, SIX_MONTHS_PERIOD_ID, ALL_FILTER_ID } from "@/lib/period-filter";
 import { TxType } from "@/lib/schemas/definitions";
 
 const mv = (over: Record<string, unknown>) =>
@@ -54,5 +54,17 @@ describe("filterMovements", () => {
 	it("filters by period range", () => {
 		const range = getRangeForPeriod("month-9-2026");
 		expect(ids(filterMovements(list, { ...noFilters, range }))).toEqual(["a", "b"]);
+	});
+});
+
+describe("getPeriodLabel", () => {
+	it("labels quick filters and months", () => {
+		expect(getPeriodLabel("6months")).toBe("Últimos 6 meses");
+		expect(getPeriodLabel("month-9-2026")).toBe("Octubre 2026");
+		expect(getPeriodLabel("nonsense")).toBe("");
+	});
+
+	it("exposes the six months id as the asset default", () => {
+		expect(SIX_MONTHS_PERIOD_ID).toBe("6months");
 	});
 });

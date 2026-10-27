@@ -9,7 +9,8 @@ import { availableColors, formatToBalance } from "@/lib/quick-spend-constants"
 import { Button } from "../ui/button"
 import { ChevronDown, ChevronUp } from "lucide-react"
 
-export default function CategoryDonutChart({ budgetedCategories, label }: { budgetedCategories: CategoryBudget[], label?: string }) {
+/** `currency`: format amounts in this currency (a patrimony element's own); omitted = the default, as in Historial */
+export default function CategoryDonutChart({ budgetedCategories, label, currency }: { budgetedCategories: CategoryBudget[], label?: string, currency?: string }) {
 	const [hoveredCategory, setHoveredCategory] = useState<string | null>(null)
 	const [viewType, setViewType] = useState<TxType.EXPENSE | TxType.INCOME>(TxType.EXPENSE)
 
@@ -141,13 +142,13 @@ export default function CategoryDonutChart({ budgetedCategories, label }: { budg
 										{hoveredSeg ? (
 											<>
 												<p className="text-xs text-muted-foreground">{hoveredSeg.name}</p>
-												<p className="text-xl font-bold tabular-nums">{formatToBalance(hoveredSeg.amount)}</p>
-												<p className="text-xs text-muted-foreground">{formatToBalance(hoveredSeg.percentage)}%</p>
+												<p className="text-xl font-bold tabular-nums">{formatToBalance(hoveredSeg.amount, currency)}</p>
+												<p className="text-xs text-muted-foreground">{hoveredSeg.percentage.toFixed(0)}%</p>
 											</>
 										) : (
 											<>
 												<p className="text-xs text-muted-foreground">Total</p>
-												<p className="text-xl font-bold tabular-nums">{formatToBalance(total)}</p>
+												<p className="text-xl font-bold tabular-nums">{formatToBalance(total, currency)}</p>
 												<p className="text-xs text-muted-foreground">
 													{segments.length} {segments.length === 1 ? "categoria" : "categorias"}
 												</p>
@@ -193,7 +194,7 @@ export default function CategoryDonutChart({ budgetedCategories, label }: { budg
 												<span className="text-sm font-medium truncate">{seg.name}</span>
 											</div>
 											<span className="text-sm tabular-nums text-right font-medium">
-												{formatToBalance(seg.amount)}
+												{formatToBalance(seg.amount, currency)}
 											</span>
 											<span className={cn(
 												"text-sm tabular-nums text-right",
@@ -207,7 +208,7 @@ export default function CategoryDonutChart({ budgetedCategories, label }: { budg
 											)}>
 												{viewType === TxType.EXPENSE ? (
 													seg.budget > 0 ? (
-														isOver ? `-${formatToBalance(seg.amount - seg.budget)}` : `${formatToBalance(remaining)}`
+														isOver ? `-${formatToBalance(seg.amount - seg.budget, currency)}` : `${formatToBalance(remaining, currency)}`
 													) : (
 														<span className="text-xs">--</span>
 													)

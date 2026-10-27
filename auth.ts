@@ -84,22 +84,15 @@ export const { auth, signIn, signOut } = NextAuth({
 					});
 
 					if (!response.ok) {
-						const errorData = await response.json();
-
 						if (response.status >= 500) {
 							lastAuthError = 'LOGIN_ERROR';
 							throw new AuthError('LOGIN_ERROR');
 						}
 
-						switch (errorData.message) {
-							case 'Invalid username':
-								lastAuthError = 'LOGIN_EMAIL_ERROR';
-								break;
-
-							default:
-								lastAuthError = 'LOGIN_PASSWORD_ERROR';
-								break;
-						}
+						// The API answers the same 401 for an unknown email and a wrong password
+						// (so login can't be used to find out who has an account), and 429 after
+						// too many attempts for one email.
+						lastAuthError = response.status === 429 ? 'LOGIN_THROTTLED' : 'LOGIN_CREDENTIALS_ERROR';
 						return null;
 					}
 

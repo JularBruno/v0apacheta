@@ -4,7 +4,7 @@ import InicioPage from "@/app/dashboard/inicio/page";
 import { DashboardUserContext } from "@/app/dashboard/dashboardContext";
 import { TxType } from "@/lib/schemas/definitions";
 import userEvent from "@testing-library/user-event";
-import { revalidateTag } from "next/cache";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 global.fetch = jest.fn().mockResolvedValue({
 	ok: true,
@@ -13,7 +13,8 @@ global.fetch = jest.fn().mockResolvedValue({
 
 jest.mock("@/lib/actions/movements", () => ({
 	postMovement: jest.fn().mockImplementation((data) =>
-		Promise.resolve(data) // ← return exactly what was passed in
+		// echo the payload back with the fields the server adds
+		Promise.resolve({ ...data, id: "m1", createdAt: new Date().toISOString() })
 	),
 }));
 
@@ -24,7 +25,9 @@ jest.mock("@/lib/actions/tags", () => ({  // 👈 adjust path
 jest.mock("next/cache", () => ({
 	revalidateTag: jest.fn(),
 }));
-const mockRevalidateTag = revalidateTag as jest.Mock;
+
+// server actions pull in next-auth (ESM), which jest can't parse
+jest.mock("@/auth", () => ({ auth: jest.fn() }));
 
 // ── mock context value ──
 const mockContextValue = {
@@ -73,14 +76,18 @@ const mockContextValue = {
 	budgetedCats: [],
 	setBudgetedCats: jest.fn(),
 	loadingBudgetedCats: false,
+	budgetLoading: false,
 };
 
 // ── helper: wraps component with mocked context ──
-function renderWithContext(contextValue = mockContextValue) {
+// the balance lives in the react-query 'user-profile' cache; useCreateMovement updates it
+function renderWithContext(contextValue = mockContextValue, queryClient = new QueryClient()) {
 	return render(
-		<DashboardUserContext.Provider value={contextValue}>
-			<InicioPage />
-		</DashboardUserContext.Provider>
+		<QueryClientProvider client={queryClient}>
+			<DashboardUserContext.Provider value={contextValue as never}>
+				<InicioPage />
+			</DashboardUserContext.Provider>
+		</QueryClientProvider>
 	);
 }
 
@@ -132,13 +139,19 @@ describe("InicioPage", () => {
 
 		// ARRANGE
 		const user = userEvent.setup();
-
-		renderWithContext({
-			...mockContextValue,
-			userBalance: 0
-		});
+		const balanceOf = (qc: QueryClient) =>
+			(qc.getQueryData(["user-profile"]) as { balance: number } | undefined)?.balance;
+		const clientWithBalance = (balance: number) => {
+			const qc = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity } } });
+			qc.setQueryData(["user-profile"], { ...mockContextValue.user, balance });
+			// keep the seeded profile: the post-mutation invalidate would refetch it
+			jest.spyOn(qc, "invalidateQueries").mockResolvedValue();
+			return qc;
+		};
 
 		// ── INCOME ──
+		const incomeClient = clientWithBalance(0);
+		renderWithContext(mockContextValue, incomeClient);
 
 		// ACT
 		await fillQuickSpendFormAndSubmit(user, {
@@ -149,14 +162,15 @@ describe("InicioPage", () => {
 		})
 
 		await waitFor(() => {
-			expect(mockContextValue.setUserBalance).toHaveBeenCalledWith(10000);
+			expect(balanceOf(incomeClient)).toBe(10000);
 		});
 
 		// ── EXPENSE ──
 		cleanup();
 		jest.clearAllMocks();
 
-		renderWithContext({ ...mockContextValue, userBalance: 10000 });
+		const expenseClient = clientWithBalance(10000);
+		renderWithContext(mockContextValue, expenseClient);
 
 		// ACT
 		await fillQuickSpendFormAndSubmit(user, {
@@ -168,11 +182,7 @@ describe("InicioPage", () => {
 
 		// ASSERT
 		await waitFor(() => {
-			expect(mockContextValue.setUserBalance).toHaveBeenCalledWith(7000);
-		});
-
-		await waitFor(() => {
-			expect(mockRevalidateTag).toHaveBeenCalledWith('user');
+			expect(balanceOf(expenseClient)).toBe(7000);
 		});
 
 	});
